@@ -69,21 +69,23 @@ export default function Home() {
               </p>
 
               <div className="mt-6 flex justify-center gap-10">
-                <Link
-                  href="/shop"
-                  className="px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
-                    lg:text-[30px] hover:bg-white/10 transition"
-                >
-                  Shop
-                </Link>
+               <div className="mt-6 flex justify-center gap-10">
+                  <Link
+                    href="/shop"
+                    className="w-[220px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
+                      lg:text-[30px] hover:bg-white/10 transition text-center"
+                  >
+                    Shop
+                  </Link>
 
-                <Link
-                  href="/contact"
-                  className="px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
-                    lg:text-[30px] hover:bg-white/20 transition"
-                >
-                  Contact
-                </Link>
+                  <Link
+                    href="/contact"
+                    className="w-[220px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
+                      lg:text-[30px] hover:bg-white/20 transition text-center"
+                  >
+                    Contact
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
