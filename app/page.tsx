@@ -11,7 +11,8 @@ export default function Home() {
       <Background />
 
       {/* HERO - Mobile (full screen, centered, bigger text, title forced 1-line) */}
-      <section className="relative z-10 flex min-h-screen items-center pt-32 pb-8 lg:hidden">
+     <section className="relative z-10 flex min-h-[85svh] items-center pt-32 pb-0 lg:hidden">
+
         <div className="mx-auto max-w-7xl px-6 w-full">
           <div className="mx-auto max-w px-3 sm:px-8">
             <div className="p-8 text-center">
@@ -50,6 +51,12 @@ export default function Home() {
                     </Link>
                   </div>
                 </div>
+
+                {/*Section Divider*/}
+                <div className="relative z-10 flex justify-center pt-40 pb-1">
+                <div className="h-[3px] w-36 sm:w-56 lg:w-[380px] rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
+              </div>
+              
               </HeroIn>
             </div>
           </div>
@@ -93,14 +100,21 @@ export default function Home() {
                     </Link>
                   </div>
                 </div>
+
+                {/*Section Divider*/}
+                <div className="relative z-10 flex justify-center pt-65 pb-16">
+                <div className="h-[3px] w-36 sm:w-56 lg:w-[380px] rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
+              </div>
+
               </div>
             </div>
           </div>
         </HeroIn>
       </section>
-
+      
+    
       {/* Rest of page (scroll) */}
-      <section className="relative z-10 pb-12">
+      <section className="relative z-10 pt-50 pb-12">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {[
