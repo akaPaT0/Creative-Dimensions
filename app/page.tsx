@@ -64,7 +64,7 @@ export default function Home() {
       </section>
 
       {/* HERO - PC (full screen) */}
-      <section className="relative z-10 hidden lg:flex lg:h-screen lg:items-center lg:pt-0 hero-in">
+      <section className="relative z-10 hidden lg:flex lg:h-screen lg:items-center lg:pt-10 hero-in">
         <HeroIn>
           <div className="mx-auto max-w-7xl px-6 w-full">
             <div className="mx-auto max-w px-10">
@@ -101,17 +101,17 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/*Section Divider*/}
-                <div className="relative z-10 flex justify-center pt-65 pb-16">
-                <div className="h-[3px] w-36 sm:w-56 lg:w-[380px] rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
-              </div>
-
+                
               </div>
             </div>
           </div>
         </HeroIn>
       </section>
-      
+      {/*Section Divider*/}
+                <div className="relative z-10 flex justify-center pt-6 pb-8">
+                <div className="h-[3px] w-36 sm:w-56 lg:w-[500px] rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
+              </div>
+
     
       {/* Rest of page (scroll) */}
       <section className="relative z-10 pt-50 pb-12">
