@@ -8,47 +8,53 @@ export default function Home() {
       <Navbar />
       <Background />
 
-      {/* Content */}
-      <section className="relative z-10 pt-28 pb-12 lg:pt-0 lg:h-screen lg:flex lg:items-center">
-        <div className="mx-auto max-w-7xl px-6">
+      {/* HERO - Mobile (full screen, centered, bigger text, title forced 1-line) */}
+<section className="relative z-10 flex min-h-screen items-center pt-32 pb-8 lg:hidden">
+  <div className="mx-auto max-w-7xl px-6 w-full">
+    <div className="mx-auto max-w px-3 sm:px-8">
+      <div className="p-8 text-center">
+        <h2
+          className="text-white font-semibold leading-tight text-center whitespace-nowrap
+            text-[42px] sm:text-6xl mt-2"
+        >
+          What we do
+        </h2>
 
-          {/* HERO - Mobile */}
-          <div className="lg:hidden mx-auto max-w px-6">
-            <div className="p-6 text-center">
-              <h2 className="text-white font-semibold leading-tight text-center text-4xl sm:text-5xl">
-                What we do
-              </h2>
+        <p className="text-white/75 mt-6 text-center text-[20px] sm:text-2xl">
+          3D printed products and parts.
+        </p>
 
-              <p className="text-white/75 mt-3 text-center text-base sm:text-lg">
-                3D printed products and parts.
-              </p>
+        <p className="text-white/75 mt-3 text-center text-[20px] sm:text-2xl">
+          Browse the shop or reach out for custom work.
+        </p>
 
-              <p className="text-white/75 mt-2 text-center text-base sm:text-lg">
-                Browse the shop or reach out for custom work.
-              </p>
+        <div className="mt-9 flex flex-col sm:flex-row justify-center gap-4 sm:gap-10">
+          <Link
+            href="/shop"
+            className="px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
+              text-[20px] sm:text-2xl hover:bg-white/10 transition"
+          >
+            Shop
+          </Link>
 
-              <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3 sm:gap-10">
-                <Link
-                  href="/shop"
-                  className="px-5 py-3 sm:px-7 sm:py-3 rounded-xl border border-white/20 bg-white/5 text-white
-                    text-base sm:text-lg hover:bg-white/10 transition"
-                >
-                  Shop
-                </Link>
+          <Link
+            href="/contact"
+            className="px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
+              text-[20px] sm:text-2xl hover:bg-white/20 transition"
+          >
+            Contact
+          </Link>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-                <Link
-                  href="/contact"
-                  className="px-5 py-3 sm:px-7 sm:py-3 rounded-xl border border-white/20 bg-white/5 text-white
-                    text-base sm:text-lg hover:bg-white/20 transition"
-                >
-                  Contact
-                </Link>
-              </div>
-            </div>
-          </div>
 
-          {/* HERO - PC */}
-          <div className="hidden lg:block mx-auto max-w px-10">
+      {/* HERO - PC (full screen) */}
+      <section className="relative z-10 hidden lg:flex lg:h-screen lg:items-center lg:pt-0">
+        <div className="mx-auto max-w-7xl px-6 w-full">
+          <div className="mx-auto max-w px-10">
             <div className="p-8 text-center">
               <h2 className="text-white font-semibold leading-tight text-center lg:text-[100px]">
                 What we do
@@ -81,9 +87,13 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Cards (shared) */}
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Rest of page (scroll) */}
+      <section className="relative z-10 pb-12">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { title: "Printers", desc: "FDM and resin options for every workflow." },
               { title: "Filament & Resin", desc: "Materials that print clean and consistent." },
@@ -102,7 +112,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
     </main>
