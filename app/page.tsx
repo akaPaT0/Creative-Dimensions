@@ -84,7 +84,7 @@ export default function Home() {
                 <div className="mt-6 flex justify-center gap-10">
                   <div className="mt-6 flex justify-center gap-10">
                     <Link
-                      href="/shop"
+                      href="/Shop"
                       className="w-[220px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
                         lg:text-[30px] hover:bg-white/10 transition text-center"
                     >
@@ -181,7 +181,7 @@ export default function Home() {
       </section>
 
        {/*Section Divider*/}
-                <div className="relative z-10 flex justify-center pt-10 pb-8">
+                <div className="relative z-10 flex justify-center pt-30 pb-25">
                 <div className="h-[3px] w-36 sm:w-56 lg:w-[500px] rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
               </div>
 
@@ -221,7 +221,7 @@ export default function Home() {
         Request a Custom
       </Link>
       <Link
-        href="/shop"
+        href="/Shop"
         className="px-7 py-3 rounded-2xl border border-white/20 bg-white/5 text-white text-base sm:text-lg hover:bg-white/20 transition text-center"
       >
         Browse Shop
