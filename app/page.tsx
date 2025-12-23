@@ -84,7 +84,7 @@ export default function Home() {
                 <div className="mt-6 flex justify-center gap-10">
                   <div className="mt-6 flex justify-center gap-10">
                     <Link
-                      href="/Shop"
+                      href="/shop"
                       className="w-[220px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
                         lg:text-[30px] hover:bg-white/10 transition text-center"
                     >
@@ -221,7 +221,7 @@ export default function Home() {
         Request a Custom
       </Link>
       <Link
-        href="/Shop"
+        href="/shop"
         className="px-7 py-3 rounded-2xl border border-white/20 bg-white/5 text-white text-base sm:text-lg hover:bg-white/20 transition text-center"
       >
         Browse Shop
