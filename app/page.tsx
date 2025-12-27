@@ -13,7 +13,7 @@ export default function Home() {
       {/* HERO - Mobile (full screen, centered, bigger text, title forced 1-line) */}
      <section className="relative z-10 flex min-h-[85svh] items-center pt-32 pb-0 lg:hidden">
 
-        <div className="mx-auto max-w-7xl px-6 w-full">
+        <div className="transform-gpu mx-auto max-w-7xl px-6 w-full">
           <div className="mx-auto max-w px-3 sm:px-8">
             <div className="p-8 text-center">
               <HeroIn>

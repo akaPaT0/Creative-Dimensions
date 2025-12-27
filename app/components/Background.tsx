@@ -10,18 +10,34 @@ type Sparkle = {
   delay: string;
 };
 
+function makeSparkles(count: number, sizeMin: number, sizeMax: number): Sparkle[] {
+  return Array.from({ length: count }).map(() => ({
+    size: Math.random() * (sizeMax - sizeMin) + sizeMin,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 5}s`,
+  }));
+}
+
 export default function Background() {
   const [sparkles, setSparkles] = useState<Sparkle[]>([]);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    setSparkles(
-      Array.from({ length: 40 }).map(() => ({
-        size: Math.random() * 20 + 4,
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        delay: `${Math.random() * 5}s`,
-      }))
-    );
+    const mq = window.matchMedia("(min-width: 640px)"); // Tailwind sm breakpoint
+
+    const apply = () => {
+      const desktop = mq.matches;
+      setIsDesktop(desktop);
+
+      // Desktop: richer sparkle field
+      // Mobile: still sparkly, but not blinding
+      setSparkles(desktop ? makeSparkles(40, 4, 22) : makeSparkles(22, 3, 12));
+    };
+
+    apply();
+    mq.addEventListener?.("change", apply);
+    return () => mq.removeEventListener?.("change", apply);
   }, []);
 
   return (
@@ -37,6 +53,14 @@ export default function Background() {
               "polygon(50% 0%, 60% 38%, 100% 50%, 60% 62%, 50% 100%, 40% 62%, 0% 50%, 40% 38%)",
           };
 
+          // Tuned: mobile is calmer, desktop is richer
+          const glowOpacity = isDesktop ? 0.18 : 0.09;
+          const glowBlur = isDesktop ? "10px" : "14px";
+          const glowShadow = isDesktop
+            ? "0 0 30px rgba(255,139,100,0.75)"
+            : "0 0 18px rgba(255,139,100,0.30)";
+          const mainOpacity = isDesktop ? 0.75 : 0.38;
+
           return (
             <span
               key={i}
@@ -48,25 +72,26 @@ export default function Background() {
                 height: `${s.size}px`,
               }}
             >
-              {/* BIG glow behind (not clipped) */}
+              {/* Glow behind (softened on mobile) */}
               <span
                 className="absolute inset-0 rounded-full animate-pulse"
                 style={{
                   background: "#FF8B64",
                   animationDelay: s.delay,
                   transform: "scale(1.0)",
-                  opacity: 0.2,
-                  filter: "blur(10px)",
-                  boxShadow: "0 0 30px rgba(255,139,100,0.9)",
+                  opacity: glowOpacity,
+                  filter: `blur(${glowBlur})`,
+                  boxShadow: glowShadow,
                 }}
               />
 
-              {/* main sparkle */}
+              {/* Main sparkle */}
               <span
-                className="absolute inset-0 opacity-80 animate-pulse"
+                className="absolute inset-0 animate-pulse"
                 style={{
                   ...sparkleStyle,
                   animationDelay: s.delay,
+                  opacity: mainOpacity,
                 }}
               />
             </span>

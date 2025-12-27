@@ -1,4 +1,4 @@
-// app/Shop/page.tsx
+import { products } from "../data/products";
 import Navbar from "../components/Navbar";
 import Background from "../components/Background";
 import Link from "next/link";
@@ -70,15 +70,16 @@ export default function Shop() {
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
+            {products.map((p) => (
+              <Link
+                key={p.id}
+                href={`/shop/${p.slug}`}
                 className="group rounded-2xl border border-white/10 bg-black/20 p-5 hover:bg-black/30 transition"
               >
                 <div className="aspect-[4/3] w-full rounded-xl bg-white/5 border border-white/10" />
                 <div className="mt-4 flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-white font-semibold">Product {i}</div>
+                    <div className="text-white font-semibold">Product {}</div>
                     <div className="mt-1 text-sm text-white/60">
                       Short product description goes here.
                     </div>
@@ -92,7 +93,7 @@ export default function Shop() {
                 >
                   View
                 </button>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

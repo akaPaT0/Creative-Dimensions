@@ -22,10 +22,12 @@ export const products: Product[] = [
   },
   {
     id: "t001",
-    name: "Wallet Caliper",
-    slug: "wallet-caliper",
+    name: "Caliper Card",
+    slug: "caliper-card",
     category: "tools",
     priceUSD: 3,
     description: "Carry a caliper inside your wallet.",
   },
+
+  
 ];
