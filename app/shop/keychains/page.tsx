@@ -1,10 +1,25 @@
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "../../components/Navbar";
 import Background from "../../components/Background";
 import { products } from "../../data/products";
 
+function getCardImage(p: any) {
+  if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
+  if (typeof p.image === "string" && p.image) return p.image;
+  if (p?.category && p?.slug) return `/products/${p.category}/${p.slug}-1.jpg`;
+  return "/products/placeholder.jpg";
+}
+
 export default function Page() {
   const keychains = products.filter((p) => p.category === "keychains");
+
+  // ✅ If ANY keychain has a subCategory, show only those with a subCategory.
+  // Otherwise, just show all keychains (category only).
+  const hasAnySubCats = keychains.some((p: any) => !!p.subCategory);
+  const list = hasAnySubCats
+    ? keychains.filter((p: any) => !!p.subCategory)
+    : keychains;
 
   return (
     <div className="relative min-h-screen">
@@ -13,7 +28,7 @@ export default function Page() {
 
       <main className="relative z-10 mx-auto max-w-7xl px-6 pt-28 pb-16">
         <Link
-          href="/Shop"
+          href="/shop"
           className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
         >
           <span className="text-lg leading-none">←</span>
@@ -26,32 +41,53 @@ export default function Page() {
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {keychains.map((p) => (
-            <div
+          {list.map((p) => (
+            <Link
               key={p.id}
-              className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition"
+              href={`/shop/keychains/${encodeURIComponent(p.slug)}`}
+              className="
+                group rounded-2xl border border-white/10 bg-white/5 p-5
+                transition
+                hover:bg-white/10
+                lg:hover:-translate-y-[2px] lg:hover:scale-[1.01]
+                active:scale-[0.99]
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20
+              "
             >
-              <div className="aspect-[4/3] w-full rounded-xl bg-white/5 border border-white/10" />
+              {/* Image */}
+              <div
+                className="
+                  relative aspect-[4/3] w-full overflow-hidden rounded-xl
+                  border border-white/10 bg-white/5
+                  transition
+                  lg:group-hover:scale-[1.02]
+                "
+              >
+                <Image
+                  src={getCardImage(p)}
+                  alt={p.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-70 transition lg:group-hover:opacity-90" />
+              </div>
 
               <div className="mt-4 flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-white font-semibold">{p.name}</div>
-                  <div className="mt-1 text-sm text-white/60">
+                <div className="min-w-0">
+                  <div className="text-white font-semibold transition lg:group-hover:text-white">
+                    {p.name}
+                  </div>
+                  <div className="mt-1 text-sm text-white/60 line-clamp-2">
                     {p.description ?? "—"}
                   </div>
                 </div>
-                <div className="text-sm text-white/80">
+
+                <div className="text-sm text-white/80 shrink-0">
                   {p.priceUSD ? `$${p.priceUSD}` : ""}
                 </div>
               </div>
-
-              <Link
-                href={`/Shop/keychains/${p.slug}`}
-                className="mt-4 block w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-center text-white/90 hover:bg-white/10 transition"
-              >
-                View
-              </Link>
-            </div>
+            </Link>
           ))}
         </div>
       </main>
