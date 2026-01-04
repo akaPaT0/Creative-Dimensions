@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import Background from "../../components/Background";
 import { products } from "../../data/products";
 
@@ -105,6 +106,7 @@ export default function Page() {
           </div>
         )}
       </main>
+        <Footer />
     </div>
   );
 }

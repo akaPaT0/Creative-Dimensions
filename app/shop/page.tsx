@@ -1,5 +1,6 @@
 import { products } from "../data/products";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import Background from "../components/Background";
 import Link from "next/link";
 import Image from "next/image";
@@ -241,6 +242,7 @@ export default function Shop() {
           Want something specific? Hit{" "}
           <span className="text-white/80">Custom Request</span>.
         </div>
+          <Footer />
       </main>
     </div>
   );

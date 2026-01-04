@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Navbar from "../../../components/Navbar";
+import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import { products } from "../../../data/products";
 
@@ -65,6 +66,7 @@ export default async function Page({
             </div>
           )}
         </div>
+        <Footer />
       </main>
     </div>
   );

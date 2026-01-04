@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../../../components/Navbar";
+import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import { products } from "../../../data/products";
 import ProductGallery from "../../../components/ProductGallery";
@@ -195,6 +196,7 @@ export default async function KeychainSlugPage({
             )}
           </div>
         </div>
+        <Footer / >
       </main>
     </div>
   );
