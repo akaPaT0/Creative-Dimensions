@@ -23,7 +23,7 @@ function getCardImage(p: any) {
   return "/products/placeholder.jpg";
 }
 
-export default async function KeychainSlugPage({
+export default async function FanboySlugPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -32,7 +32,7 @@ export default async function KeychainSlugPage({
   const slug = normalize(rawSlug);
 
   const p = products.find(
-    (x) => x.category === "keychains" && normalize(String(x.slug)) === slug
+    (x: any) => x.category === "fanboys" && normalize(String(x.slug)) === slug
   );
 
   if (!p) {
@@ -43,11 +43,11 @@ export default async function KeychainSlugPage({
 
         <main className="relative z-10 mx-auto max-w-3xl px-6 pt-28 pb-16 text-white">
           <Link
-            href="/shop/keychains"
+            href="/shop/fanboys"
             className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
           >
             <span className="text-lg leading-none">←</span>
-            Back to Keychains
+            Back to Fanboys
           </Link>
 
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
@@ -60,31 +60,40 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Similar logic:
-  // - Prefer same subCategory
-  // - If < 3 results, fill from same category
+  // ✅ Similar logic (fixed):
+  // - If category has any subCategory items, don't recommend items without subCategory
+  // - If same subCategory >= MIN_SUB => ONLY show sameSub (no fillers)
   const LIMIT = 8;
   const MIN_SUB = 3;
 
+  const categoryItems = products.filter((x: any) => x.category === p.category);
+  const hasAnySubCatsInCategory = categoryItems.some((x: any) => !!x.subCategory);
+
+  const basePool = hasAnySubCatsInCategory
+    ? categoryItems.filter((x: any) => !!x.subCategory)
+    : categoryItems;
+
   const sameSub =
     (p as any).subCategory
-      ? products.filter(
+      ? basePool.filter(
           (x: any) =>
-            x.category === p.category &&
-            x.slug !== p.slug &&
-            x.subCategory === (p as any).subCategory
+            x.slug !== p.slug && x.subCategory === (p as any).subCategory
         )
       : [];
 
   let similar: any[] = sameSub;
 
+  // Only fill if we DON'T have enough sameSub
   if (similar.length < MIN_SUB) {
-    const fillers = products.filter(
-      (x: any) =>
-        x.category === p.category &&
-        x.slug !== p.slug &&
-        !similar.some((s: any) => s.id === x.id)
-    );
+    const keyOf = (x: any) => `${x.category}-${x.slug}-${x.id ?? "x"}`;
+    const used = new Set(similar.map(keyOf));
+
+    const fillers = basePool.filter((x: any) => {
+      if (x.slug === p.slug) return false;
+      const k = keyOf(x);
+      if (used.has(k)) return false;
+      return true;
+    });
 
     similar = [...similar, ...fillers];
   }
@@ -99,11 +108,11 @@ export default async function KeychainSlugPage({
       <main className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-16">
         <div className="flex items-center justify-between gap-3">
           <Link
-            href="/shop/keychains"
+            href="/shop/fanboys"
             className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
           >
             <span className="text-lg leading-none">←</span>
-            Back to Keychains
+            Back to Fanboys
           </Link>
 
           {p.isNew && (
@@ -139,57 +148,62 @@ export default async function KeychainSlugPage({
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <a
-                  href={`https://wa.me/96170304007?text=${encodeURIComponent(
-                    `Hey! I’m interested in: ${p.name}.\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
-                >
-                  Order / Ask
-                </a>
-
+                href={`https://wa.me/96170304007?text=${encodeURIComponent(
+                  `Hey! I’m interested in: ${p.name}.\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
+              >
+                Order / Ask
+              </a>
 
               <Link
-                href="/shop/keychains"
+                href="/shop/fanboys"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
               >
-                More Keychains
+                More Fanboys
               </Link>
             </div>
 
-            {/* Check similar (bubble tiles with image + title under) */}
+            {/* ✅ Check similar (single horizontal row scroll) */}
             {similar.length > 0 && (
               <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-white/85 font-semibold">Check similar</div>
 
-                <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {similar.map((x: any) => {
-                    const img = getCardImage(x);
+                <div className="mt-3 -mx-2 px-2 overflow-x-auto">
+                  <div className="flex gap-3 flex-nowrap snap-x snap-mandatory">
+                    {similar.map((x: any) => {
+                      const img = getCardImage(x);
 
-                    return (
-                      <Link
-                        key={x.id}
-                        href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
-                        className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2"
-                      >
-                        <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                          <Image
-                            src={img}
-                            alt={x.name}
-                            fill
-                            className="object-cover"
-                            sizes="120px"
-                          />
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                        </div>
+                      return (
+                        <Link
+                          key={x.id ?? `${x.category}-${x.slug}`}
+                          href={`/shop/fanboys/${encodeURIComponent(x.slug)}`}
+                          className="
+                            group shrink-0 snap-start
+                            w-[110px] sm:w-[130px] md:w-[150px]
+                            rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2
+                          "
+                        >
+                          <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                            <Image
+                              src={img}
+                              alt={x.name}
+                              fill
+                              className="object-cover"
+                              sizes="150px"
+                            />
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                          </div>
 
-                        <div className="mt-2 text-center text-white/85 text-xs sm:text-sm font-semibold leading-tight line-clamp-1">
-                          {x.name}
-                        </div>
-                      </Link>
-                    );
-                  })}
+                          <div className="mt-2 text-center text-white/85 text-[11px] sm:text-sm font-semibold leading-tight line-clamp-1">
+                            {x.name}
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
