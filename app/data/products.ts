@@ -217,4 +217,17 @@ DM to order or customize your colors.`,
     isNew: true,
     featured: true,
   },
+
+{
+  id: "KECU003",
+  name: "crab head",
+  slug: "crab-head",
+  category: "keychains",
+  subCategory: "cute",
+  priceUSD: 2,
+  description: "dada",
+  images: ["/products/keychains/cute/crab-head-1.png"],
+  isNew: true,
+  featured: false,
+},
 ];
