@@ -173,7 +173,7 @@ function ShopSearchBar({
       }
     }
 
-    // de-dupe
+    // de-dupe + top 8
     const seen = new Set<string>();
     const ranked = out.sort((a, b) => b.score - a.score);
     const final: Suggestion[] = [];
@@ -221,12 +221,11 @@ function ShopSearchBar({
       return;
     }
 
-    // keyword
     onValueChange(s.value);
   }
 
   return (
-    <div ref={wrapRef} className="relative w-full">
+    <div ref={wrapRef} className="relative w-full z-[200]">
       <input
         value={value}
         onChange={(e) => {
@@ -259,7 +258,7 @@ function ShopSearchBar({
       />
 
       {open && suggestions.length > 0 && (
-        <div className="absolute mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0D0D0D]/85 backdrop-blur-xl">
+        <div className="absolute z-[210] mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0D0D0D]/85 backdrop-blur-xl">
           {suggestions.map((s, i) => (
             <button
               key={`${s.type}:${"slug" in s ? `${(s as any).category}/${(s as any).slug}` : s.value}:${i}`}
@@ -312,7 +311,6 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     setSort("default");
   }
 
-  // When user clicks "Browse All" (href="#all"), reset filters too.
   useEffect(() => {
     const handle = () => {
       if (typeof window === "undefined") return;
@@ -340,9 +338,9 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     }
 
     if (sort === "price-asc") {
-      list.sort((a, b) => (Number(a.priceUSD ?? a.price ?? 0) || 0) - (Number(b.priceUSD ?? b.price ?? 0) || 0));
+      list.sort((a, b) => (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0) - (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0));
     } else if (sort === "price-desc") {
-      list.sort((a, b) => (Number(b.priceUSD ?? b.price ?? 0) || 0) - (Number(a.priceUSD ?? a.price ?? 0) || 0));
+      list.sort((a, b) => (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0) - (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0));
     }
 
     return list;
@@ -351,7 +349,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
   return (
     <section
       id="all"
-      className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6"
+      className="mt-10 isolate rounded-2xl border border-white/10 bg-white/5 p-6"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
         <div>
@@ -383,7 +381,6 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
             setSubCategory("all");
           }}
           onPickSubCategory={(s) => {
-            // if user picks a sub, keep current category unless it makes zero sense, still ok
             setSubCategory(s);
           }}
           onPickProduct={(cat, slug) => {
