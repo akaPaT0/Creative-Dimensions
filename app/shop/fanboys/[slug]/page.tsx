@@ -61,45 +61,36 @@ export default async function FanboySlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Similar logic (fixed):
-  // - If category has any subCategory items, don't recommend items without subCategory
-  // - If same subCategory >= MIN_SUB => ONLY show sameSub (no fillers)
-  const LIMIT = 8;
-  const MIN_SUB = 3;
+  // ✅ Similar logic (EXACTLY 3):
+  // 1) take same subCategory only (up to 3)
+  // 2) if less than 3, fill from same category until total = 3
+  const TOTAL = 3;
 
-  const categoryItems = products.filter((x: any) => x.category === p.category);
-  const hasAnySubCatsInCategory = categoryItems.some((x: any) => !!x.subCategory);
+  const currentSub = (p as any).subCategory;
 
-  const basePool = hasAnySubCatsInCategory
-    ? categoryItems.filter((x: any) => !!x.subCategory)
-    : categoryItems;
+  const sameSub: any[] = currentSub
+    ? products.filter(
+        (x: any) =>
+          x.category === p.category &&
+          x.slug !== p.slug &&
+          x.subCategory === currentSub
+      )
+    : [];
 
-  const sameSub =
-    (p as any).subCategory
-      ? basePool.filter(
-          (x: any) =>
-            x.slug !== p.slug && x.subCategory === (p as any).subCategory
-        )
-      : [];
+  let similar: any[] = sameSub.slice(0, TOTAL);
 
-  let similar: any[] = sameSub;
+  if (similar.length < TOTAL) {
+    const needed = TOTAL - similar.length;
 
-  // Only fill if we DON'T have enough sameSub
-  if (similar.length < MIN_SUB) {
-    const keyOf = (x: any) => `${x.category}-${x.slug}-${x.id ?? "x"}`;
-    const used = new Set(similar.map(keyOf));
+    const fillers = products.filter(
+      (x: any) =>
+        x.category === p.category &&
+        x.slug !== p.slug &&
+        !similar.some((s: any) => (s.id && x.id && s.id === x.id) || s.slug === x.slug)
+    );
 
-    const fillers = basePool.filter((x: any) => {
-      if (x.slug === p.slug) return false;
-      const k = keyOf(x);
-      if (used.has(k)) return false;
-      return true;
-    });
-
-    similar = [...similar, ...fillers];
+    similar = [...similar, ...fillers.slice(0, needed)];
   }
-
-  similar = similar.slice(0, LIMIT);
 
   return (
     <div className="relative min-h-screen">
@@ -167,7 +158,7 @@ export default async function FanboySlugPage({
               </Link>
             </div>
 
-            {/* ✅ Check similar (single horizontal row scroll) */}
+            {/* ✅ Check similar (horizontal row, now exactly 3) */}
             {similar.length > 0 && (
               <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-white/85 font-semibold">Check similar</div>
@@ -211,7 +202,7 @@ export default async function FanboySlugPage({
           </div>
         </div>
 
-    <Footer/>
+        <Footer />
       </main>
     </div>
   );

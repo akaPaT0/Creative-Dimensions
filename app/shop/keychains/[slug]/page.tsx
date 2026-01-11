@@ -61,36 +61,38 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Similar logic:
-  // - Prefer same subCategory
-  // - If < 3 results, fill from same category
-  const LIMIT = 8;
-  const MIN_SUB = 3;
+  // ✅ Similar logic (exactly 3):
+  // 1) take same subCategory only
+  // 2) if less than 3, fill from same category (any other subCategory) until total = 3
+  const TOTAL = 3;
 
-  const sameSub =
-    (p as any).subCategory
-      ? products.filter(
-          (x: any) =>
-            x.category === p.category &&
-            x.slug !== p.slug &&
-            x.subCategory === (p as any).subCategory
-        )
-      : [];
+  const currentSub = (p as any).subCategory;
 
-  let similar: any[] = sameSub;
+  const sameSub: any[] = currentSub
+    ? products.filter(
+        (x: any) =>
+          x.category === p.category &&
+          x.slug !== p.slug &&
+          x.subCategory === currentSub
+      )
+    : [];
 
-  if (similar.length < MIN_SUB) {
+  // Start with up to 3 from same subcategory
+  let similar: any[] = sameSub.slice(0, TOTAL);
+
+  // If still less than 3, fill from same category (excluding already picked + excluding current product)
+  if (similar.length < TOTAL) {
+    const needed = TOTAL - similar.length;
+
     const fillers = products.filter(
       (x: any) =>
         x.category === p.category &&
         x.slug !== p.slug &&
-        !similar.some((s: any) => s.id === x.id)
+        !similar.some((s: any) => s.id === x.id || s.slug === x.slug)
     );
 
-    similar = [...similar, ...fillers];
+    similar = [...similar, ...fillers.slice(0, needed)];
   }
-
-  similar = similar.slice(0, LIMIT);
 
   return (
     <div className="relative min-h-screen">
@@ -140,16 +142,15 @@ export default async function KeychainSlugPage({
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <a
-                  href={`https://wa.me/96170304007?text=${encodeURIComponent(
-                    `Hey! I’m interested in: ${p.name}.\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
-                >
-                  Order / Ask
-                </a>
-
+                href={`https://wa.me/96170304007?text=${encodeURIComponent(
+                  `Hey! I’m interested in: ${p.name}.\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
+              >
+                Order / Ask
+              </a>
 
               <Link
                 href="/shop/keychains"
@@ -159,18 +160,18 @@ export default async function KeychainSlugPage({
               </Link>
             </div>
 
-            {/* Check similar (bubble tiles with image + title under) */}
+            {/* Check similar (exactly 3) */}
             {similar.length > 0 && (
               <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-white/85 font-semibold">Check similar</div>
 
-                <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                <div className="mt-3 grid grid-cols-3 gap-3">
                   {similar.map((x: any) => {
                     const img = getCardImage(x);
 
                     return (
                       <Link
-                        key={x.id}
+                        key={x.id ?? x.slug}
                         href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
                         className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2"
                       >
@@ -196,7 +197,8 @@ export default async function KeychainSlugPage({
             )}
           </div>
         </div>
-        <Footer / >
+
+        <Footer />
       </main>
     </div>
   );
