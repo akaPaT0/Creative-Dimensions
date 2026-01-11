@@ -196,17 +196,4 @@ export const products: Product[] = [
     "isNew": true,
     "featured": true
   }
-,
-{
-  id: "KECU004",
-  name: "hghghg",
-  slug: "hghghg",
-  category: "keychains",
-  subCategory: "cute",
-  priceUSD: 2.3,
-  description: "hhuhhg",
-  images: ["/products/keychains/cute/hghghg-1.png"],
-  isNew: true,
-  featured: false,
-},
 ];
