@@ -2,6 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import AdminProductForm from "./AdminProductForm";
 import Background from "../components/Background";
+import AdminProductsManager from "./AdminProductsManager";
 
 export default async function AdminPage() {
   const { userId } = await auth();
@@ -46,6 +47,7 @@ export default async function AdminPage() {
           </div>
 
           <AdminProductForm />
+          <AdminProductsManager />
         </div>
       </main>
     </div>
