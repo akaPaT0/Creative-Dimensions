@@ -14,13 +14,30 @@ function guessExt(filename: string, mime: string) {
   if (lower.endsWith(".png") || mime === "image/png") return "png";
   if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || mime === "image/jpeg") return "jpg";
   if (lower.endsWith(".webp") || mime === "image/webp") return "webp";
-  return "png";
+  return "webp";
 }
 
-// GitHub "contents" API must keep slashes, but still encode each segment.
+// GitHub contents API: encode each segment, keep slashes
 function encodeRepoPath(p: string) {
   return p.split("/").map(encodeURIComponent).join("/");
 }
+
+const allowedCategories = new Set([
+  "new-arrivals",
+  "keychains",
+  "tools",
+  "accessories",
+  "fanboys",
+]);
+
+const allowedSubCategories = new Set([
+  "cute",
+  "minecraft",
+  "cars",
+  "anime",
+  "tools",
+  "other",
+]);
 
 async function ghFetch(path: string, init?: RequestInit) {
   const token = process.env.GITHUB_TOKEN;
@@ -96,30 +113,30 @@ async function putFile(params: {
 }
 
 function appendProductToProductsTs(fileText: string, productObjLiteral: string) {
-  // works for files that end array with "];"
+  // Your file ends with `];`
   const idx = fileText.lastIndexOf("];");
   if (idx === -1) throw new Error("Could not find array end '];' in products.ts");
 
   const before = fileText.slice(0, idx).trimEnd();
   const after = fileText.slice(idx);
 
-  // If last non-space char before insert is "[" then no comma
+  // If last non-space char before insert is "[" then no comma needed
   const needsComma = !before.endsWith("[") && !before.endsWith(",");
 
-  const insertion = `\n${needsComma ? "," : ""}\n  ${productObjLiteral}\n`;
+  const insertion = `\n${needsComma ? "," : ""}\n${productObjLiteral}\n`;
   return before + insertion + after;
 }
 
 export async function POST(req: Request) {
   try {
-    // Auth: only signed-in
+    // Signed in?
     const { userId } = await auth();
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
+    // Only admin email?
     const user = await currentUser();
     if (!user) return json({ error: "Unauthorized" }, 401);
 
-    // Auth: only your email
     const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const primaryEmail =
       user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
@@ -141,20 +158,37 @@ export async function POST(req: Request) {
 
     // Read form
     const form = await req.formData();
-    const title = String(form.get("title") || "").trim();
-    const category = String(form.get("category") || "").trim().toLowerCase();
-    const subCategory = String(form.get("subCategory") || "").trim();
-    const price = String(form.get("price") || "").trim();
-    const description = String(form.get("description") || "").trim();
-    const slugRaw = String(form.get("slug") || title || "");
+
+    const id = String(form.get("id") || "").trim();
+    const name = String(form.get("name") || "").trim();
+    const slugRaw = String(form.get("slug") || name || "");
     const slug = normalizeSlug(slugRaw);
+
+    const category = String(form.get("category") || "").trim().toLowerCase();
+    const subCategory = String(form.get("subCategory") || "").trim().toLowerCase();
+    const priceUSDStr = String(form.get("priceUSD") || "").trim();
+    const description = String(form.get("description") || "").trim();
 
     const file = form.get("image") as File | null;
 
-    if (!title || !slug || !category || !file) {
-      return json({ error: "Missing: title, slug (or title), category, image" }, 400);
+    if (!id || !name || !slug || !category || !priceUSDStr || !description || !file) {
+      return json({ error: "Missing: id, name, category, priceUSD, description, image" }, 400);
     }
 
+    if (!allowedCategories.has(category)) {
+      return json({ error: `Invalid category: ${category}` }, 400);
+    }
+    if (subCategory && !allowedSubCategories.has(subCategory)) {
+      return json({ error: `Invalid subCategory: ${subCategory}` }, 400);
+    }
+
+    const priceUSD = Number(priceUSDStr);
+    if (!Number.isFinite(priceUSD)) {
+      return json({ error: "priceUSD must be a number" }, 400);
+    }
+
+    // Store new images in a clean convention:
+    // public/products/<category>/<slug>-1.webp
     const ext = guessExt(file.name, file.type);
     const imageRepoPath = `public/products/${category}/${slug}-1.${ext}`;
     const imagePublicPath = `/products/${category}/${slug}-1.${ext}`;
@@ -176,15 +210,18 @@ export async function POST(req: Request) {
     // 2) Append to products.ts
     const { sha: productsSha, text: productsText } = await getFile(owner, repo, productsFilePath, branch);
 
-    const productLiteral = `{
-    title: ${JSON.stringify(title)},
-    slug: ${JSON.stringify(slug)},
-    category: ${JSON.stringify(category)},
-    ${subCategory ? `subCategory: ${JSON.stringify(subCategory)},` : ""}
-    ${price ? `price: ${JSON.stringify(price)},` : ""}
-    ${description ? `description: ${JSON.stringify(description)},` : ""}
-    images: [${JSON.stringify(imagePublicPath)}],
-  }`;
+    const productLiteral =
+`{
+  id: ${JSON.stringify(id)},
+  name: ${JSON.stringify(name)},
+  slug: ${JSON.stringify(slug)},
+  category: ${JSON.stringify(category)},
+${subCategory ? `  subCategory: ${JSON.stringify(subCategory)},\n` : ""}  priceUSD: ${priceUSD},
+  description: ${JSON.stringify(description)},
+  images: [${JSON.stringify(imagePublicPath)}],
+  isNew: true,
+  featured: false,
+},`;
 
     const updatedProducts = appendProductToProductsTs(productsText, productLiteral);
     const updatedB64 = Buffer.from(updatedProducts, "utf8").toString("base64");
@@ -199,7 +236,10 @@ export async function POST(req: Request) {
       sha: productsSha,
     });
 
-    return json({ ok: true, product: { title, slug, category, image: imagePublicPath } });
+    return json({
+      ok: true,
+      product: { id, name, slug, category, image: imagePublicPath },
+    });
   } catch (e: any) {
     return json({ error: e?.message || "Unknown error" }, 500);
   }

@@ -1,8 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import AdminProductForm from "./AdminProductForm";
-
-<AdminProductForm />
+import Background from "../components/Background";
 
 export default async function AdminPage() {
   const { userId } = await auth();
@@ -23,17 +22,32 @@ export default async function AdminPage() {
 
   if (!adminEmail || userEmail !== adminEmail) {
     return (
-      <main className="min-h-screen px-6 pt-28">
-        <h1 className="text-white text-2xl font-semibold">403</h1>
-        <p className="text-white/70 mt-2">Not authorized.</p>
-      </main>
+      <div className="relative min-h-screen">
+        <Background />
+        <main className="relative z-20 min-h-screen flex items-center justify-center px-6">
+          <div className="w-full max-w-xl text-center">
+            <h1 className="text-white text-2xl font-semibold">403</h1>
+            <p className="text-white/70 mt-2">Not authorized.</p>
+          </div>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen px-6 pt-28">
-      <h1 className="text-white text-2xl font-semibold">Admin</h1>
-      <p className="text-white/70 mt-2">Welcome, {userEmail}</p>
-    </main>
+    <div className="relative min-h-screen">
+      <Background />
+
+      <main className="relative z-20 min-h-screen flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-2xl">
+          <div className="text-center">
+            <h1 className="text-white text-2xl font-semibold">Admin</h1>
+            <p className="text-white/70 mt-2">Welcome, {userEmail}</p>
+          </div>
+
+          <AdminProductForm />
+        </div>
+      </main>
+    </div>
   );
 }
