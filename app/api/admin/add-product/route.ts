@@ -1,3 +1,4 @@
+// app/api/admin/add-product/route.ts
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
@@ -7,6 +8,15 @@ function json(res: any, status = 200) {
 
 function normalizeSlug(s: string) {
   return s.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+function slugifyFolder(s: string) {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function guessExt(filename: string, mime: string) {
@@ -21,23 +31,6 @@ function guessExt(filename: string, mime: string) {
 function encodeRepoPath(p: string) {
   return p.split("/").map(encodeURIComponent).join("/");
 }
-
-const allowedCategories = new Set([
-  "new-arrivals",
-  "keychains",
-  "tools",
-  "accessories",
-  "fanboys",
-]);
-
-const allowedSubCategories = new Set([
-  "cute",
-  "minecraft",
-  "cars",
-  "anime",
-  "tools",
-  "other",
-]);
 
 async function ghFetch(path: string, init?: RequestInit) {
   const token = process.env.GITHUB_TOKEN;
@@ -63,7 +56,9 @@ async function ghFetch(path: string, init?: RequestInit) {
   }
 
   if (!r.ok) {
-    throw new Error(`GitHub API error ${r.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`);
+    throw new Error(
+      `GitHub API error ${r.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`
+    );
   }
 
   return data;
@@ -71,7 +66,9 @@ async function ghFetch(path: string, init?: RequestInit) {
 
 async function getFile(owner: string, repo: string, filePath: string, branch: string) {
   const encoded = encodeRepoPath(filePath);
-  const data = await ghFetch(`/repos/${owner}/${repo}/contents/${encoded}?ref=${encodeURIComponent(branch)}`);
+  const data = await ghFetch(
+    `/repos/${owner}/${repo}/contents/${encoded}?ref=${encodeURIComponent(branch)}`
+  );
 
   const contentB64 = (data.content || "").replace(/\n/g, "");
   const buff = Buffer.from(contentB64, "base64");
@@ -81,7 +78,9 @@ async function getFile(owner: string, repo: string, filePath: string, branch: st
 async function tryGetSha(owner: string, repo: string, filePath: string, branch: string) {
   try {
     const encoded = encodeRepoPath(filePath);
-    const data = await ghFetch(`/repos/${owner}/${repo}/contents/${encoded}?ref=${encodeURIComponent(branch)}`);
+    const data = await ghFetch(
+      `/repos/${owner}/${repo}/contents/${encoded}?ref=${encodeURIComponent(branch)}`
+    );
     return data?.sha as string;
   } catch {
     return undefined;
@@ -113,14 +112,12 @@ async function putFile(params: {
 }
 
 function appendProductToProductsTs(fileText: string, productObjLiteral: string) {
-  // Your file ends with `];`
   const idx = fileText.lastIndexOf("];");
   if (idx === -1) throw new Error("Could not find array end '];' in products.ts");
 
   const before = fileText.slice(0, idx).trimEnd();
   const after = fileText.slice(idx);
 
-  // If last non-space char before insert is "[" then no comma needed
   const needsComma = !before.endsWith("[") && !before.endsWith(",");
 
   const insertion = `\n${needsComma ? "," : ""}\n${productObjLiteral}\n`;
@@ -129,11 +126,10 @@ function appendProductToProductsTs(fileText: string, productObjLiteral: string) 
 
 export async function POST(req: Request) {
   try {
-    // Signed in?
+    // auth
     const { userId } = await auth();
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
-    // Only admin email?
     const user = await currentUser();
     if (!user) return json({ error: "Unauthorized" }, 401);
 
@@ -146,17 +142,20 @@ export async function POST(req: Request) {
 
     if (!adminEmail || userEmail !== adminEmail) return json({ error: "Forbidden" }, 403);
 
-    // Repo config
+    // repo config
     const owner = process.env.GITHUB_OWNER;
     const repo = process.env.GITHUB_REPO;
     const branch = process.env.GITHUB_BRANCH || "main";
     const productsFilePath = process.env.PRODUCTS_FILE_PATH; // app/data/products.ts
 
     if (!owner || !repo || !productsFilePath) {
-      return json({ error: "Missing env: GITHUB_OWNER, GITHUB_REPO, PRODUCTS_FILE_PATH" }, 500);
+      return json(
+        { error: "Missing env: GITHUB_OWNER, GITHUB_REPO, PRODUCTS_FILE_PATH" },
+        500
+      );
     }
 
-    // Read form
+    // read form
     const form = await req.formData();
 
     const id = String(form.get("id") || "").trim();
@@ -164,22 +163,27 @@ export async function POST(req: Request) {
     const slugRaw = String(form.get("slug") || name || "");
     const slug = normalizeSlug(slugRaw);
 
-    const category = String(form.get("category") || "").trim().toLowerCase();
-    const subCategory = String(form.get("subCategory") || "").trim().toLowerCase();
+    const categoryRaw = String(form.get("category") || "").trim();
+    const subCategoryRaw = String(form.get("subCategory") || "").trim();
+
+    // folder-safe
+    const category = slugifyFolder(categoryRaw);
+    const subCategory = slugifyFolder(subCategoryRaw);
+
     const priceUSDStr = String(form.get("priceUSD") || "").trim();
     const description = String(form.get("description") || "").trim();
 
-    const file = form.get("image") as File | null;
+    // MULTI
+    const files = form.getAll("images") as File[];
 
-    if (!id || !name || !slug || !category || !priceUSDStr || !description || !file) {
-      return json({ error: "Missing: id, name, category, priceUSD, description, image" }, 400);
+    if (!id || !name || !slug || !category || !subCategory || !priceUSDStr || !description) {
+      return json(
+        { error: "Missing: id, name, category, subCategory, priceUSD, description" },
+        400
+      );
     }
-
-    if (!allowedCategories.has(category)) {
-      return json({ error: `Invalid category: ${category}` }, 400);
-    }
-    if (subCategory && !allowedSubCategories.has(subCategory)) {
-      return json({ error: `Invalid subCategory: ${subCategory}` }, 400);
+    if (!files || files.length === 0) {
+      return json({ error: "Missing: images" }, 400);
     }
 
     const priceUSD = Number(priceUSDStr);
@@ -187,38 +191,53 @@ export async function POST(req: Request) {
       return json({ error: "priceUSD must be a number" }, 400);
     }
 
-    // Store new images in a clean convention:
-    // public/products/<category>/<slug>-1.webp
-    const ext = guessExt(file.name, file.type);
-    const imageRepoPath = `public/products/${category}/${slug}-1.${ext}`;
-    const imagePublicPath = `/products/${category}/${slug}-1.${ext}`;
+    // 1) upload images to: public/products/<category>/<subCategory>/<slug>-N.<ext>
+    const publicPaths: string[] = [];
 
-    // 1) Upload/overwrite image
-    const imgB64 = Buffer.from(await file.arrayBuffer()).toString("base64");
-    const existingImageSha = await tryGetSha(owner, repo, imageRepoPath, branch);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = guessExt(file.name, file.type);
+      const n = i + 1;
 
-    await putFile({
+      // ✅ slug-number naming (example: keychain-brabus-2.webp)
+      const imageRepoPath = `public/products/${category}/${subCategory}/${slug}-${n}.${ext}`;
+      const imagePublicPath = `/products/${category}/${subCategory}/${slug}-${n}.${ext}`;
+
+      const imgB64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+      const existingSha = await tryGetSha(owner, repo, imageRepoPath, branch);
+
+      await putFile({
+        owner,
+        repo,
+        path: imageRepoPath,
+        branch,
+        message: `Add product image ${n}: ${category}/${subCategory}/${slug}`,
+        contentBase64: imgB64,
+        sha: existingSha,
+      });
+
+      publicPaths.push(imagePublicPath);
+    }
+
+    // 2) append to products.ts
+    const { sha: productsSha, text: productsText } = await getFile(
       owner,
       repo,
-      path: imageRepoPath,
-      branch,
-      message: `Add product image: ${category}/${slug}`,
-      contentBase64: imgB64,
-      sha: existingImageSha,
-    });
+      productsFilePath,
+      branch
+    );
 
-    // 2) Append to products.ts
-    const { sha: productsSha, text: productsText } = await getFile(owner, repo, productsFilePath, branch);
+    const imagesArrayLiteral = publicPaths.map((p) => JSON.stringify(p)).join(", ");
 
-    const productLiteral =
-`{
+    const productLiteral = `{
   id: ${JSON.stringify(id)},
   name: ${JSON.stringify(name)},
   slug: ${JSON.stringify(slug)},
   category: ${JSON.stringify(category)},
-${subCategory ? `  subCategory: ${JSON.stringify(subCategory)},\n` : ""}  priceUSD: ${priceUSD},
+  subCategory: ${JSON.stringify(subCategory)},
+  priceUSD: ${priceUSD},
   description: ${JSON.stringify(description)},
-  images: [${JSON.stringify(imagePublicPath)}],
+  images: [${imagesArrayLiteral}],
   isNew: true,
   featured: false,
 },`;
@@ -231,14 +250,14 @@ ${subCategory ? `  subCategory: ${JSON.stringify(subCategory)},\n` : ""}  priceU
       repo,
       path: productsFilePath,
       branch,
-      message: `Add product: ${category}/${slug}`,
+      message: `Add product: ${category}/${subCategory}/${slug}`,
       contentBase64: updatedB64,
       sha: productsSha,
     });
 
     return json({
       ok: true,
-      product: { id, name, slug, category, image: imagePublicPath },
+      product: { id, name, slug, category, subCategory, images: publicPaths },
     });
   } catch (e: any) {
     return json({ error: e?.message || "Unknown error" }, 500);
