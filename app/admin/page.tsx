@@ -1,5 +1,8 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import AdminProductForm from "./AdminProductForm";
+
+<AdminProductForm />
 
 export default async function AdminPage() {
   const { userId } = await auth();
