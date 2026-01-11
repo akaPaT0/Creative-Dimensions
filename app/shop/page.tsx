@@ -4,12 +4,19 @@ import Footer from "../components/Footer";
 import Background from "../components/Background";
 import Link from "next/link";
 import Image from "next/image";
+import ShopCatalogClient from "./ShopCatalogClient";
 
 /** Helpers */
 function getCardImage(p: any) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
   if (typeof p.image === "string" && p.image) return p.image;
-  if (p?.category && p?.slug) return `/products/${p.category}/${p.slug}-1.jpg`;
+
+  // fallback for older data
+  const cat = p?.category;
+  const sub = p?.subCategory || "other";
+  const slug = p?.slug;
+  if (cat && slug) return `/products/${cat}/${sub}/${slug}-1.webp`;
+
   return "/products/placeholder.jpg";
 }
 
@@ -127,9 +134,8 @@ export default function Shop() {
               Custom Request
             </a>
 
-            {/* Server Component safe */}
             <Link
-              href="#featured"
+              href="#all"
               className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
             >
               Browse All
@@ -238,11 +244,15 @@ export default function Shop() {
           </div>
         </div>
 
+        {/* All products (interactive) */}
+        <ShopCatalogClient products={products as any[]} />
+
         <div className="mt-10 text-center text-sm text-white/50">
           Want something specific? Hit{" "}
           <span className="text-white/80">Custom Request</span>.
         </div>
-          <Footer />
+
+        <Footer />
       </main>
     </div>
   );
