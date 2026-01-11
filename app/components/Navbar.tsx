@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Ubuntu } from "next/font/google";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 const ubuntu = Ubuntu({
   subsets: ["latin"],
@@ -25,35 +26,43 @@ export default function MobileNav() {
     <>
       {/* PC Nav (lg and up) */}
       <nav
-          className={`fixed inset-x-0 top-0 z-20 hidden lg:block transition-all duration-200 ${
-            scrolled
-              ? "bg-white/5 border-b border-white/10 backdrop-blur-xs backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
-              : "bg-transparent border-b border-transparent shadow-none"
-          }`}
+        className={`fixed inset-x-0 top-0 z-20 hidden lg:block transition-all duration-200 ${
+          scrolled
+            ? "bg-white/5 border-b border-white/10 backdrop-blur-xs backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+            : "bg-transparent border-b border-transparent shadow-none"
+        }`}
+      >
+        <div className="max-w-8xl mx-auto px-20 py-4 flex items-center justify-between">
+          <Link
+            href="/"
+            className={`${ubuntu.className} text-[30px] font-semibold tracking-tight
+              bg-gradient-to-r from-[#FF8B64] to-[#3BC7C4]
+              hover:from-[#3BC7C4] hover:to-[#FF8B64]
+              bg-clip-text text-transparent transition`}
           >
-          <div className="max-w-8xl mx-auto px-20 py-4 flex items-center justify-between">
-            <Link
-              href="/"
-              className={`${ubuntu.className} text-[30px] font-semibold tracking-tight
-                bg-gradient-to-r from-[#FF8B64] to-[#3BC7C4]
-                hover:from-[#3BC7C4] hover:to-[#FF8B64]
-                bg-clip-text text-transparent transition`}
-            >
-              Creative Dimensions
+            Creative Dimensions
+          </Link>
+
+          <div className="flex items-center gap-8 text-sm">
+            <Link href="/about" className="text-white hover:opacity-70 transition">
+              About
+            </Link>
+            <Link href="/shop" className="text-white hover:opacity-70 transition">
+              Shop
+            </Link>
+            <Link href="/contact" className="text-white hover:opacity-70 transition">
+              Contact
             </Link>
 
-            <div className="flex gap-8 text-sm">
-              <Link href="/about" className="text-white hover:opacity-70 transition">About</Link>
-              <Link href="/shop" className="text-white hover:opacity-70 transition">Shop</Link>
-              <Link href="/contact" className="text-white hover:opacity-70 transition">Contact</Link>
-            </div>
+            <AuthButtons />
           </div>
+        </div>
       </nav>
 
       {/* Mobile Nav */}
       <nav
         className={`fixed inset-x-0 top-0 z-50 md:hidden transition-all duration-200 ${
-          (scrolled || open)
+          scrolled || open
             ? "bg-[#0D0D0D]/10 border border-white/10 backdrop-blur-xs backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
             : "bg-transparent border border-transparent shadow-none"
         }`}
@@ -90,9 +99,29 @@ export default function MobileNav() {
             <Link href="/contact" onClick={() => setOpen(false)} className="text-white hover:opacity-70 transition">
               Contact
             </Link>
+
+            <AuthButtons />
           </div>
         </div>
       </nav>
     </>
+  );
+}
+
+export function AuthButtons() {
+  return (
+    <div className="flex items-center gap-3">
+      <SignedOut>
+        <SignInButton mode="modal">
+          <button className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition">
+            Sign in
+          </button>
+        </SignInButton>
+      </SignedOut>
+
+      <SignedIn>
+        <UserButton afterSignOutUrl="/" />
+      </SignedIn>
+    </div>
   );
 }
