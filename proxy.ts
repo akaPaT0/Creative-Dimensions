@@ -1,13 +1,17 @@
-// middleware.ts
-import { clerkMiddleware } from "@clerk/nextjs/server";
+// proxy.ts
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isAdminRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
     "/((?!_next|.*\\.(?:css|js|json|png|jpg|jpeg|gif|svg|webp|ico|txt|map|woff|woff2|ttf|eot)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 };
