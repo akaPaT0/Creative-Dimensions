@@ -23,8 +23,8 @@ export const products: Product[] = [
     "slug": "cute-crab",
     "category": "keychains",
     "subCategory": "cute",
-    "priceUSD": 2,
-    "description": "This crab has one job: make your keys look cooler 🦀🔥\nHandmade vibes, clean details, and that “I need it” look.\nAvailable now, DM to grab yours.",
+    "priceUSD": 3,
+    "description": "This crab has one job: make your keys look cooler 🦀🔥\r\nHandmade vibes, clean details, and that “I need it” look.\r\nAvailable now, DM to grab yours.",
     "images": [
       "/products/Cute_Crab_1.webp",
       "/products/Cute_Crab_2.webp"
