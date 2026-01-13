@@ -108,11 +108,11 @@ export const products: Product[] = [
   {
     "id": "KECA004",
     "name": "Mercedes front-end keychain",
-    "slug": "mercedes-front-end-keycahin",
+    "slug": "mercedes-front-end-keychain",
     "category": "keychains",
     "subCategory": "cars",
-    "priceUSD": 2,
-    "description": "Mercedes front-end keychain 🚘🖤\nA clean Mercedes-inspired bumper design with the signature grille and headlight shape, made for anyone who loves that classic luxury-car look. The layered details give it depth, and it sits nicely on keys or bags without feeling oversized.\nAvailable in multiple colors and combos (like the ones shown). DM to order or customize your colors.",
+    "priceUSD": 3,
+    "description": "Mercedes front-end keychain 🚘🖤\r\nA clean Mercedes-inspired bumper design with the signature grille and headlight shape, made for anyone who loves that classic luxury-car look. The layered details give it depth, and it sits nicely on keys or bags without feeling oversized.\r\nAvailable in multiple colors and combos (like the ones shown). DM to order or customize your colors.",
     "images": [
       "/products/Mercedes 3-1.webp",
       "/products/Mercedes 3-2.webp",
