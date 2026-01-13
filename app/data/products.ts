@@ -143,12 +143,12 @@ export const products: Product[] = [
   },
   {
     "id": "KECA006",
-    "name": "BMW logo keychain ",
+    "name": "BMW logo keychain",
     "slug": "bmw-logo-keychain",
     "category": "keychains",
     "subCategory": "cars",
-    "priceUSD": 2,
-    "description": "BMW logo keychain 🖤🚘\nClean, simple, and instantly recognizable. This BMW-inspired emblem keychain is made for daily carry and looks great on car keys, backpacks, or as a small gift for any BMW fan.\nAvailable in multiple colors and finishes. DM to order or customize.",
+    "priceUSD": 3,
+    "description": "BMW logo keychain 🖤🚘\r\nClean, simple, and instantly recognizable. This BMW-inspired emblem keychain is made for daily carry and looks great on car keys, backpacks, or as a small gift for any BMW fan.\r\nAvailable in multiple colors and finishes. DM to order or customize.",
     "images": [
       "/products/BMW 2-2.webp",
       "/products/BMW 2-1.webp"
