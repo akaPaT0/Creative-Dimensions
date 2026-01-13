@@ -73,8 +73,8 @@ export const products: Product[] = [
     "slug": "bmw-front-e92",
     "category": "keychains",
     "subCategory": "cars",
-    "priceUSD": 2,
-    "description": "BMW front-end keychain 🚘🖤\nIconic BMW-inspired bumper design with the signature kidney grille and headlights, made for anyone who’s into clean German-car vibes. The layered cutouts give it depth and it looks sharp on keys, bags, or a rearview tag.\nAvailable in multiple colors and combos (like the ones shown). DM to order or customize your own colors.",
+    "priceUSD": 3,
+    "description": "BMW front-end keychain 🚘🖤\r\nIconic BMW-inspired bumper design with the signature kidney grille and headlights, made for anyone who’s into clean German-car vibes. The layered cutouts give it depth and it looks sharp on keys, bags, or a rearview tag.\r\nAvailable in multiple colors and combos (like the ones shown). DM to order or customize your own colors.",
     "images": [
       "/products/BMW 1-6.webp",
       "/products/BMW 1-7.webp",
