@@ -38,8 +38,8 @@ export const products: Product[] = [
     "slug": "half-skeleton-cat-keychain",
     "category": "keychains",
     "subCategory": "cute",
-    "priceUSD": 2.5,
-    "description": "Cute on one side, spooky on the other. This half-and-half cat design mixes a clean cat silhouette with a skeleton detail for a fun “sweet but dark” vibe\nLightweight, durable, and perfect for keys, bags, or as a small gift. \nAvailable in different color combos (like the ones shown). DM to order or customize.",
+    "priceUSD": 3,
+    "description": "Cute on one side, spooky on the other. This half-and-half cat design mixes a clean cat silhouette with a skeleton detail for a fun “sweet but dark” vibe\r\nLightweight, durable, and perfect for keys, bags, or as a small gift. \r\nAvailable in different color combos (like the ones shown). DM to order or customize.",
     "images": [
       "/products/Cat Half Skel 1-1.webp",
       "/products/Cat Half Skel 1-2.webp",
