@@ -131,7 +131,7 @@ export const products: Product[] = [
     "name": "Mercedes-inspired emblem keychain",
     "slug": "mercedes-inspired-emblem-keychain",
     "category": "keychains",
-    "subCategory": "3",
+    "subCategory": "cars",
     "priceUSD": 3,
     "description": "Mercedes-inspired emblem keychain ✨🚘\r\nClean, bold, and made to upgrade your everyday keys with a sleek automotive vibe.\r\nLightweight, durable, and perfect as a small gift for any car lover.\r\nAvailable in multiple colors and finishes. DM to order or customize.",
     "images": [
