@@ -57,8 +57,8 @@ export const products: Product[] = [
     "slug": "shock-absorber-keychain",
     "category": "keychains",
     "subCategory": "cars",
-    "priceUSD": 2,
-    "description": "A mini suspension-inspired keychain made for anyone who’s into cars, builds, and clean mechanical details.\nThe layered design gives it a realistic look, and it’s a perfect add-on for your daily keys without taking up much space.\nAvailable in multiple color combos (spring + body).\nDM to order or customize your colors.",
+    "priceUSD": 3,
+    "description": "A mini suspension-inspired keychain made for anyone who’s into cars, builds, and clean mechanical details.\r\nThe layered design gives it a realistic look, and it’s a perfect add-on for your daily keys without taking up much space.\r\nAvailable in multiple color combos (spring + body).\r\nDM to order or customize your colors.",
     "images": [
       "/products/Shock Absorber 1-1.webp",
       "/products/Shock Absorber 1-2.webp",
