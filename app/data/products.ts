@@ -92,8 +92,8 @@ export const products: Product[] = [
     "slug": "mercedes-grille-keychain",
     "category": "keychains",
     "subCategory": "cars",
-    "priceUSD": 2,
-    "description": "Mercedes grille keychain 🔥🚘\nA clean front-end inspired design made for car lovers who notice the details. The layered look gives it depth, and it sits nice on your keys without feeling bulky.\nAvailable in multiple color combos (like the ones shown). DM to order or customize your own colors.",
+    "priceUSD": 3,
+    "description": "Mercedes grille keychain 🔥🚘\r\nA clean front-end inspired design made for car lovers who notice the details. The layered look gives it depth, and it sits nice on your keys without feeling bulky.\r\nAvailable in multiple color combos (like the ones shown). DM to order or customize your own colors.",
     "images": [
       "/products/Mercedes 2-4.webp",
       "/products/Mercedes 2-5.webp",
