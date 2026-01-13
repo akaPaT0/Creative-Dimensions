@@ -158,12 +158,12 @@ export const products: Product[] = [
   },
   {
     "id": "KECA007",
-    "name": "Rim wheel keychain ",
+    "name": "Rim wheel keychain",
     "slug": "rim-wheel-keychain",
     "category": "keychains",
     "subCategory": "cars",
-    "priceUSD": 2,
-    "description": "Rim wheel keychain 🛞✨\nFor the people who stare at wheels a little longer than they should. Clean multi-spoke rim design with a bold tire profile, made to give your keys that car-guy (or car-girl) touch without being oversized.\nAvailable in different colors and combos for the rim + tire. DM to order.",
+    "priceUSD": 3,
+    "description": "Rim wheel keychain 🛞✨\r\nFor the people who stare at wheels a little longer than they should. Clean multi-spoke rim design with a bold tire profile, made to give your keys that car-guy (or car-girl) touch without being oversized.\r\nAvailable in different colors and combos for the rim + tire. DM to order.",
     "images": [
       "/products/RIM 1-2.webp",
       "/products/RIM 1-1.webp"
