@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 type Props = {
@@ -22,11 +22,11 @@ export default function CustomRequestModal({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // ✅ ensure portal is ready (avoids SSR mismatch)
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // ✅ lock scroll + ESC to close
   useEffect(() => {
     if (!open) return;
 
@@ -44,6 +44,25 @@ export default function CustomRequestModal({
     };
   }, [open]);
 
+  function addFiles(newOnes: File[]) {
+    if (!newOnes.length) return;
+
+    // de-dupe by name+size+lastModified
+    const key = (f: File) => `${f.name}::${f.size}::${f.lastModified}`;
+    const existing = new Set(files.map(key));
+    const merged = [...files, ...newOnes.filter((f) => !existing.has(key(f)))];
+
+    setFiles(merged);
+  }
+
+  function removeFileAt(i: number) {
+    setFiles((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  function clearFiles() {
+    setFiles([]);
+  }
+
   const waText = () => {
     const base = `Custom request: ${productName || ""}${productUrl ? ` — ${productUrl}` : ""}`;
     const extra = details.trim() ? `\nDetails: ${details.trim()}` : "";
@@ -60,7 +79,6 @@ export default function CustomRequestModal({
   async function send() {
     setErr(null);
 
-    // If no files, just send text
     if (files.length === 0) {
       openWhatsApp();
       setOpen(false);
@@ -82,6 +100,10 @@ export default function CustomRequestModal({
 
       const urls: string[] = Array.isArray(data?.urls) ? data.urls : [];
       openWhatsApp(urls);
+
+      // reset
+      setDetails("");
+      setFiles([]);
       setOpen(false);
     } catch (e: any) {
       setErr(e?.message || "Something went wrong");
@@ -99,13 +121,11 @@ export default function CustomRequestModal({
             aria-modal="true"
             aria-label="Custom request"
           >
-            {/* Backdrop blocks ALL clicks */}
             <div
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setOpen(false)}
             />
 
-            {/* Panel */}
             <div
               className="relative z-[10000] w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl backdrop-saturate-150 p-5 sm:p-6 text-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
@@ -140,17 +160,68 @@ export default function CustomRequestModal({
 
                 <div>
                   <label className="text-white/80 text-sm">Files</label>
+
+                  {/* Hidden input so we can re-open without replacing */}
                   <input
-                    className="mt-1 w-full text-white/80"
+                    ref={fileInputRef}
+                    className="hidden"
                     type="file"
                     multiple
                     accept="image/png,image/jpeg,image/webp,.stl,.3mf,.obj,.zip"
-                    onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                    onChange={(e) => {
+                      const incoming = Array.from(e.target.files || []);
+                      addFiles(incoming);
+
+                      // reset input so selecting the same file again still triggers onChange
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
                   />
 
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/80 hover:bg-white/10 transition"
+                    >
+                      {files.length ? "Add more files" : "Choose files"}
+                    </button>
+
+                    {files.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearFiles}
+                        className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/70 hover:bg-white/10 transition"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
                   {files.length > 0 && (
-                    <div className="mt-3 text-white/60 text-xs">
-                      Selected: {files.length} file(s)
+                    <div className="mt-3 max-h-40 overflow-auto rounded-2xl border border-white/10 bg-white/5 p-2">
+                      <div className="space-y-2">
+                        {files.map((f, i) => (
+                          <div
+                            key={`${f.name}-${f.size}-${f.lastModified}`}
+                            className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2"
+                          >
+                            <div className="min-w-0">
+                              <div className="truncate text-white/85 text-sm">{f.name}</div>
+                              <div className="text-white/50 text-xs">
+                                {(f.size / (1024 * 1024)).toFixed(2)} MB
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => removeFileAt(i)}
+                              className="shrink-0 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/75 hover:bg-white/10 transition"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -191,7 +262,6 @@ export default function CustomRequestModal({
       <button type="button" onClick={() => setOpen(true)} className={className}>
         Request Custom
       </button>
-
       {modal}
     </>
   );
