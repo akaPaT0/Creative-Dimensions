@@ -188,7 +188,7 @@ export default async function KeychainSlugPage({
           <ProductGallery images={imgs} name={p.name} />
 
           {/* Details */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6 h-full flex flex-col">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6 lg:h-full lg:flex lg:flex-col">
             <div className="text-white/70 text-sm capitalize">{p.category}</div>
 
             <h1 className="mt-2 text-4xl sm:text-5xl font-semibold text-white leading-tight">
@@ -224,6 +224,7 @@ export default async function KeychainSlugPage({
               />
             </div>
 
+            {/* RecommendedRow */}
             {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
           </div>
         </div>
