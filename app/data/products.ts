@@ -196,4 +196,17 @@ export const products: Product[] = [
     "isNew": true,
     "featured": true
   }
+,
+{
+  id: "KECA008",
+  name: "Mercedes W203 Front Keychain",
+  slug: "mercedes-w203-front-keychain",
+  category: "keychains",
+  subCategory: "cars",
+  priceUSD: 2,
+  description: "Mercedes W203 front keychain, clean lines, classic face.\r\n3D printed with crisp layered details so it stands out on your keys.\r\nChain options: silver or gold.",
+  images: ["/products/keychains/cars/mercedes-w203-front-keychain-1.jpg", "/products/keychains/cars/mercedes-w203-front-keychain-2.jpg", "/products/keychains/cars/mercedes-w203-front-keychain-3.jpg", "/products/keychains/cars/mercedes-w203-front-keychain-4.jpg", "/products/keychains/cars/mercedes-w203-front-keychain-5.jpg", "/products/keychains/cars/mercedes-w203-front-keychain-6.jpg", "/products/keychains/cars/mercedes-w203-front-keychain-7.jpg", "/products/keychains/cars/mercedes-w203-front-keychain-8.jpg"],
+  isNew: true,
+  featured: false,
+},
 ];
