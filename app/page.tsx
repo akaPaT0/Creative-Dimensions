@@ -39,7 +39,7 @@ export default function Home() {
                     <div className="mt-9 flex flex-col sm:flex-row justify-center gap-4 sm:gap-10">
                       <Link
                         href="/shop"
-                        className="px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
+                        className="w-full sm:w-auto px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
                           text-[20px] sm:text-2xl hover:bg-white/10 transition"
                       >
                         Shop
@@ -47,19 +47,19 @@ export default function Home() {
 
                       <Link
                         href="/contact"
-                        className="px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
+                        className="w-full sm:w-auto px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
                           text-[20px] sm:text-2xl hover:bg-white/20 transition"
                       >
                         Contact
                       </Link>
                     </div>
 
-                    {/* ✅ Custom Request under Shop/Contact (mobile same scale) */}
+                    {/* ✅ Custom Request (mobile = same width as Shop/Contact) */}
                     <div className="mt-4 sm:mt-10 flex justify-center">
                       <CustomRequestModal
                         productName="Custom Order"
                         productUrl="https://creative-dimensions.vercel.app"
-                        className="px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
+                        className="w-full sm:w-auto px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
                           text-[20px] sm:text-2xl hover:bg-white/10 transition text-center"
                       />
                     </div>
