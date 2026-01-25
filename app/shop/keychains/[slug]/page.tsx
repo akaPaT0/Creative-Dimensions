@@ -27,7 +27,6 @@ function getCardImage(p: any) {
   return "/products/placeholder.jpg";
 }
 
-/** ✅ Preview cards (WhatsApp / iMessage / FB / X) */
 export async function generateMetadata({
   params,
 }: {
@@ -68,7 +67,7 @@ export async function generateMetadata({
       description: desc,
       url,
       siteName: "Creative Dimensions",
-      type: "product",
+      type: "website",
       images: [{ url: ogImage, width: 1200, height: 630, alt: p.name }],
     },
     twitter: {
