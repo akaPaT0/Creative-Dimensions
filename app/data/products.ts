@@ -64,7 +64,7 @@ export const products: Product[] = [
       "/products/Shock Absorber 1-2.webp",
       "/products/Shock Absorber 1-3.webp"
     ],
-    "isNew": true,
+    "isNew": false,
     "featured": true
   },
   {
