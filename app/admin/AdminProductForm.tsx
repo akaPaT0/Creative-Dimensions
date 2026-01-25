@@ -19,15 +19,12 @@ async function readJsonSafe(res: Response) {
   const ct = res.headers.get("content-type") || "";
   const text = await res.text();
 
-  // Only parse JSON if response declares it
   if (!ct.includes("application/json")) {
-    // Helpful debug message (shows why it isn't JSON)
     throw new Error(
       `Non-JSON response (${res.status}) ct=${ct || "none"} body=${text.slice(0, 200)}`
     );
   }
 
-  // Some endpoints might return empty JSON body
   return text ? JSON.parse(text) : null;
 }
 
@@ -48,7 +45,7 @@ export default function AdminProductForm() {
   const [priceUSD, setPriceUSD] = useState<string>("2");
   const [description, setDescription] = useState("");
 
-  // MULTI images
+  // MULTI images (order matters: first = cover => -1.webp)
   const [images, setImages] = useState<File[]>([]);
 
   // add-new option UI
@@ -127,6 +124,32 @@ export default function AdminProductForm() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function moveImage(index: number, dir: -1 | 1) {
+    setImages((prev) => {
+      const next = [...prev];
+      const j = index + dir;
+      if (j < 0 || j >= next.length) return prev;
+      const tmp = next[index];
+      next[index] = next[j];
+      next[j] = tmp;
+      return next;
+    });
+  }
+
+  function makeCover(index: number) {
+    setImages((prev) => {
+      if (index <= 0) return prev;
+      const next = [...prev];
+      const [picked] = next.splice(index, 1);
+      next.unshift(picked);
+      return next;
+    });
+  }
+
+  // Optional: prevent 413 payload too large (tweak to your server limits)
+  const MAX_MB_TOTAL = 20;
+  const MAX_MB_EACH = 8;
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
@@ -139,6 +162,18 @@ export default function AdminProductForm() {
     if (!description.trim()) return setMsg("Description is required.");
     if (images.length === 0) return setMsg("At least 1 image is required.");
 
+    // size guard (avoid 413)
+    const totalMB = images.reduce((s, f) => s + f.size, 0) / (1024 * 1024);
+    if (totalMB > MAX_MB_TOTAL) {
+      return setMsg(`Images too large: ${totalMB.toFixed(1)}MB. Keep total under ${MAX_MB_TOTAL}MB.`);
+    }
+    for (const f of images) {
+      const mb = f.size / (1024 * 1024);
+      if (mb > MAX_MB_EACH) {
+        return setMsg(`"${f.name}" is ${mb.toFixed(1)}MB. Keep each image under ${MAX_MB_EACH}MB.`);
+      }
+    }
+
     setBusy(true);
     try {
       const fd = new FormData();
@@ -150,14 +185,11 @@ export default function AdminProductForm() {
       fd.set("priceUSD", priceUSD);
       fd.set("description", description);
 
-      // Append multiple images (same key)
+      // Append multiple images in chosen order (first = cover)
       for (const file of images) fd.append("images", file);
 
       const res = await fetch("/api/admin/add-product", { method: "POST", body: fd });
-
-      // ✅ safe JSON parsing (gives a clear error if server returns non-JSON)
       const data = await readJsonSafe(res);
-
       if (!res.ok) throw new Error(data?.error || "Failed");
 
       setMsg(
@@ -172,7 +204,6 @@ export default function AdminProductForm() {
       setDescription("");
       setImages([]);
 
-      // next id for same prefix
       await regenerateId();
     } catch (err: any) {
       setMsg(err?.message || "Error");
@@ -331,23 +362,86 @@ export default function AdminProductForm() {
           multiple
           onChange={(e) => {
             const files = Array.from(e.target.files || []);
-            setImages(files);
+            if (files.length === 0) return;
+
+            // ✅ append instead of replace
+            setImages((prev) => {
+              const seen = new Set(prev.map((f) => `${f.name}-${f.size}-${f.lastModified}`));
+              const toAdd = files.filter((f) => !seen.has(`${f.name}-${f.size}-${f.lastModified}`));
+              return [...prev, ...toAdd];
+            });
+
+            // ✅ allow adding the same file again later if needed
+            e.currentTarget.value = "";
           }}
         />
-        <p className="text-white/40 text-xs mt-1">
-          Saved as: /products/{category}/{subCategory}/{slug}-1.webp, -2.webp, ...
-        </p>
+
+        <div className="mt-2 flex items-center gap-2">
+          <p className="text-white/40 text-xs">
+            Order matters: first image becomes <b>-1</b> (cover). Saved as: /products/{category}/{subCategory}/{slug}
+            -1.webp, -2.webp...
+          </p>
+          {images.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setImages([])}
+              className="ml-auto rounded-lg border border-white/15 bg-white/5 px-3 py-1 text-xs text-white hover:bg-white/10 transition"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Preview grid */}
+      {/* Preview grid + ordering controls */}
       {previewUrls.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-          <p className="text-white/60 text-sm mb-3">Preview ({previewUrls.length})</p>
+          <p className="text-white/60 text-sm mb-3">
+            Preview ({previewUrls.length}) <span className="text-white/40">(first is cover)</span>
+          </p>
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {previewUrls.map((u, i) => (
               <div key={u} className="relative rounded-xl overflow-hidden border border-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={u} alt={`preview-${i}`} className="w-full h-40 object-cover" />
+
+                {/* index badge */}
+                <div className="absolute bottom-2 left-2 rounded-lg border border-white/15 bg-black/35 px-2 py-1 text-xs text-white">
+                  {i === 0 ? "Cover (1)" : i + 1}
+                </div>
+
+                {/* controls */}
+                <div className="absolute top-2 left-2 flex gap-2">
+                  <button
+                    type="button"
+                    disabled={i === 0}
+                    onClick={() => moveImage(i, -1)}
+                    className="rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-xs text-white hover:bg-black/55 disabled:opacity-40 transition"
+                    title="Move up"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === previewUrls.length - 1}
+                    onClick={() => moveImage(i, 1)}
+                    className="rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-xs text-white hover:bg-black/55 disabled:opacity-40 transition"
+                    title="Move down"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === 0}
+                    onClick={() => makeCover(i)}
+                    className="rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-xs text-white hover:bg-black/55 disabled:opacity-40 transition"
+                    title="Make cover (move to first)"
+                  >
+                    Cover
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => removeImageAt(i)}
@@ -355,9 +449,6 @@ export default function AdminProductForm() {
                 >
                   Remove
                 </button>
-                <div className="absolute bottom-2 left-2 rounded-lg border border-white/15 bg-black/35 px-2 py-1 text-xs text-white">
-                  {i + 1}
-                </div>
               </div>
             ))}
           </div>
