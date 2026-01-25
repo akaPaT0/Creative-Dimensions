@@ -26,7 +26,7 @@ export default function RecommendedRow({ items }: { items: Item[] }) {
   if (!items?.length) return null;
 
   return (
-    <div className="mt-6 lg:mt-auto rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="mt-auto rounded-2xl border border-white/10 bg-black/20 p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-white/85 font-semibold">Check similar</div>
 
