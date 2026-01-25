@@ -6,6 +6,7 @@ import Background from "../../../components/Background";
 import { products } from "../../../data/products";
 import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
+import ShareButton from "../../../components/ShareButton";
 
 const SITE = "https://creative-dimensions.vercel.app";
 
@@ -116,9 +117,7 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Recommended logic (final):
-  // - default show 4
-  // - show >4 ONLY if there are 4+ in same subCategory (excluding current)
+  // ✅ Recommended logic (final)
   const TOTAL = 4;
   const currentSub = (p as any).subCategory;
 
@@ -160,6 +159,7 @@ export default async function KeychainSlugPage({
   }));
 
   const productUrl = `${SITE}/shop/keychains/${encodeURIComponent(p.slug)}`;
+  const waText = `Hey! I’m interested in: ${p.name} — ${productUrl}`;
 
   return (
     <div className="relative min-h-screen">
@@ -209,9 +209,7 @@ export default async function KeychainSlugPage({
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <a
-                href={`https://wa.me/96170304007?text=${encodeURIComponent(
-                  `Hey! I’m interested in: ${p.name}\n\nLink: ${productUrl}\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
-                )}`}
+                href={`https://wa.me/96170304007?text=${encodeURIComponent(waText)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
@@ -219,15 +217,13 @@ export default async function KeychainSlugPage({
                 Order / Ask
               </a>
 
-              <Link
-                href="/shop/keychains"
+              <ShareButton
+                url={productUrl}
+                title={p.name}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
-              >
-                More Keychains
-              </Link>
+              />
             </div>
 
-            {/* RecommendedRow (desktop arrows + 4-fit + >4 only when sameSub has 4+) */}
             {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
           </div>
         </div>
