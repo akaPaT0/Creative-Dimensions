@@ -1,121 +1,205 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
+import Navbar from "../../../components/Navbar";
+import Footer from "../../../components/Footer";
+import Background from "../../../components/Background";
+import { products } from "../../../data/products";
+import ProductGallery from "../../../components/ProductGallery";
 
-type Props = {
-  images: string[];
-  name?: string;
-};
+function normalize(s: string) {
+  return decodeURIComponent(s).trim().toLowerCase();
+}
 
-export default function ProductGallery({ images, name = "Product" }: Props) {
-  const imgs = useMemo(() => (Array.isArray(images) ? images.filter(Boolean) : []), [images]);
-  const [index, setIndex] = useState(0);
+function getImages(p: any) {
+  if (Array.isArray(p.images) && p.images.length) return p.images;
+  if (typeof p.image === "string" && p.image) return [p.image];
+  if (p?.category && p?.slug) return [`/products/${p.category}/${p.slug}-1.jpg`];
+  return ["/products/placeholder.jpg"];
+}
 
-  // Keep index valid if images change
-  useEffect(() => {
-    if (index > imgs.length - 1) setIndex(0);
-  }, [imgs.length, index]);
+function getCardImage(p: any) {
+  if (Array.isArray(p.images) && p.images.length) return p.images[0];
+  if (typeof p.image === "string" && p.image) return p.image;
+  if (p?.category && p?.slug) return `/products/${p.category}/${p.slug}-1.jpg`;
+  return "/products/placeholder.jpg";
+}
 
-  const hasMany = imgs.length > 1;
-  const current = imgs[index] || "/products/placeholder.jpg";
+export default async function KeychainSlugPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug: rawSlug } = await params;
+  const slug = normalize(rawSlug);
 
-  function prev() {
-    if (!hasMany) return;
-    setIndex((i) => (i - 1 + imgs.length) % imgs.length);
+  const p = products.find(
+    (x) => x.category === "keychains" && normalize(String(x.slug)) === slug
+  );
+
+  if (!p) {
+    return (
+      <div className="relative min-h-screen">
+        <Background />
+        <Navbar />
+
+        <main className="relative z-10 mx-auto max-w-3xl px-6 pt-28 pb-16 text-white">
+          <Link
+            href="/shop/keychains"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+          >
+            <span className="text-lg leading-none">←</span>
+            Back to Keychains
+          </Link>
+
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
+            Not found.
+          </div>
+        </main>
+      </div>
+    );
   }
 
-  function next() {
-    if (!hasMany) return;
-    setIndex((i) => (i + 1) % imgs.length);
+  const imgs = getImages(p);
+
+  // ✅ Similar logic (exactly 3):
+  // 1) take same subCategory only
+  // 2) if less than 3, fill from same category (any other subCategory) until total = 3
+  const TOTAL = 3;
+
+  const currentSub = (p as any).subCategory;
+
+  const sameSub: any[] = currentSub
+    ? products.filter(
+        (x: any) =>
+          x.category === p.category &&
+          x.slug !== p.slug &&
+          x.subCategory === currentSub
+      )
+    : [];
+
+  // Start with up to 3 from same subcategory
+  let similar: any[] = sameSub.slice(0, TOTAL);
+
+  // If still less than 3, fill from same category (excluding already picked + excluding current product)
+  if (similar.length < TOTAL) {
+    const needed = TOTAL - similar.length;
+
+    const fillers = products.filter(
+      (x: any) =>
+        x.category === p.category &&
+        x.slug !== p.slug &&
+        !similar.some((s: any) => s.id === x.id || s.slug === x.slug)
+    );
+
+    similar = [...similar, ...fillers.slice(0, needed)];
   }
 
   return (
-    <div className="w-full">
-      {/* Main image frame */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-        <div className="relative aspect-square w-full">
-          <Image
-            src={current}
-            alt={`${name} image ${index + 1}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            priority
-          />
+    <div className="relative min-h-screen">
+      <Background />
+      <Navbar />
+
+      <main className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-16">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/shop/keychains"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+          >
+            <span className="text-lg leading-none">←</span>
+            Back to Keychains
+          </Link>
+
+          {p.isNew && (
+            <div className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white/80 text-sm">
+              New ✨
+            </div>
+          )}
         </div>
 
-        {/* Arrows */}
-        {hasMany && (
-          <>
-            <button
-              type="button"
-              onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-white/90 hover:bg-black/55 transition"
-              aria-label="Previous image"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-white/90 hover:bg-black/55 transition"
-              aria-label="Next image"
-            >
-              ›
-            </button>
-          </>
-        )}
+        <div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-stretch">
+          {/* Gallery */}
+          <ProductGallery images={imgs} name={p.name} />
 
-        {/* Dots */}
-        {hasMany && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-2">
-            {imgs.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setIndex(i)}
-                className={`h-2 w-2 rounded-full transition ${
-                  i === index ? "bg-white/80" : "bg-white/25 hover:bg-white/45"
-                }`}
-                aria-label={`Go to image ${i + 1}`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          {/* Details */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6 h-full flex flex-col">
+            <div className="text-white/70 text-sm capitalize">{p.category}</div>
 
-      {/* Thumbnails (scrollable + clipped) */}
-      {hasMany && (
-        <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-2 overflow-hidden">
-          <div className="flex gap-2 overflow-x-auto overscroll-x-contain">
-            {imgs.map((src, i) => (
-              <button
-                key={`${src}-${i}`}
-                type="button"
-                onClick={() => setIndex(i)}
-                className={`relative h-16 w-20 shrink-0 overflow-hidden rounded-xl border transition ${
-                  i === index
-                    ? "border-white/40"
-                    : "border-white/10 hover:border-white/25"
-                }`}
-                aria-label={`View thumbnail ${i + 1}`}
+            <h1 className="mt-2 text-4xl sm:text-5xl font-semibold text-white leading-tight">
+              {p.name}
+            </h1>
+
+            <div className="mt-4 text-white/75 whitespace-pre-line leading-relaxed">
+              {p.description}
+            </div>
+
+            <div className="mt-6 flex items-end justify-between gap-4">
+              <div className="text-white font-semibold text-2xl">
+                {p.priceUSD ? `$${p.priceUSD}` : ""}
+              </div>
+
+              <div className="text-white/60 text-sm">Lebanon delivery / pickup</div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <a
+                href={`https://wa.me/96170304007?text=${encodeURIComponent(
+                  `Hey! I’m interested in: ${p.name}.\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
               >
-                <Image
-                  src={src}
-                  alt={`${name} thumbnail ${i + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                />
-                {i === index && (
-                  <div className="pointer-events-none absolute inset-0 ring-2 ring-white/20" />
-                )}
-              </button>
-            ))}
+                Order / Ask
+              </a>
+
+              <Link
+                href="/shop/keychains"
+                className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
+              >
+                More Keychains
+              </Link>
+            </div>
+
+            {/* Check similar (exactly 3) */}
+            {similar.length > 0 && (
+              <div className="mt-auto rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="text-white/85 font-semibold">Check similar</div>
+
+                <div className="mt-3 grid grid-cols-3 gap-3">
+                  {similar.map((x: any) => {
+                    const img = getCardImage(x);
+
+                    return (
+                      <Link
+                        key={x.id ?? x.slug}
+                        href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
+                        className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2"
+                      >
+                        <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                          <Image
+                            src={img}
+                            alt={x.name}
+                            fill
+                            className="object-cover"
+                            sizes="120px"
+                          />
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                        </div>
+
+                        <div className="mt-2 text-center text-white/85 text-xs sm:text-sm font-semibold leading-tight line-clamp-1">
+                          {x.name}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+
+        <Footer />
+      </main>
     </div>
   );
 }

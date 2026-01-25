@@ -58,7 +58,6 @@ export default function ProductGallery({
         >
           {cleanImages.map((src) => (
             <div key={src} className="relative min-w-full snap-start aspect-square">
-
               <Image
                 src={src}
                 alt={name}
@@ -116,23 +115,25 @@ export default function ProductGallery({
         )}
       </div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails (scrollable + clipped, show ALL) */}
       {cleanImages.length > 1 && (
-        <div className="mt-3 grid grid-cols-5 gap-2">
-          {cleanImages.slice(0, 5).map((src, i) => (
-            <button
-              key={src}
-              type="button"
-              onClick={() => scrollToIndex(i)}
-              className={[
-                "relative aspect-square overflow-hidden rounded-xl border bg-white/5 transition",
-                i === active ? "border-white/30" : "border-white/10 hover:border-white/20",
-              ].join(" ")}
-              aria-label={`Select image ${i + 1}`}
-            >
-              <Image src={src} alt={name} fill className="object-cover" sizes="120px" />
-            </button>
-          ))}
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-2 overflow-hidden">
+          <div className="flex gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {cleanImages.map((src, i) => (
+              <button
+                key={`${src}-${i}`}
+                type="button"
+                onClick={() => scrollToIndex(i)}
+                className={[
+                  "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-white/5 transition",
+                  i === active ? "border-white/30" : "border-white/10 hover:border-white/20",
+                ].join(" ")}
+                aria-label={`Select image ${i + 1}`}
+              >
+                <Image src={src} alt={name} fill className="object-cover" sizes="64px" />
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
