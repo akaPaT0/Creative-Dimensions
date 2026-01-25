@@ -5,6 +5,7 @@ import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import { products } from "../../../data/products";
 import ProductGallery from "../../../components/ProductGallery";
+import RecommendedRow from "../../../components/RecommendedRow";
 
 function normalize(s: string) {
   return decodeURIComponent(s).trim().toLowerCase();
@@ -61,7 +62,7 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Recommended products:
+  // ✅ Recommended logic (your rule):
   // - default show 4
   // - show >4 ONLY if there are 4+ in same subCategory (excluding current)
   const TOTAL = 4;
@@ -79,10 +80,8 @@ export default async function KeychainSlugPage({
   let similar: any[] = [];
 
   if (sameSub.length > 3) {
-    // allow more than 4 only when there are 4+ in same subcategory
-    similar = sameSub;
+    similar = sameSub; // allow more than 4 only when sameSub has 4+
   } else {
-    // otherwise cap at 4: same sub first, then fill from same category
     similar = sameSub.slice(0, TOTAL);
 
     if (similar.length < TOTAL) {
@@ -98,6 +97,13 @@ export default async function KeychainSlugPage({
       similar = [...similar, ...fillers.slice(0, needed)];
     }
   }
+
+  const recommendedItems = similar.map((x: any) => ({
+    id: x.id,
+    slug: x.slug,
+    name: x.name,
+    image: getCardImage(x),
+  }));
 
   return (
     <div className="relative min-h-screen">
@@ -165,48 +171,8 @@ export default async function KeychainSlugPage({
               </Link>
             </div>
 
-            {/* Recommended: scrollable row, fits 4 on desktop */}
-            {similar.length > 0 && (
-              <div className="mt-auto rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="text-white/85 font-semibold">Check similar</div>
-
-                <div className="mt-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <div className="flex gap-3">
-                    {similar.map((x: any) => {
-                      const img = getCardImage(x);
-
-                      return (
-                        <Link
-                          key={x.id ?? x.slug}
-                          href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
-                          className="
-                            group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2
-                            shrink-0 snap-start
-                            w-40 sm:w-44 md:w-48
-                            lg:w-[calc(25%-0.75rem)]
-                          "
-                        >
-                          <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                            <Image
-                              src={img}
-                              alt={x.name}
-                              fill
-                              className="object-cover"
-                              sizes="200px"
-                            />
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                          </div>
-
-                          <div className="mt-2 text-center text-white/85 text-xs sm:text-sm font-semibold leading-tight line-clamp-1">
-                            {x.name}
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* ✅ Recommended row with desktop arrows + smaller images */}
+            {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
           </div>
         </div>
 
