@@ -7,6 +7,7 @@ import { products } from "../../../data/products";
 import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
 import ShareButton from "../../../components/ShareButton";
+import CustomRequestModal from "../../../components/CustomRequestModal";
 
 const SITE = "https://creative-dimensions.vercel.app";
 
@@ -209,7 +210,6 @@ export default async function KeychainSlugPage({
               <div className="text-white/60 text-sm">Lebanon delivery / pickup</div>
             </div>
 
-            {/* Buttons: mobile stacked nicer */}
             <div className="mt-6 grid gap-3">
               <a
                 href={`https://wa.me/96170304007?text=${encodeURIComponent(waText)}`}
@@ -226,6 +226,12 @@ export default async function KeychainSlugPage({
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
               />
 
+              <CustomRequestModal
+                productName={p.name}
+                productUrl={productUrl}
+                className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
+              />
+
               <Link
                 href="/shop/keychains"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
@@ -235,11 +241,10 @@ export default async function KeychainSlugPage({
             </div>
 
             {recommendedItems.length > 0 && (
-            <div className="mt-6">
-              <RecommendedRow items={recommendedItems} />
-            </div>
-)}
-
+              <div className="mt-6">
+                <RecommendedRow items={recommendedItems} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -282,6 +287,12 @@ export default async function KeychainSlugPage({
                 url={productUrl}
                 title={p.name}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
+              />
+
+              <CustomRequestModal
+                productName={p.name}
+                productUrl={productUrl}
+                className="sm:col-span-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
               />
 
               <Link

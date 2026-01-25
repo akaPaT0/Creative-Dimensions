@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
 import HeroIn from "./components/HeroIn";
+import CustomRequestModal from "./components/CustomRequestModal";
 
 export default function Home() {
   return (
@@ -221,14 +222,11 @@ export default function Home() {
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-            <a
-              href="https://wa.me/96170304007?text=Hey!%20I%E2%80%99m%20interested%20in%20a%20custom%203D%20print.%20I%20can%20send%20the%20file%20or%20a%20photo%20of%20the%20idea.%20What%20details%20do%20you%20need,%20and%20what%20size%20should%20it%20be%3F"
-              target="_blank"
-              rel="noopener noreferrer"
+            <CustomRequestModal
               className="px-7 py-3 rounded-2xl border border-white/20 bg-white/5 text-white text-base sm:text-lg hover:bg-white/10 transition text-center"
-            >
-              Request a Custom
-            </a>
+              productName="Custom Order"
+              productUrl="https://creative-dimensions.vercel.app"
+            />
 
             <Link
               href="/shop"
@@ -240,9 +238,7 @@ export default function Home() {
         </div>
       </section>
 
-        <Footer />
-        
+      <Footer />
     </main>
   );
 }
-
