@@ -234,7 +234,12 @@ export default async function KeychainSlugPage({
               </Link>
             </div>
 
-            {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
+            {recommendedItems.length > 0 && (
+            <div className="mt-6">
+              <RecommendedRow items={recommendedItems} />
+            </div>
+)}
+
           </div>
         </div>
 
