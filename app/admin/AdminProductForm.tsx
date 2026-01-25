@@ -14,6 +14,23 @@ function slugify(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+// ✅ Safe JSON reader (prevents "Unexpected token ..." crashes)
+async function readJsonSafe(res: Response) {
+  const ct = res.headers.get("content-type") || "";
+  const text = await res.text();
+
+  // Only parse JSON if response declares it
+  if (!ct.includes("application/json")) {
+    // Helpful debug message (shows why it isn't JSON)
+    throw new Error(
+      `Non-JSON response (${res.status}) ct=${ct || "none"} body=${text.slice(0, 200)}`
+    );
+  }
+
+  // Some endpoints might return empty JSON body
+  return text ? JSON.parse(text) : null;
+}
+
 export default function AdminProductForm() {
   // options (editable in UI)
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -68,7 +85,7 @@ export default function AdminProductForm() {
         `/api/admin/next-id?category=${encodeURIComponent(cat)}&subCategory=${encodeURIComponent(sub)}`
       );
       if (!r.ok) return;
-      const data = await r.json();
+      const data = await readJsonSafe(r);
       if (data?.id) setId(data.id);
     } catch {
       // ignore
@@ -137,10 +154,15 @@ export default function AdminProductForm() {
       for (const file of images) fd.append("images", file);
 
       const res = await fetch("/api/admin/add-product", { method: "POST", body: fd });
-      const data = await res.json();
+
+      // ✅ safe JSON parsing (gives a clear error if server returns non-JSON)
+      const data = await readJsonSafe(res);
+
       if (!res.ok) throw new Error(data?.error || "Failed");
 
-      setMsg(`Saved ✅ ${data.product.category}/${data.product.slug} (${data.product.images?.length || 0} images)`);
+      setMsg(
+        `Saved ✅ ${data.product.category}/${data.product.slug} (${data.product.images?.length || 0} images)`
+      );
 
       // reset fields (keep category/subCategory)
       setName("");
