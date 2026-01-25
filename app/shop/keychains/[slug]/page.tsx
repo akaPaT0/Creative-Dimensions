@@ -24,18 +24,13 @@ function getCardImage(p: any) {
   return "/products/placeholder.jpg";
 }
 
-const glassCard =
-  "rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150";
-
-const pill =
-  "inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-white/90 hover:bg-white/10 transition";
-
 export default async function KeychainSlugPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const slug = normalize(params.slug);
+  const { slug: rawSlug } = await params;
+  const slug = normalize(rawSlug);
 
   const p = products.find(
     (x) => x.category === "keychains" && normalize(String(x.slug)) === slug
@@ -48,12 +43,17 @@ export default async function KeychainSlugPage({
         <Navbar />
 
         <main className="relative z-10 mx-auto max-w-3xl px-6 pt-28 pb-16 text-white">
-          <Link href="/shop/keychains" className={pill}>
+          <Link
+            href="/shop/keychains"
+            className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-white/90 hover:bg-white/10 transition"
+          >
             <span className="text-lg leading-none">←</span>
             Back to Keychains
           </Link>
 
-          <div className={`mt-6 ${glassCard} p-6`}>Not found.</div>
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
+            Not found.
+          </div>
         </main>
       </div>
     );
@@ -61,8 +61,11 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Similar logic (exactly 3)
+  // ✅ Similar logic (exactly 3):
+  // 1) take same subCategory only
+  // 2) if less than 3, fill from same category (any other subCategory) until total = 3
   const TOTAL = 3;
+
   const currentSub = (p as any).subCategory;
 
   const sameSub: any[] = currentSub
@@ -74,16 +77,20 @@ export default async function KeychainSlugPage({
       )
     : [];
 
+  // Start with up to 3 from same subcategory
   let similar: any[] = sameSub.slice(0, TOTAL);
 
+  // If still less than 3, fill from same category (excluding already picked + excluding current product)
   if (similar.length < TOTAL) {
     const needed = TOTAL - similar.length;
+
     const fillers = products.filter(
       (x: any) =>
         x.category === p.category &&
         x.slug !== p.slug &&
         !similar.some((s: any) => s.id === x.id || s.slug === x.slug)
     );
+
     similar = [...similar, ...fillers.slice(0, needed)];
   }
 
@@ -93,29 +100,31 @@ export default async function KeychainSlugPage({
       <Navbar />
 
       <main className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-16">
-        {/* top row */}
         <div className="flex items-center justify-between gap-3">
-          <Link href="/shop/keychains" className={pill}>
+          <Link
+            href="/shop/keychains"
+            className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-white/90 hover:bg-white/10 transition"
+          >
             <span className="text-lg leading-none">←</span>
             Back to Keychains
           </Link>
 
           {p.isNew && (
-            <div className={`${pill} cursor-default hover:bg-white/5`}>
+            <div className="inline-flex h-11 items-center rounded-xl border border-white/15 bg-white/5 px-4 text-white/80 text-sm">
               New ✨
             </div>
           )}
         </div>
 
-        {/* content */}
-        <div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-stretch">
-          {/* Gallery wrapper to match the right card */}
-          <div className={`${glassCard} p-4 lg:sticky lg:top-24 h-fit`}>
+        {/* ✅ Alignment fix: both sides are "cards" with the same border/bg/padding */}
+        <div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-start">
+          {/* Gallery (wrapped) */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-4">
             <ProductGallery images={imgs} name={p.name} />
           </div>
 
-          {/* Details */}
-          <div className={`${glassCard} p-6 flex flex-col`}>
+          {/* Details (unchanged content, same as yours) */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
             <div className="text-white/70 text-sm capitalize">{p.category}</div>
 
             <h1 className="mt-2 text-4xl sm:text-5xl font-semibold text-white leading-tight">
@@ -126,13 +135,12 @@ export default async function KeychainSlugPage({
               {p.description}
             </div>
 
-            <div className="mt-6 flex items-center justify-between gap-4">
+            <div className="mt-6 flex items-end justify-between gap-4">
               <div className="text-white font-semibold text-2xl">
                 {p.priceUSD ? `$${p.priceUSD}` : ""}
               </div>
-              <div className="text-white/60 text-sm text-right">
-                Lebanon delivery / pickup
-              </div>
+
+              <div className="text-white/60 text-sm">Lebanon delivery / pickup</div>
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -155,7 +163,7 @@ export default async function KeychainSlugPage({
               </Link>
             </div>
 
-            {/* Similar */}
+            {/* Check similar (exactly 3) */}
             {similar.length > 0 && (
               <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-white/85 font-semibold">Check similar</div>
@@ -168,7 +176,7 @@ export default async function KeychainSlugPage({
                       <Link
                         key={x.id ?? x.slug}
                         href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
-                        className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2 flex flex-col"
+                        className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2"
                       >
                         <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20">
                           <Image
@@ -176,7 +184,7 @@ export default async function KeychainSlugPage({
                             alt={x.name}
                             fill
                             className="object-cover"
-                            sizes="140px"
+                            sizes="120px"
                           />
                           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                         </div>
@@ -190,9 +198,6 @@ export default async function KeychainSlugPage({
                 </div>
               </div>
             )}
-
-            {/* keeps card bottom spacing consistent */}
-            <div className="mt-auto" />
           </div>
         </div>
 
