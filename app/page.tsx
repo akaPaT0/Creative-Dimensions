@@ -54,6 +54,16 @@ export default function Home() {
                       </Link>
                     </div>
 
+                    {/* ✅ Custom Request button under Shop/Contact (same spacing) */}
+                    <div className="mt-4 sm:mt-10 flex justify-center">
+                      <CustomRequestModal
+                        productName="Custom Order"
+                        productUrl="https://creative-dimensions.vercel.app"
+                        className="px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
+                          text-[20px] sm:text-2xl hover:bg-white/10 transition text-center"
+                      />
+                    </div>
+
                     {/* Divider (mobile) */}
                     <div className="relative z-10 flex justify-center pt-10 pb-2">
                       <div className="h-[3px] w-36 sm:w-56 rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
@@ -100,6 +110,16 @@ export default function Home() {
                   >
                     Contact
                   </Link>
+                </div>
+
+                {/* ✅ Custom Request button under Shop/Contact */}
+                <div className="mt-6 flex justify-center">
+                  <CustomRequestModal
+                    productName="Custom Order"
+                    productUrl="https://creative-dimensions.vercel.app"
+                    className="w-[460px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
+                      lg:text-[30px] hover:bg-white/10 transition text-center"
+                  />
                 </div>
               </div>
 
