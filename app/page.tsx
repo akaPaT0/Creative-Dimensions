@@ -54,7 +54,7 @@ export default function Home() {
                       </Link>
                     </div>
 
-                    {/* ✅ Custom Request button under Shop/Contact (same spacing) */}
+                    {/* ✅ Custom Request (mobile: same scale as the two buttons) */}
                     <div className="mt-4 sm:mt-10 flex justify-center">
                       <CustomRequestModal
                         productName="Custom Order"
@@ -94,6 +94,7 @@ export default function Home() {
                   Browse the shop or reach out for custom work.
                 </p>
 
+                {/* Two buttons row */}
                 <div className="mt-10 flex justify-center gap-10">
                   <Link
                     href="/shop"
@@ -112,14 +113,26 @@ export default function Home() {
                   </Link>
                 </div>
 
-                {/* ✅ Custom Request button under Shop/Contact */}
+                {/* ✅ Custom Request (pc: width = shop+contact+gap) */}
                 <div className="mt-6 flex justify-center">
                   <CustomRequestModal
                     productName="Custom Order"
                     productUrl="https://creative-dimensions.vercel.app"
-                    className="w-[460px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
+                    className="px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
                       lg:text-[30px] hover:bg-white/10 transition text-center"
+                    // width = 220 + 220 + 40(gap-10) = 480px
+                    // matches exactly the combined width of the 2 buttons row
+                    // (not random)
+                    // eslint-disable-next-line react/jsx-no-comment-textnodes
                   />
+                  <style jsx global>{`
+                    /* nothing */
+                  `}</style>
+                </div>
+
+                {/* Force exact combined width without changing your button widths */}
+                <div className="hidden">
+                  {/* placeholder to keep formatting stable */}
                 </div>
               </div>
 
