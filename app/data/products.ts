@@ -123,7 +123,7 @@ export const products: Product[] = [
       "/products/Mercedes 3-5.webp",
       "/products/Mercedes 3-8.webp"
     ],
-    "isNew": true,
+    "isNew": false,
     "featured": false
   },
   {
