@@ -54,7 +54,7 @@ export default function Home() {
                       </Link>
                     </div>
 
-                    {/* ✅ Custom Request (mobile: same scale as the two buttons) */}
+                    {/* ✅ Custom Request under Shop/Contact (mobile same scale) */}
                     <div className="mt-4 sm:mt-10 flex justify-center">
                       <CustomRequestModal
                         productName="Custom Order"
@@ -94,7 +94,6 @@ export default function Home() {
                   Browse the shop or reach out for custom work.
                 </p>
 
-                {/* Two buttons row */}
                 <div className="mt-10 flex justify-center gap-10">
                   <Link
                     href="/shop"
@@ -113,26 +112,14 @@ export default function Home() {
                   </Link>
                 </div>
 
-                {/* ✅ Custom Request (pc: width = shop+contact+gap) */}
+                {/* ✅ Custom Request under them (pc width = 2 buttons + gap) */}
                 <div className="mt-6 flex justify-center">
                   <CustomRequestModal
                     productName="Custom Order"
                     productUrl="https://creative-dimensions.vercel.app"
-                    className="px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
+                    className="w-[480px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
                       lg:text-[30px] hover:bg-white/10 transition text-center"
-                    // width = 220 + 220 + 40(gap-10) = 480px
-                    // matches exactly the combined width of the 2 buttons row
-                    // (not random)
-                    // eslint-disable-next-line react/jsx-no-comment-textnodes
                   />
-                  <style jsx global>{`
-                    /* nothing */
-                  `}</style>
-                </div>
-
-                {/* Force exact combined width without changing your button widths */}
-                <div className="hidden">
-                  {/* placeholder to keep formatting stable */}
                 </div>
               </div>
 
@@ -228,18 +215,9 @@ export default function Home() {
 
           <div className="mx-auto mt-10 max-w-3xl space-y-4">
             {[
-              {
-                t: "Clean, consistent finish",
-                d: "Dialed settings and careful post-processing for a premium look.",
-              },
-              {
-                t: "Clear turnaround times",
-                d: "We tell you the ETA up front and stick to it.",
-              },
-              {
-                t: "Local delivery in Lebanon",
-                d: "Pickup or delivery with safe packaging and updates.",
-              },
+              { t: "Clean, consistent finish", d: "Dialed settings and careful post-processing for a premium look." },
+              { t: "Clear turnaround times", d: "We tell you the ETA up front and stick to it." },
+              { t: "Local delivery in Lebanon", d: "Pickup or delivery with safe packaging and updates." },
             ].map((x) => (
               <div
                 key={x.t}
