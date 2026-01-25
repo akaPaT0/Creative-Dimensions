@@ -83,7 +83,7 @@ export const products: Product[] = [
       "/products/BMW 1-3.webp",
       "/products/BMW 1-4.webp"
     ],
-    "isNew": true,
+    "isNew": false,
     "featured": false
   },
   {
