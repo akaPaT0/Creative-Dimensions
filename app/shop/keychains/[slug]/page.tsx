@@ -45,7 +45,7 @@ export default async function KeychainSlugPage({
         <main className="relative z-10 mx-auto max-w-3xl px-6 pt-28 pb-16 text-white">
           <Link
             href="/shop/keychains"
-            className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-white/90 hover:bg-white/10 transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
           >
             <span className="text-lg leading-none">←</span>
             Back to Keychains
@@ -103,28 +103,25 @@ export default async function KeychainSlugPage({
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/shop/keychains"
-            className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-white/90 hover:bg-white/10 transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
           >
             <span className="text-lg leading-none">←</span>
             Back to Keychains
           </Link>
 
           {p.isNew && (
-            <div className="inline-flex h-11 items-center rounded-xl border border-white/15 bg-white/5 px-4 text-white/80 text-sm">
+            <div className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white/80 text-sm">
               New ✨
             </div>
           )}
         </div>
 
-        {/* ✅ Alignment fix: both sides are "cards" with the same border/bg/padding */}
-        <div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-start">
-          {/* Gallery (wrapped) */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-4">
-            <ProductGallery images={imgs} name={p.name} />
-          </div>
+        <div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-stretch">
+          {/* Gallery */}
+          <ProductGallery images={imgs} name={p.name} />
 
-          {/* Details (unchanged content, same as yours) */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
+          {/* Details */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6 h-full flex flex-col">
             <div className="text-white/70 text-sm capitalize">{p.category}</div>
 
             <h1 className="mt-2 text-4xl sm:text-5xl font-semibold text-white leading-tight">
@@ -165,7 +162,7 @@ export default async function KeychainSlugPage({
 
             {/* Check similar (exactly 3) */}
             {similar.length > 0 && (
-              <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="mt-auto rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-white/85 font-semibold">Check similar</div>
 
                 <div className="mt-3 grid grid-cols-3 gap-3">
