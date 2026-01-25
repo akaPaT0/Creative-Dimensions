@@ -5,6 +5,7 @@ import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import { products } from "../../../data/products";
 import ProductGallery from "../../../components/ProductGallery";
+import RecommendedRow from "../../../components/RecommendedRow";
 
 function normalize(s: string) {
   return decodeURIComponent(s).trim().toLowerCase();
@@ -61,11 +62,10 @@ export default async function FanboySlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Similar logic (EXACTLY 3):
-  // 1) take same subCategory only (up to 3)
-  // 2) if less than 3, fill from same category until total = 3
-  const TOTAL = 3;
-
+  // ✅ Recommended logic (match keychains final):
+  // - default show 4
+  // - show >4 ONLY if there are 4+ in same subCategory (excluding current)
+  const TOTAL = 4;
   const currentSub = (p as any).subCategory;
 
   const sameSub: any[] = currentSub
@@ -77,20 +77,33 @@ export default async function FanboySlugPage({
       )
     : [];
 
-  let similar: any[] = sameSub.slice(0, TOTAL);
+  let similar: any[] = [];
 
-  if (similar.length < TOTAL) {
-    const needed = TOTAL - similar.length;
+  if (sameSub.length > 3) {
+    similar = sameSub;
+  } else {
+    similar = sameSub.slice(0, TOTAL);
 
-    const fillers = products.filter(
-      (x: any) =>
-        x.category === p.category &&
-        x.slug !== p.slug &&
-        !similar.some((s: any) => (s.id && x.id && s.id === x.id) || s.slug === x.slug)
-    );
+    if (similar.length < TOTAL) {
+      const needed = TOTAL - similar.length;
 
-    similar = [...similar, ...fillers.slice(0, needed)];
+      const fillers = products.filter(
+        (x: any) =>
+          x.category === p.category &&
+          x.slug !== p.slug &&
+          !similar.some((s: any) => (s.id && x.id && s.id === x.id) || s.slug === x.slug)
+      );
+
+      similar = [...similar, ...fillers.slice(0, needed)];
+    }
   }
+
+  const recommendedItems = similar.map((x: any) => ({
+    id: x.id,
+    slug: x.slug,
+    name: x.name,
+    image: getCardImage(x),
+  }));
 
   return (
     <div className="relative min-h-screen">
@@ -114,12 +127,12 @@ export default async function FanboySlugPage({
           )}
         </div>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-start">
+        <div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-stretch">
           {/* Gallery */}
           <ProductGallery images={imgs} name={p.name} />
 
           {/* Details */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6 h-full flex flex-col">
             <div className="text-white/70 text-sm capitalize">{p.category}</div>
 
             <h1 className="mt-2 text-4xl sm:text-5xl font-semibold text-white leading-tight">
@@ -158,47 +171,8 @@ export default async function FanboySlugPage({
               </Link>
             </div>
 
-            {/* ✅ Check similar (horizontal row, now exactly 3) */}
-            {similar.length > 0 && (
-              <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="text-white/85 font-semibold">Check similar</div>
-
-                <div className="mt-3 -mx-2 px-2 overflow-x-auto">
-                  <div className="flex gap-3 flex-nowrap snap-x snap-mandatory">
-                    {similar.map((x: any) => {
-                      const img = getCardImage(x);
-
-                      return (
-                        <Link
-                          key={x.id ?? `${x.category}-${x.slug}`}
-                          href={`/shop/fanboys/${encodeURIComponent(x.slug)}`}
-                          className="
-                            group shrink-0 snap-start
-                            w-[110px] sm:w-[130px] md:w-[150px]
-                            rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2
-                          "
-                        >
-                          <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                            <Image
-                              src={img}
-                              alt={x.name}
-                              fill
-                              className="object-cover"
-                              sizes="150px"
-                            />
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                          </div>
-
-                          <div className="mt-2 text-center text-white/85 text-[11px] sm:text-sm font-semibold leading-tight line-clamp-1">
-                            {x.name}
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* ✅ RecommendedRow (desktop arrows + 4-fit + >4 only when sameSub has 4+) */}
+            {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
           </div>
         </div>
 
