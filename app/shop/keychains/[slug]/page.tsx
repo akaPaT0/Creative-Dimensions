@@ -1,11 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import { products } from "../../../data/products";
 import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
+
+const SITE = "https://creative-dimensions.vercel.app";
 
 function normalize(s: string) {
   return decodeURIComponent(s).trim().toLowerCase();
@@ -25,6 +27,59 @@ function getCardImage(p: any) {
   return "/products/placeholder.jpg";
 }
 
+/** ✅ Preview cards (WhatsApp / iMessage / FB / X) */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug: rawSlug } = await params;
+  const slug = normalize(rawSlug);
+
+  const p = products.find(
+    (x: any) => x.category === "keychains" && normalize(String(x.slug)) === slug
+  );
+
+  if (!p) {
+    return {
+      title: "Product not found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const imgs = getImages(p);
+  const first = imgs[0] || "/products/placeholder.jpg";
+  const ogImage = String(first).startsWith("http") ? String(first) : `${SITE}${first}`;
+
+  const title = `${p.name} | Creative Dimensions`;
+  const desc =
+    typeof p.description === "string" && p.description.trim()
+      ? p.description.trim().slice(0, 200)
+      : "Custom 3D printed item in Lebanon.";
+
+  const url = `${SITE}/shop/keychains/${encodeURIComponent(p.slug)}`;
+
+  return {
+    title,
+    description: desc,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description: desc,
+      url,
+      siteName: "Creative Dimensions",
+      type: "product",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: p.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: desc,
+      images: [ogImage],
+    },
+  };
+}
+
 export default async function KeychainSlugPage({
   params,
 }: {
@@ -34,7 +89,7 @@ export default async function KeychainSlugPage({
   const slug = normalize(rawSlug);
 
   const p = products.find(
-    (x) => x.category === "keychains" && normalize(String(x.slug)) === slug
+    (x: any) => x.category === "keychains" && normalize(String(x.slug)) === slug
   );
 
   if (!p) {
@@ -62,7 +117,7 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Recommended logic (your rule):
+  // ✅ Recommended logic (final):
   // - default show 4
   // - show >4 ONLY if there are 4+ in same subCategory (excluding current)
   const TOTAL = 4;
@@ -80,7 +135,7 @@ export default async function KeychainSlugPage({
   let similar: any[] = [];
 
   if (sameSub.length > 3) {
-    similar = sameSub; // allow more than 4 only when sameSub has 4+
+    similar = sameSub;
   } else {
     similar = sameSub.slice(0, TOTAL);
 
@@ -104,6 +159,8 @@ export default async function KeychainSlugPage({
     name: x.name,
     image: getCardImage(x),
   }));
+
+  const productUrl = `${SITE}/shop/keychains/${encodeURIComponent(p.slug)}`;
 
   return (
     <div className="relative min-h-screen">
@@ -154,7 +211,7 @@ export default async function KeychainSlugPage({
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <a
                 href={`https://wa.me/96170304007?text=${encodeURIComponent(
-                  `Hey! I’m interested in: ${p.name}.\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
+                  `Hey! I’m interested in: ${p.name}\n\nLink: ${productUrl}\n\nI can send a photo/file if needed.\nWhat details do you need, and what size do you recommend?`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -171,7 +228,7 @@ export default async function KeychainSlugPage({
               </Link>
             </div>
 
-            {/* ✅ Recommended row with desktop arrows + smaller images */}
+            {/* RecommendedRow (desktop arrows + 4-fit + >4 only when sameSub has 4+) */}
             {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
           </div>
         </div>
