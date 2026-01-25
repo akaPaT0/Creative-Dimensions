@@ -61,9 +61,9 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Recommended logic (only changed here)
+  // ✅ Recommended products:
   // - default show 4
-  // - show >4 ONLY if there are 4+ in the same subCategory (excluding current)
+  // - show >4 ONLY if there are 4+ in same subCategory (excluding current)
   const TOTAL = 4;
   const currentSub = (p as any).subCategory;
 
@@ -82,7 +82,7 @@ export default async function KeychainSlugPage({
     // allow more than 4 only when there are 4+ in same subcategory
     similar = sameSub;
   } else {
-    // otherwise cap at 4: take same sub first then fill from same category
+    // otherwise cap at 4: same sub first, then fill from same category
     similar = sameSub.slice(0, TOTAL);
 
     if (similar.length < TOTAL) {
@@ -165,12 +165,12 @@ export default async function KeychainSlugPage({
               </Link>
             </div>
 
-            {/* Recommended (scrollable, fits 4) */}
+            {/* Recommended: scrollable row, fits 4 on desktop */}
             {similar.length > 0 && (
               <div className="mt-auto rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-white/85 font-semibold">Check similar</div>
 
-                <div className="mt-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="mt-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <div className="flex gap-3">
                     {similar.map((x: any) => {
                       const img = getCardImage(x);
@@ -179,7 +179,12 @@ export default async function KeychainSlugPage({
                         <Link
                           key={x.id ?? x.slug}
                           href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
-                          className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2 shrink-0 w-[calc(25%-0.5625rem)]"
+                          className="
+                            group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2
+                            shrink-0 snap-start
+                            w-40 sm:w-44 md:w-48
+                            lg:w-[calc(25%-0.75rem)]
+                          "
                         >
                           <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20">
                             <Image
@@ -187,7 +192,7 @@ export default async function KeychainSlugPage({
                               alt={x.name}
                               fill
                               className="object-cover"
-                              sizes="160px"
+                              sizes="200px"
                             />
                             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                           </div>
