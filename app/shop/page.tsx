@@ -4,10 +4,14 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-/** Helpers (same logic you used in Shop page) */
+type Props = {
+  products: any[];
+};
+
+/** Helpers (safe fallbacks so Image never gets undefined) */
 function getCardImage(p: any) {
-  if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
-  if (typeof p.image === "string" && p.image) return p.image;
+  if (Array.isArray(p?.images) && p.images.length > 0 && p.images[0]) return p.images[0];
+  if (typeof p?.image === "string" && p.image) return p.image;
 
   const cat = p?.category;
   const sub = p?.subCategory || "other";
@@ -19,26 +23,26 @@ function getCardImage(p: any) {
 
 function getTitle(p: any) {
   return (
-    p.title ||
-    p.name ||
-    p.label ||
-    (p.slug ? String(p.slug).replace(/-/g, " ") : "Product")
+    p?.title ||
+    p?.name ||
+    p?.label ||
+    (p?.slug ? String(p.slug).replace(/-/g, " ") : "Product")
   );
 }
 
 function getDesc(p: any) {
   return (
-    p.shortDesc ||
-    p.shortDescription ||
-    p.desc ||
-    p.description ||
+    p?.shortDesc ||
+    p?.shortDescription ||
+    p?.desc ||
+    p?.description ||
     "Custom 3D print item."
   );
 }
 
 function getPriceLabel(p: any) {
-  const price = p.price ?? p.priceUSD;
-  const currency = p.currency || "USD";
+  const price = p?.price ?? p?.priceUSD;
+  const currency = p?.currency || "USD";
 
   if (typeof price === "number") return `${price} ${currency}`;
   if (typeof price === "string" && price.trim()) return price;
@@ -53,30 +57,26 @@ function getProductHref(p: any) {
 }
 
 function getStableKey(p: any) {
-  return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;
+  return `${p?.category ?? "x"}-${p?.slug ?? "no-slug"}-${p?.id ?? "no-id"}`;
 }
 
-type Props = {
-  products: any[];
-};
+type SortKey = "recommended" | "newest" | "az" | "priceLow" | "priceHigh";
 
 export default function ShopCatalogClient({ products }: Props) {
-  const [sort, setSort] = useState<
-    "recommended" | "newest" | "az" | "priceLow" | "priceHigh"
-  >("recommended");
+  // your existing sort dropdown (keep)
+  const [sort, setSort] = useState<SortKey>("recommended");
 
-  // NEW: columns dropdown (1..4)
+  // NEW: columns dropdown below sort
   const [columns, setColumns] = useState<1 | 2 | 3 | 4>(3);
 
-  const sorted = useMemo(() => {
-    const list = [...(products || [])];
+  const list = useMemo(() => {
+    const arr = Array.isArray(products) ? [...products] : [];
 
-    // If you already have a "createdAt" or "date" field, this will use it
     const getDate = (p: any) =>
-      new Date(p.createdAt || p.date || p.updatedAt || 0).getTime();
+      new Date(p?.createdAt || p?.date || p?.updatedAt || 0).getTime();
 
     const getPrice = (p: any) => {
-      const v = p.price ?? p.priceUSD;
+      const v = p?.price ?? p?.priceUSD;
       if (typeof v === "number") return v;
       if (typeof v === "string") {
         const n = Number(v.replace(/[^\d.]/g, ""));
@@ -87,24 +87,24 @@ export default function ShopCatalogClient({ products }: Props) {
 
     switch (sort) {
       case "newest":
-        list.sort((a, b) => getDate(b) - getDate(a));
+        arr.sort((a, b) => getDate(b) - getDate(a));
         break;
       case "az":
-        list.sort((a, b) => getTitle(a).localeCompare(getTitle(b)));
+        arr.sort((a, b) => getTitle(a).localeCompare(getTitle(b)));
         break;
       case "priceLow":
-        list.sort((a, b) => getPrice(a) - getPrice(b));
+        arr.sort((a, b) => getPrice(a) - getPrice(b));
         break;
       case "priceHigh":
-        list.sort((a, b) => getPrice(b) - getPrice(a));
+        arr.sort((a, b) => getPrice(b) - getPrice(a));
         break;
       case "recommended":
       default:
-        // keep original order (your curated order in data)
+        // keep original data order
         break;
     }
 
-    return list;
+    return arr;
   }, [products, sort]);
 
   return (
@@ -114,16 +114,14 @@ export default function ShopCatalogClient({ products }: Props) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-white">Browse All</h2>
-            <p className="mt-1 text-sm text-white/60">
-              Sort the catalog and choose your grid layout.
-            </p>
+            <p className="mt-1 text-sm text-white/60">Sort and adjust the grid.</p>
           </div>
 
           <div className="w-full sm:w-auto flex flex-col gap-2">
             {/* Sort dropdown */}
             <select
               value={sort}
-              onChange={(e) => setSort(e.target.value as any)}
+              onChange={(e) => setSort(e.target.value as SortKey)}
               className="w-full sm:w-[220px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90
                 backdrop-blur-xl backdrop-saturate-150 hover:bg-white/10 transition focus:outline-none"
             >
@@ -144,10 +142,10 @@ export default function ShopCatalogClient({ products }: Props) {
               </option>
             </select>
 
-            {/* NEW: Columns dropdown (below Sort) */}
+            {/* NEW: Columns dropdown (below sort) */}
             <select
               value={columns}
-              onChange={(e) => setColumns(Number(e.target.value) as any)}
+              onChange={(e) => setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)}
               className="w-full sm:w-[220px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90
                 backdrop-blur-xl backdrop-saturate-150 hover:bg-white/10 transition focus:outline-none"
             >
@@ -171,11 +169,9 @@ export default function ShopCatalogClient({ products }: Props) {
       {/* Grid */}
       <div
         className="mt-6 grid gap-4"
-        style={{
-          gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-        }}
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
-        {sorted.map((p: any) => (
+        {list.map((p: any) => (
           <Link
             key={getStableKey(p)}
             href={getProductHref(p)}
@@ -193,17 +189,11 @@ export default function ShopCatalogClient({ products }: Props) {
 
             <div className="mt-4 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-white font-semibold truncate">
-                  {getTitle(p)}
-                </div>
-                <div className="mt-1 text-sm text-white/60 line-clamp-2">
-                  {getDesc(p)}
-                </div>
+                <div className="text-white font-semibold truncate">{getTitle(p)}</div>
+                <div className="mt-1 text-sm text-white/60 line-clamp-2">{getDesc(p)}</div>
               </div>
 
-              <div className="shrink-0 text-white/80 text-sm">
-                {getPriceLabel(p)}
-              </div>
+              <div className="shrink-0 text-white/80 text-sm">{getPriceLabel(p)}</div>
             </div>
 
             <div className="mt-4 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90 group-hover:bg-white/10 transition text-center">
