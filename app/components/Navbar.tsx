@@ -40,7 +40,10 @@ export default function MobileNav() {
               hover:from-[#3BC7C4] hover:to-[#FF8B64]
               bg-clip-text text-transparent transition`}
           >
-            Creative Dimensions
+            Creative Dimensions{" "}
+            <span className="text-white text-[12px] font-semibold tracking-wide">
+              beta
+            </span>
           </Link>
 
           <div className="flex items-center gap-8 text-sm">
@@ -74,7 +77,10 @@ export default function MobileNav() {
               bg-gradient-to-r from-[#FF8B64] to-[#3BC7C4]
               bg-clip-text text-transparent transition text-lg`}
           >
-            Creative Dimensions
+            Creative Dimensions{" "}
+            <span className="text-white text-[11px] font-semibold tracking-wide">
+              beta
+            </span>
           </Link>
 
           <button
@@ -90,13 +96,25 @@ export default function MobileNav() {
 
         <div id="mobile-menu" className={open ? "block" : "hidden"}>
           <div className="px-4 py-3 flex flex-col items-center justify-center gap-3 text-sm border-t border-white/10">
-            <Link href="/about" onClick={() => setOpen(false)} className="text-white hover:opacity-70 transition">
+            <Link
+              href="/about"
+              onClick={() => setOpen(false)}
+              className="text-white hover:opacity-70 transition"
+            >
               About
             </Link>
-            <Link href="/shop" onClick={() => setOpen(false)} className="text-white hover:opacity-70 transition">
+            <Link
+              href="/shop"
+              onClick={() => setOpen(false)}
+              className="text-white hover:opacity-70 transition"
+            >
               Shop
             </Link>
-            <Link href="/contact" onClick={() => setOpen(false)} className="text-white hover:opacity-70 transition">
+            <Link
+              href="/contact"
+              onClick={() => setOpen(false)}
+              className="text-white hover:opacity-70 transition"
+            >
               Contact
             </Link>
 
