@@ -314,8 +314,8 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     "default"
   );
 
-  // columns dropdown
-  const [columns, setColumns] = useState<1 | 2 | 3 | 4>(3);
+  // ✅ default load as 2 columns
+  const [columns, setColumns] = useState<1 | 2 | 3 | 4>(2);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -455,7 +455,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           ))}
         </select>
 
-        {/* Sort + Columns in same cell */}
+        {/* Sort + Columns */}
         <div className="flex flex-col gap-3">
           <select
             value={sort}
@@ -511,10 +511,8 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               />
             </div>
 
-            {/* Title + Price: stack on small, inline on larger ONLY if it fits */}
             <div className="mt-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
               <div className="min-w-0">
-                {/* ✅ readable title: allow 2 lines instead of truncate */}
                 <div className="text-white font-semibold text-[15px] leading-snug line-clamp-2">
                   {getTitle(p)}
                 </div>
@@ -533,8 +531,6 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               {p.category}
               {p.subCategory ? ` / ${p.subCategory}` : ""}
             </div>
-
-            {/* ✅ removed the View button as requested */}
           </Link>
         ))}
       </div>
