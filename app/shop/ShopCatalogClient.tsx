@@ -314,7 +314,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     "default"
   );
 
-  // ✅ NEW: column selector state
+  // columns dropdown
   const [columns, setColumns] = useState<1 | 2 | 3 | 4>(3);
 
   const categories = useMemo(() => {
@@ -337,7 +337,6 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     setCategory("all");
     setSubCategory("all");
     setSort("default");
-    // (no reset for columns unless you want it)
   }
 
   useEffect(() => {
@@ -362,10 +361,9 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
     if (q) {
       list = list.filter((p) => {
-        const hay =
-          `${p.id || ""} ${getTitle(p)} ${p.slug} ${p.category} ${
-            p.subCategory || ""
-          } ${getDesc(p)}`.toLowerCase();
+        const hay = `${p.id || ""} ${getTitle(p)} ${p.slug} ${p.category} ${
+          p.subCategory || ""
+        } ${getDesc(p)}`.toLowerCase();
         return hay.includes(q);
       });
     }
@@ -457,7 +455,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           ))}
         </select>
 
-        {/* ✅ sort + columns in SAME grid cell, columns is BELOW sort */}
+        {/* Sort + Columns in same cell */}
         <div className="flex flex-col gap-3">
           <select
             value={sort}
@@ -492,7 +490,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         </div>
       </div>
 
-      {/* ✅ dynamic columns applied here (removed sm:grid-cols-2 lg:grid-cols-3) */}
+      {/* Cards */}
       <div
         className="mt-4 grid gap-4"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
@@ -513,28 +511,30 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               />
             </div>
 
-            <div className="mt-4 flex items-start justify-between gap-3">
+            {/* Title + Price: stack on small, inline on larger ONLY if it fits */}
+            <div className="mt-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
               <div className="min-w-0">
-                <div className="text-white font-semibold truncate">
+                {/* ✅ readable title: allow 2 lines instead of truncate */}
+                <div className="text-white font-semibold text-[15px] leading-snug line-clamp-2">
                   {getTitle(p)}
-                </div>
-                <div className="mt-1 text-sm text-white/60 line-clamp-2">
-                  {getDesc(p)}
-                </div>
-                <div className="mt-2 text-xs text-white/45">
-                  {p.category}
-                  {p.subCategory ? ` / ${p.subCategory}` : ""}
                 </div>
               </div>
 
-              <div className="shrink-0 text-white/80 text-sm">
+              <div className="shrink-0 text-white/80 text-sm sm:text-right">
                 {getPriceLabel(p)}
               </div>
             </div>
 
-            <div className="mt-4 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90 group-hover:bg-white/10 transition text-center">
-              View
+            <div className="mt-2 text-sm text-white/60 line-clamp-2">
+              {getDesc(p)}
             </div>
+
+            <div className="mt-2 text-xs text-white/45">
+              {p.category}
+              {p.subCategory ? ` / ${p.subCategory}` : ""}
+            </div>
+
+            {/* ✅ removed the View button as requested */}
           </Link>
         ))}
       </div>
