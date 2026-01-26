@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import { ZoomIn } from "lucide-react";
 
 export default function ProductGallery({
   images,
@@ -37,8 +38,7 @@ export default function ProductGallery({
       if (e.key === "Escape") setOpen(false);
       if (e.key === "ArrowRight")
         setActive((i) => Math.min(i + 1, imgs.length - 1));
-      if (e.key === "ArrowLeft")
-        setActive((i) => Math.max(i - 1, 0));
+      if (e.key === "ArrowLeft") setActive((i) => Math.max(i - 1, 0));
     };
 
     window.addEventListener("keydown", onKey);
@@ -56,31 +56,19 @@ export default function ProductGallery({
   }, [open]);
 
   const modal = open ? (
-    // ✅ outer layer: pointer-events none so header doesn't "fight" visually/click-wise
     <div className="fixed inset-0 z-[999999] pointer-events-none">
-      {/* ✅ overlay behind modal (lower opacity than X button) */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        // allow clicking outside to close
-        onMouseDown={(e) => {
-          // needs pointer events, so we attach to inner wrapper (below)
-        }}
-      />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
-      {/* ✅ actual modal wrapper: pointer-events enabled */}
       <div
         className="absolute inset-0 pointer-events-auto"
         onMouseDown={(e) => {
-          // click outside closes
           if (e.target === e.currentTarget) setOpen(false);
         }}
       >
         <div className="mx-auto h-full w-full max-w-6xl px-4 py-6 flex flex-col">
-          {/* ✅ Top bar with its own background so it never blends with header */}
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0D0D0D]/55 backdrop-blur-xl px-4 py-3">
             <div className="text-white/85 text-sm truncate">{name}</div>
 
-            {/* ✅ X button more opaque than popup background */}
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -91,7 +79,6 @@ export default function ProductGallery({
             </button>
           </div>
 
-          {/* ✅ Big image panel */}
           <div className="mt-4 flex-1 rounded-2xl border border-white/10 bg-[#0D0D0D]/45 backdrop-blur-xl overflow-hidden relative">
             <Image
               src={current}
@@ -103,7 +90,6 @@ export default function ProductGallery({
             />
           </div>
 
-          {/* ✅ thumbs inside modal */}
           {imgs.length > 1 && (
             <div className="mt-4 rounded-2xl border border-white/10 bg-[#0D0D0D]/40 backdrop-blur-xl p-3">
               <div className="flex gap-2 overflow-x-auto">
@@ -138,7 +124,6 @@ export default function ProductGallery({
 
   return (
     <>
-      {/* Normal gallery (page) */}
       <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-4">
         <button
           type="button"
@@ -154,13 +139,15 @@ export default function ProductGallery({
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          <div className="absolute bottom-3 right-3 rounded-xl border border-white/15 bg-black/45 px-3 py-1.5 text-xs text-white/85 backdrop-blur">
-            Tap to zoom
+
+          {/* ✅ Zoom icon instead of "Tap to zoom" */}
+          <div className="absolute bottom-3 right-3 inline-flex items-center justify-center rounded-xl border border-white/15 bg-black/55 p-2 text-white/90 backdrop-blur">
+            <ZoomIn size={18} />
           </div>
         </button>
 
-        {/* thumbs */}
         {imgs.length > 1 && (
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {imgs.map((src, i) => (
@@ -188,7 +175,6 @@ export default function ProductGallery({
         )}
       </div>
 
-      {/* Portal to body so Navbar can't overlay it */}
       {mounted && modal ? createPortal(modal, document.body) : null}
     </>
   );
