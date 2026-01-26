@@ -29,7 +29,7 @@ export const products: Product[] = [
       "/products/Cute_Crab_1.webp",
       "/products/Cute_Crab_2.webp"
     ],
-    "isNew": false,
+    "isNew": true,
     "featured": true
   },
   {
