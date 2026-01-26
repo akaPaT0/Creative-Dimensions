@@ -196,12 +196,15 @@ export default function AdminProductsManager() {
   );
 }
 
+/** ✅ FIXED: scrollable modal */
 function ModalShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[999]">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
-        {children}
+      <div className="relative h-full w-full overflow-y-auto px-4 py-8">
+        <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -231,12 +234,16 @@ function EditModal({
   const [isNew, setIsNew] = useState(!!product.isNew);
   const [featured, setFeatured] = useState(!!product.featured);
 
-  // ✅ Existing images (URL strings) that you can reorder/remove
+  // ✅ Existing images you can reorder/remove
   const initialExistingImages =
-    (product.images && product.images.length ? product.images : product.image ? [product.image] : []) as string[];
+    (product.images && product.images.length
+      ? product.images
+      : product.image
+        ? [product.image]
+        : []) as string[];
   const [existingImages, setExistingImages] = useState<string[]>(initialExistingImages);
 
-  // Optional: if you upload new images, it replaces old images
+  // Optional: uploading new files replaces old images (backend handles deletion)
   const [images, setImages] = useState<File[]>([]);
   const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
 
@@ -265,10 +272,10 @@ function EditModal({
       fd.set("isNew", String(isNew));
       fd.set("featured", String(featured));
 
-      // ✅ THIS is what makes sorting/removing work when you did NOT upload new files
+      // ✅ persist order/removals (your PUT route reads this)
       fd.set("imagesOrder", JSON.stringify(existingImages));
 
-      // If you select new images, your backend replaces and deletes old ones
+      // Optional: replace images by uploading new files
       for (const f of images) fd.append("images", f);
 
       const r = await fetch(`/api/admin/products/${encodeURIComponent(product.id)}`, {
@@ -391,12 +398,10 @@ function EditModal({
           />
         </div>
 
-        {/* ✅ Existing images sort/remove */}
+        {/* Existing images: reorder/remove */}
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
           <ImageSorter images={existingImages} onChange={setExistingImages} />
-          <p className="text-white/40 text-xs">
-            Reorder or remove existing images, then Save.
-          </p>
+          <p className="text-white/40 text-xs">Reorder/remove existing images, then Save.</p>
         </div>
 
         {/* Replace images (optional) */}
