@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import ImageSorter from "./components/ImageSorter";
 
 type Product = {
   id: string;
@@ -93,9 +94,7 @@ export default function AdminProductsManager() {
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-          <p className="text-white/70 text-sm">
-            {loading ? "Loading..." : `${filtered.length} items`}
-          </p>
+          <p className="text-white/70 text-sm">{loading ? "Loading..." : `${filtered.length} items`}</p>
         </div>
 
         <div className="overflow-x-auto">
@@ -232,6 +231,12 @@ function EditModal({
   const [isNew, setIsNew] = useState(!!product.isNew);
   const [featured, setFeatured] = useState(!!product.featured);
 
+  // ✅ Existing images (URL strings) that you can reorder/remove
+  const initialExistingImages =
+    (product.images && product.images.length ? product.images : product.image ? [product.image] : []) as string[];
+  const [existingImages, setExistingImages] = useState<string[]>(initialExistingImages);
+
+  // Optional: if you upload new images, it replaces old images
   const [images, setImages] = useState<File[]>([]);
   const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
 
@@ -260,7 +265,10 @@ function EditModal({
       fd.set("isNew", String(isNew));
       fd.set("featured", String(featured));
 
-      // Optional: if you select images, they replace old images and old ones get deleted
+      // ✅ THIS is what makes sorting/removing work when you did NOT upload new files
+      fd.set("imagesOrder", JSON.stringify(existingImages));
+
+      // If you select new images, your backend replaces and deletes old ones
       for (const f of images) fd.append("images", f);
 
       const r = await fetch(`/api/admin/products/${encodeURIComponent(product.id)}`, {
@@ -269,6 +277,7 @@ function EditModal({
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data?.error || "Failed to save");
+
       await onSaved();
     } catch (e: any) {
       setMsg(e?.message || "Error");
@@ -359,11 +368,7 @@ function EditModal({
 
           <div className="flex items-end gap-4">
             <label className="flex items-center gap-2 text-white/70 text-sm">
-              <input
-                type="checkbox"
-                checked={isNew}
-                onChange={(e) => setIsNew(e.target.checked)}
-              />
+              <input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} />
               isNew
             </label>
             <label className="flex items-center gap-2 text-white/70 text-sm">
@@ -386,10 +391,17 @@ function EditModal({
           />
         </div>
 
+        {/* ✅ Existing images sort/remove */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+          <ImageSorter images={existingImages} onChange={setExistingImages} />
+          <p className="text-white/40 text-xs">
+            Reorder or remove existing images, then Save.
+          </p>
+        </div>
+
+        {/* Replace images (optional) */}
         <div>
-          <label className="text-white/70 text-sm">
-            Replace images (optional)
-          </label>
+          <label className="text-white/70 text-sm">Replace images (optional)</label>
           <input
             type="file"
             multiple
@@ -485,8 +497,7 @@ function ConfirmDelete({
 
       <div className="p-5 space-y-3">
         <p className="text-white/80">
-          Are you sure you want to delete{" "}
-          <span className="font-semibold">{product.name}</span>?
+          Are you sure you want to delete <span className="font-semibold">{product.name}</span>?
         </p>
         <p className="text-white/50 text-sm">
           This removes it from <code className="text-white/70">products.ts</code> and deletes its images.
