@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Background from "./components/Background";
 import Navbar from "./components/Navbar";
@@ -41,7 +43,7 @@ export default function Home() {
                       <Link
                         href="/shop"
                         className="w-full sm:w-auto px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
-                          text-[20px] sm:text-2xl hover:bg-white/10 transition"
+                          text-[20px] sm:text-2xl hover:bg-white/10 transition text-center"
                       >
                         Shop
                       </Link>
@@ -49,7 +51,7 @@ export default function Home() {
                       <Link
                         href="/contact"
                         className="w-full sm:w-auto px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
-                          text-[20px] sm:text-2xl hover:bg-white/20 transition"
+                          text-[20px] sm:text-2xl hover:bg-white/20 transition text-center"
                       >
                         Contact
                       </Link>
@@ -129,7 +131,7 @@ export default function Home() {
         </HeroIn>
       </section>
 
-      {/* Rest of page (scroll) */}
+      {/* BROWSE CARDS SECTION */}
       <section className="relative z-10 pt-12 pb-12">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -142,7 +144,7 @@ export default function Home() {
               {
                 title: "New Drops",
                 desc: "Fresh designs added regularly. Sometimes limited runs.",
-                href: "/shop/new-arrivals", // Linked to the path shown in your video
+                href: "/shop/new-arrivals",
               },
               {
                 title: "Custom Orders",
@@ -162,11 +164,13 @@ export default function Home() {
                 desc: "Pickup or delivery. Clear timelines and safe packaging.",
               },
             ].map((item, i) => {
-              // Exact card styling from your original code
-              const cardClass = "h-[230px] flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-5 transition-transform duration-200 ease-out hover:scale-[1.02] active:scale-[0.99] w-full text-left";
-              
+              // Card Content with Group-Hover Zoom on Text
               const cardContent = (
-                <div className={cardClass}>
+                <div
+                  className={`group h-[230px] flex flex-col rounded-2xl border border-white/10 bg-white/5
+                    backdrop-blur-xl backdrop-saturate-150 p-5 w-full text-left transition-colors
+                    ${item.href || item.isModal ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
+                >
                   <div className="h-28 rounded-xl border border-white/10 bg-white/5 relative overflow-hidden flex items-center justify-center">
                     <div
                       className="absolute -top-10 -right-10 h-32 w-32 rounded-full blur-2xl opacity-60"
@@ -177,14 +181,17 @@ export default function Home() {
                       style={{ background: "#3BC7C4" }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
-                    <div className="relative px-4 text-center">
+                    
+                    {/* Title Zooms 110% on Card Hover */}
+                    <div className="relative px-4 text-center transition-transform duration-300 group-hover:scale-110">
                       <div className="text-white font-semibold text-[18px] sm:text-[19px]">
                         {item.title}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 text-white/70 text-sm leading-relaxed line-clamp-2">
+                  {/* Desc Zooms 105% on Card Hover */}
+                  <div className="mt-4 text-white/70 text-sm leading-relaxed line-clamp-2 transition-transform duration-300 group-hover:scale-105 origin-left">
                     {item.desc}
                   </div>
                 </div>
@@ -195,8 +202,8 @@ export default function Home() {
                   {item.href ? (
                     <Link href={item.href}>{cardContent}</Link>
                   ) : item.isModal ? (
-                    /* Uses your CustomRequestModal function exactly as provided, but styled as a card */
                     <div className="relative group">
+                      {/* Invisible trigger overlaying the card */}
                       <div className="absolute inset-0 z-20 opacity-0">
                         <CustomRequestModal
                           productName="Custom Order"
@@ -218,12 +225,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Divider */}
-      <div className="relative z-10 flex justify-center pt-12 pb-12">
-        <div className="h-[3px] w-36 sm:w-56 lg:w-[500px] rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
-      </div>
-
-      {/* Why us */}
+      {/* Why us Section */}
       <section className="relative z-10 py-16">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-3xl text-center">
@@ -252,21 +254,6 @@ export default function Home() {
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-            <CustomRequestModal
-              className="px-7 py-3 rounded-2xl border border-white/20 bg-white/5 text-white text-base sm:text-lg hover:bg-white/10 transition text-center"
-              productName="Custom Order"
-              productUrl="https://creative-dimensions.vercel.app"
-            />
-
-            <Link
-              href="/shop"
-              className="px-7 py-3 rounded-2xl border border-white/20 bg-white/5 text-white text-base sm:text-lg hover:bg-white/20 transition text-center"
-            >
-              Browse Shop
-            </Link>
           </div>
         </div>
       </section>
