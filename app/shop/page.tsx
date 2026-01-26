@@ -216,7 +216,7 @@ export default function Shop() {
                     src={getCardImage(p)}
                     alt={getTitle(p)}
                     fill
-                    className="object-cover group-hover:scale-[1.02] transition"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
@@ -236,9 +236,7 @@ export default function Shop() {
                   </div>
                 </div>
 
-                <div className="mt-4 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90 group-hover:bg-white/10 transition text-center">
-                  View
-                </div>
+                {/* ✅ removed View button (whole card is clickable via Link) */}
               </Link>
             ))}
           </div>
