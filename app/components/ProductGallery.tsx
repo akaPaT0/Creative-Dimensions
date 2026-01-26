@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function ProductGallery({
   images,
@@ -10,132 +10,141 @@ export default function ProductGallery({
   images: string[];
   name: string;
 }) {
-  const cleanImages = useMemo(() => {
-    const uniq = Array.from(new Set(images.filter(Boolean)));
-    return uniq.length ? uniq : ["/products/placeholder.jpg"];
-  }, [images]);
-
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const imgs = useMemo(() => (Array.isArray(images) && images.length ? images : ["/products/placeholder.jpg"]), [images]);
   const [active, setActive] = useState(0);
 
-  const scrollToIndex = (i: number) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const clamped = Math.max(0, Math.min(i, cleanImages.length - 1));
-    const child = el.children.item(clamped) as HTMLElement | null;
-    if (!child) return;
-    child.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
-  };
+  // modal preview
+  const [open, setOpen] = useState(false);
 
+  const current = imgs[Math.min(Math.max(active, 0), imgs.length - 1)] || "/products/placeholder.jpg";
+
+  // Esc to close
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    let raf = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const w = el.clientWidth || 1;
-        const idx = Math.round(el.scrollLeft / w);
-        setActive(Math.max(0, Math.min(idx, cleanImages.length - 1)));
-      });
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      if (e.key === "ArrowRight") setActive((i) => Math.min(i + 1, imgs.length - 1));
+      if (e.key === "ArrowLeft") setActive((i) => Math.max(i - 1, 0));
     };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, imgs.length]);
 
-    el.addEventListener("scroll", onScroll, { passive: true });
+  // Lock body scroll when modal open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      el.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(raf);
+      document.body.style.overflow = prev;
     };
-  }, [cleanImages.length]);
+  }, [open]);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-3">
-      {/* Main swipe area */}
-      <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/20">
-        <div
-          ref={scrollerRef}
-          className="flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    <>
+      {/* Normal gallery (page) */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-4">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="relative w-full aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20 focus:outline-none"
+          aria-label="Open image preview"
         >
-          {cleanImages.map((src) => (
-            <div key={src} className="relative min-w-full snap-start aspect-square">
-              <Image
-                src={src}
-                alt={name}
-                fill
-                className="object-contain p-3"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority={false}
-              />
-              {/* subtle glow */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-            </div>
-          ))}
-        </div>
+          <Image
+            src={current}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          <div className="absolute bottom-3 right-3 rounded-xl border border-white/15 bg-black/40 px-3 py-1.5 text-xs text-white/85 backdrop-blur">
+            Tap to zoom
+          </div>
+        </button>
 
-        {/* Prev/Next buttons (nice on desktop, still works on mobile) */}
-        {cleanImages.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={() => scrollToIndex(active - 1)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-white/90 backdrop-blur hover:bg-black/45 transition disabled:opacity-40"
-              disabled={active === 0}
-              aria-label="Previous image"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToIndex(active + 1)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-white/90 backdrop-blur hover:bg-black/45 transition disabled:opacity-40"
-              disabled={active === cleanImages.length - 1}
-              aria-label="Next image"
-            >
-              ›
-            </button>
-          </>
-        )}
-
-        {/* Dots */}
-        {cleanImages.length > 1 && (
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2">
-            {cleanImages.map((_, i) => (
+        {/* thumbs */}
+        {imgs.length > 1 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {imgs.map((src, i) => (
               <button
-                key={i}
+                key={`${src}-${i}`}
                 type="button"
-                onClick={() => scrollToIndex(i)}
-                className={[
-                  "h-2.5 w-2.5 rounded-full border border-white/15 transition",
-                  i === active ? "bg-white/70" : "bg-white/20 hover:bg-white/30",
-                ].join(" ")}
-                aria-label={`Go to image ${i + 1}`}
-              />
+                onClick={() => setActive(i)}
+                className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border transition ${
+                  i === active ? "border-white/35" : "border-white/10 hover:border-white/20"
+                }`}
+                aria-label={`View image ${i + 1}`}
+              >
+                <Image src={src} alt={`${name} ${i + 1}`} fill className="object-cover" sizes="64px" />
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Thumbnails (scrollable + clipped, show ALL) */}
-      {cleanImages.length > 1 && (
-        <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-2 overflow-hidden">
-          <div className="flex gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {cleanImages.map((src, i) => (
+      {/* Modal preview */}
+      {open && (
+        <div
+          className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            // click outside closes
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="mx-auto h-full w-full max-w-6xl px-4 py-6 flex flex-col">
+            {/* Top bar */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-white/80 text-sm truncate">{name}</div>
+
               <button
-                key={`${src}-${i}`}
                 type="button"
-                onClick={() => scrollToIndex(i)}
-                className={[
-                  "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-white/5 transition",
-                  i === active ? "border-white/30" : "border-white/10 hover:border-white/20",
-                ].join(" ")}
-                aria-label={`Select image ${i + 1}`}
+                onClick={() => setOpen(false)}
+                className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white/90 hover:bg-white/10 transition"
+                aria-label="Close preview"
               >
-                <Image src={src} alt={name} fill className="object-cover" sizes="64px" />
+                ✕
               </button>
-            ))}
+            </div>
+
+            {/* Big image */}
+            <div className="mt-4 flex-1 rounded-2xl border border-white/10 bg-black/30 overflow-hidden relative">
+              <Image
+                src={current}
+                alt={name}
+                fill
+                className="object-contain"
+                sizes="100vw"
+                priority
+              />
+            </div>
+
+            {/* thumbs inside modal */}
+            {imgs.length > 1 && (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div className="flex gap-2 overflow-x-auto">
+                  {imgs.map((src, i) => (
+                    <button
+                      key={`modal-${src}-${i}`}
+                      type="button"
+                      onClick={() => setActive(i)}
+                      className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border transition ${
+                        i === active
+                          ? "border-white/35"
+                          : "border-white/10 hover:border-white/20"
+                      }`}
+                      aria-label={`View image ${i + 1}`}
+                    >
+                      <Image src={src} alt={`${name} ${i + 1}`} fill className="object-cover" sizes="80px" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
