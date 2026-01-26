@@ -27,7 +27,13 @@ type Suggestion =
   | { type: "category"; label: string; value: string }
   | { type: "subCategory"; label: string; value: string }
   | { type: "keyword"; label: string; value: string }
-  | { type: "product"; label: string; value: string; slug: string; category: string };
+  | {
+      type: "product";
+      label: string;
+      value: string;
+      slug: string;
+      category: string;
+    };
 
 const SYNONYMS: Record<string, string[]> = {
   key: ["keychain", "keychains", "keys", "keyring"],
@@ -143,13 +149,21 @@ function ShopSearchBar({
     // categories
     for (const c of categories) {
       const sc = scoreMatch(q, c);
-      if (sc >= 0) out.push({ s: { type: "category", label: c, value: c }, score: sc + 10 });
+      if (sc >= 0)
+        out.push({
+          s: { type: "category", label: c, value: c },
+          score: sc + 10,
+        });
     }
 
     // subcategories
     for (const s of subCategories) {
       const sc = scoreMatch(q, s);
-      if (sc >= 0) out.push({ s: { type: "subCategory", label: s, value: s }, score: sc + 5 });
+      if (sc >= 0)
+        out.push({
+          s: { type: "subCategory", label: s, value: s },
+          score: sc + 5,
+        });
     }
 
     // synonyms
@@ -157,7 +171,8 @@ function ShopSearchBar({
       if (!k.startsWith(q) && scoreMatch(q, k) < 0) continue;
       for (const w of words) {
         const sc = scoreMatch(q, w);
-        if (sc >= 0) out.push({ s: { type: "keyword", label: w, value: w }, score: sc });
+        if (sc >= 0)
+          out.push({ s: { type: "keyword", label: w, value: w }, score: sc });
       }
     }
 
@@ -167,7 +182,13 @@ function ShopSearchBar({
       const sc = scoreMatch(q, name);
       if (sc >= 0) {
         out.push({
-          s: { type: "product", label: name, value: name, slug: p.slug, category: p.category },
+          s: {
+            type: "product",
+            label: name,
+            value: name,
+            slug: p.slug,
+            category: p.category,
+          },
           score: sc + 15,
         });
       }
@@ -261,7 +282,9 @@ function ShopSearchBar({
         <div className="absolute z-[210] mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0D0D0D]/85 backdrop-blur-xl">
           {suggestions.map((s, i) => (
             <button
-              key={`${s.type}:${"slug" in s ? `${(s as any).category}/${(s as any).slug}` : s.value}:${i}`}
+              key={`${s.type}:${
+                "slug" in s ? `${(s as any).category}/${(s as any).slug}` : s.value
+              }:${i}`}
               type="button"
               onMouseEnter={() => setActive(i)}
               onClick={() => pick(s)}
@@ -287,7 +310,12 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | "all">("all");
   const [subCategory, setSubCategory] = useState<string | "all">("all");
-  const [sort, setSort] = useState<"default" | "price-asc" | "price-desc">("default");
+  const [sort, setSort] = useState<"default" | "price-asc" | "price-desc">(
+    "default"
+  );
+
+  // ✅ NEW: column selector state
+  const [columns, setColumns] = useState<1 | 2 | 3 | 4>(3);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -309,6 +337,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     setCategory("all");
     setSubCategory("all");
     setSort("default");
+    // (no reset for columns unless you want it)
   }
 
   useEffect(() => {
@@ -328,19 +357,31 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     let list = products.slice();
 
     if (category !== "all") list = list.filter((p) => p.category === category);
-    if (subCategory !== "all") list = list.filter((p) => (p.subCategory || "") === subCategory);
+    if (subCategory !== "all")
+      list = list.filter((p) => (p.subCategory || "") === subCategory);
 
     if (q) {
       list = list.filter((p) => {
-        const hay = `${p.id || ""} ${getTitle(p)} ${p.slug} ${p.category} ${p.subCategory || ""} ${getDesc(p)}`.toLowerCase();
+        const hay =
+          `${p.id || ""} ${getTitle(p)} ${p.slug} ${p.category} ${
+            p.subCategory || ""
+          } ${getDesc(p)}`.toLowerCase();
         return hay.includes(q);
       });
     }
 
     if (sort === "price-asc") {
-      list.sort((a, b) => (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0) - (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0));
+      list.sort(
+        (a, b) =>
+          (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0) -
+          (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0)
+      );
     } else if (sort === "price-desc") {
-      list.sort((a, b) => (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0) - (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0));
+      list.sort(
+        (a, b) =>
+          (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0) -
+          (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0)
+      );
     }
 
     return list;
@@ -416,15 +457,31 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           ))}
         </select>
 
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
-          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
-        >
-          <option value="default">Sort: default</option>
-          <option value="price-asc">Price: low to high</option>
-          <option value="price-desc">Price: high to low</option>
-        </select>
+        {/* ✅ sort + columns in SAME grid cell, columns is BELOW sort */}
+        <div className="flex flex-col gap-3">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as any)}
+            className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+          >
+            <option value="default">Sort: default</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+          </select>
+
+          <select
+            value={columns}
+            onChange={(e) =>
+              setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)
+            }
+            className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+          >
+            <option value={1}>Columns: 1</option>
+            <option value={2}>Columns: 2</option>
+            <option value={3}>Columns: 3</option>
+            <option value={4}>Columns: 4</option>
+          </select>
+        </div>
       </div>
 
       {/* Results */}
@@ -435,7 +492,11 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* ✅ dynamic columns applied here (removed sm:grid-cols-2 lg:grid-cols-3) */}
+      <div
+        className="mt-4 grid gap-4"
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+      >
         {filtered.map((p) => (
           <Link
             key={getStableKey(p)}
@@ -454,7 +515,9 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
             <div className="mt-4 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-white font-semibold truncate">{getTitle(p)}</div>
+                <div className="text-white font-semibold truncate">
+                  {getTitle(p)}
+                </div>
                 <div className="mt-1 text-sm text-white/60 line-clamp-2">
                   {getDesc(p)}
                 </div>
@@ -464,7 +527,9 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
                 </div>
               </div>
 
-              <div className="shrink-0 text-white/80 text-sm">{getPriceLabel(p)}</div>
+              <div className="shrink-0 text-white/80 text-sm">
+                {getPriceLabel(p)}
+              </div>
             </div>
 
             <div className="mt-4 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90 group-hover:bg-white/10 transition text-center">

@@ -1,18 +1,17 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import { products } from "../data/products";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import Background from "../components/Background";
 import Link from "next/link";
 import Image from "next/image";
+import ShopCatalogClient from "./ShopCatalogClient";
 
-type Props = {
-  products: any[];
-};
-
-/** Helpers (safe fallbacks so Image never gets undefined) */
+/** Helpers */
 function getCardImage(p: any) {
-  if (Array.isArray(p?.images) && p.images.length > 0 && p.images[0]) return p.images[0];
-  if (typeof p?.image === "string" && p.image) return p.image;
+  if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
+  if (typeof p.image === "string" && p.image) return p.image;
 
+  // fallback for older data
   const cat = p?.category;
   const sub = p?.subCategory || "other";
   const slug = p?.slug;
@@ -23,26 +22,26 @@ function getCardImage(p: any) {
 
 function getTitle(p: any) {
   return (
-    p?.title ||
-    p?.name ||
-    p?.label ||
-    (p?.slug ? String(p.slug).replace(/-/g, " ") : "Product")
+    p.title ||
+    p.name ||
+    p.label ||
+    (p.slug ? String(p.slug).replace(/-/g, " ") : "Product")
   );
 }
 
 function getDesc(p: any) {
   return (
-    p?.shortDesc ||
-    p?.shortDescription ||
-    p?.desc ||
-    p?.description ||
+    p.shortDesc ||
+    p.shortDescription ||
+    p.desc ||
+    p.description ||
     "Custom 3D print item."
   );
 }
 
 function getPriceLabel(p: any) {
-  const price = p?.price ?? p?.priceUSD;
-  const currency = p?.currency || "USD";
+  const price = p.price ?? p.priceUSD;
+  const currency = p.currency || "USD";
 
   if (typeof price === "number") return `${price} ${currency}`;
   if (typeof price === "string" && price.trim()) return price;
@@ -57,151 +56,204 @@ function getProductHref(p: any) {
 }
 
 function getStableKey(p: any) {
-  return `${p?.category ?? "x"}-${p?.slug ?? "no-slug"}-${p?.id ?? "no-id"}`;
+  return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;
 }
 
-type SortKey = "recommended" | "newest" | "az" | "priceLow" | "priceHigh";
+/** Featured: featured:true, picked by category limits + auto-fill */
+function pickFeaturedByCategory(
+  items: any[],
+  limits: Record<string, number>,
+  total = 6
+) {
+  const featuredOnly = items.filter((p) => p.featured === true);
 
-export default function ShopCatalogClient({ products }: Props) {
-  // your existing sort dropdown (keep)
-  const [sort, setSort] = useState<SortKey>("recommended");
+  const picked: any[] = [];
+  const used = new Set<string>();
 
-  // NEW: columns dropdown below sort
-  const [columns, setColumns] = useState<1 | 2 | 3 | 4>(3);
+  // 1) Pick by category limits
+  for (const [cat, limit] of Object.entries(limits)) {
+    const list = featuredOnly.filter(
+      (p) => p.category === cat && !used.has(getStableKey(p))
+    );
 
-  const list = useMemo(() => {
-    const arr = Array.isArray(products) ? [...products] : [];
-
-    const getDate = (p: any) =>
-      new Date(p?.createdAt || p?.date || p?.updatedAt || 0).getTime();
-
-    const getPrice = (p: any) => {
-      const v = p?.price ?? p?.priceUSD;
-      if (typeof v === "number") return v;
-      if (typeof v === "string") {
-        const n = Number(v.replace(/[^\d.]/g, ""));
-        return Number.isFinite(n) ? n : Infinity;
-      }
-      return Infinity;
-    };
-
-    switch (sort) {
-      case "newest":
-        arr.sort((a, b) => getDate(b) - getDate(a));
-        break;
-      case "az":
-        arr.sort((a, b) => getTitle(a).localeCompare(getTitle(b)));
-        break;
-      case "priceLow":
-        arr.sort((a, b) => getPrice(a) - getPrice(b));
-        break;
-      case "priceHigh":
-        arr.sort((a, b) => getPrice(b) - getPrice(a));
-        break;
-      case "recommended":
-      default:
-        // keep original data order
-        break;
+    for (const p of list.slice(0, limit)) {
+      picked.push(p);
+      used.add(getStableKey(p));
+      if (picked.length >= total) return picked.slice(0, total);
     }
+  }
 
-    return arr;
-  }, [products, sort]);
+  // 2) Fill remaining spots with any other featured items
+  for (const p of featuredOnly) {
+    const k = getStableKey(p);
+    if (!used.has(k)) {
+      picked.push(p);
+      used.add(k);
+      if (picked.length >= total) break;
+    }
+  }
+
+  return picked.slice(0, total);
+}
+
+export default function Shop() {
+  const featured = pickFeaturedByCategory(
+    products as any[],
+    {
+      keychains: 2,
+      tools: 1,
+      accessories: 1,
+      fanboys: 2,
+    },
+    6
+  );
 
   return (
-    <section id="all" className="mt-10">
-      {/* Controls */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+    <div className="relative min-h-screen">
+      <Background />
+      <Navbar />
+
+      <main className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 pt-28 pb-16">
+        {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-white">Browse All</h2>
-            <p className="mt-1 text-sm text-white/60">Sort and adjust the grid.</p>
+          <div className="text-center sm:text-left">
+            <h1 className="text-4xl font-semibold text-white">Shop</h1>
+            <p className="mt-2 text-white/70">
+              Prints, parts, and digital files built with the Creative Dimensions
+              vibe.
+            </p>
           </div>
 
-          <div className="w-full sm:w-auto flex flex-col gap-2">
-            {/* Sort dropdown */}
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="w-full sm:w-[220px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90
-                backdrop-blur-xl backdrop-saturate-150 hover:bg-white/10 transition focus:outline-none"
+          <div className="flex gap-3 justify-center sm:justify-end">
+            <a
+              href="https://wa.me/96170304007?text=Hey!%20I%E2%80%99m%20interested%20in%20a%20custom%203D%20print.%20I%20can%20send%20the%20file%20or%20a%20photo%20of%20the%20idea.%20What%20details%20do%20you%20need,%20and%20what%20size%20should%20it%20be%3F"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-white/90 hover:bg-white/10 transition"
             >
-              <option className="text-black" value="recommended">
-                Sort: Recommended
-              </option>
-              <option className="text-black" value="newest">
-                Sort: Newest
-              </option>
-              <option className="text-black" value="az">
-                Sort: A → Z
-              </option>
-              <option className="text-black" value="priceLow">
-                Sort: Price Low → High
-              </option>
-              <option className="text-black" value="priceHigh">
-                Sort: Price High → Low
-              </option>
-            </select>
+              Custom Request
+            </a>
 
-            {/* NEW: Columns dropdown (below sort) */}
-            <select
-              value={columns}
-              onChange={(e) => setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)}
-              className="w-full sm:w-[220px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90
-                backdrop-blur-xl backdrop-saturate-150 hover:bg-white/10 transition focus:outline-none"
+            <Link
+              href="#all"
+              className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
             >
-              <option className="text-black" value={1}>
-                Columns: 1
-              </option>
-              <option className="text-black" value={2}>
-                Columns: 2
-              </option>
-              <option className="text-black" value={3}>
-                Columns: 3
-              </option>
-              <option className="text-black" value={4}>
-                Columns: 4
-              </option>
-            </select>
+              Browse All
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* Grid */}
-      <div
-        className="mt-6 grid gap-4"
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-      >
-        {list.map((p: any) => (
-          <Link
-            key={getStableKey(p)}
-            href={getProductHref(p)}
-            className="group rounded-2xl border border-white/10 bg-black/20 p-5 hover:bg-black/30 transition"
-          >
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
-              <Image
-                src={getCardImage(p)}
-                alt={getTitle(p)}
-                fill
-                className="object-cover group-hover:scale-[1.02] transition"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-            </div>
-
-            <div className="mt-4 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-white font-semibold truncate">{getTitle(p)}</div>
-                <div className="mt-1 text-sm text-white/60 line-clamp-2">{getDesc(p)}</div>
+        {/* Quick categories */}
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {[
+            {
+              title: "New Arrivals",
+              desc: "Fresh drops and latest uploads.",
+              href: "/shop/new-arrivals",
+            },
+            {
+              title: "Keychains",
+              desc: "Clean, custom, gift-ready.",
+              href: "/shop/keychains",
+            },
+            {
+              title: "Tools",
+              desc: "Maker essentials and workshop gear.",
+              href: "/shop/tools",
+            },
+            {
+              title: "Accessories",
+              desc: "Upgrades, add-ons, extras.",
+              href: "/shop/accessories",
+            },
+            {
+              title: "Fanboys",
+              desc: "Fandom prints and fun stuff.",
+              href: "/shop/fanboys",
+            },
+          ].map((c) => (
+            <Link
+              key={c.title}
+              href={c.href}
+              className="group rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:bg-white/10"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-lg font-semibold text-white">
+                    {c.title}
+                  </div>
+                  <div className="mt-1 text-sm text-white/65">{c.desc}</div>
+                </div>
+                <span className="text-white/40 group-hover:text-white/70 transition">
+                  →
+                </span>
               </div>
+            </Link>
+          ))}
+        </div>
 
-              <div className="shrink-0 text-white/80 text-sm">{getPriceLabel(p)}</div>
-            </div>
+        {/* Featured */}
+        <div
+          id="featured"
+          className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6"
+        >
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
+            <h2 className="text-xl font-semibold text-white">Featured</h2>
+            <p className="text-sm text-white/60">
+              Handpicked drops, limited runs, and best-sellers.
+            </p>
+          </div>
 
-            <div className="mt-4 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90 group-hover:bg-white/10 transition text-center">
-              View
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featured.map((p: any) => (
+              <Link
+                key={getStableKey(p)}
+                href={getProductHref(p)}
+                className="group rounded-2xl border border-white/10 bg-black/20 p-5 hover:bg-black/30 transition"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
+                  <Image
+                    src={getCardImage(p)}
+                    alt={getTitle(p)}
+                    fill
+                    className="object-cover group-hover:scale-[1.02] transition"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                </div>
+
+                <div className="mt-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-white font-semibold truncate">
+                      {getTitle(p)}
+                    </div>
+                    <div className="mt-1 text-sm text-white/60 line-clamp-2">
+                      {getDesc(p)}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-white/80 text-sm">
+                    {getPriceLabel(p)}
+                  </div>
+                </div>
+
+                <div className="mt-4 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white/90 group-hover:bg-white/10 transition text-center">
+                  View
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* All products (interactive) */}
+        <ShopCatalogClient products={products as any[]} />
+
+        <div className="mt-10 text-center text-sm text-white/50">
+          Want something specific? Hit{" "}
+          <span className="text-white/80">Custom Request</span>.
+        </div>
+
+        <Footer />
+      </main>
+    </div>
   );
 }
