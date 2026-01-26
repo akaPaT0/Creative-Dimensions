@@ -148,7 +148,6 @@ function parseProducts(tsText: string) {
 }
 
 function renderProductsTs(products: any[]) {
-  // Minimal, stable file output (keeps your types flexible)
   const lines: string[] = [];
   lines.push(`export type Category = string;`);
   lines.push(``);
@@ -191,6 +190,11 @@ async function requireAdmin() {
   return { ok: true as const };
 }
 
+function repoPathFromPublicPath(pubPath: string) {
+  // pubPath like "/products/a/b/c-1.webp"
+  return `public${pubPath}`.replace(/^public\/public\//, "public/");
+}
+
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const admin = await requireAdmin();
@@ -219,6 +223,9 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const isNew = String(form.get("isNew") || "false") === "true";
     const featured = String(form.get("featured") || "false") === "true";
 
+    // NEW: imagesOrder from edit UI (JSON string)
+    const imagesOrderRaw = String(form.get("imagesOrder") || "").trim();
+
     const files = form.getAll("images") as File[]; // optional
 
     if (!name || !categoryRaw || !subCategoryRaw || !priceUSDStr || !description) {
@@ -240,11 +247,41 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
 
     const old = products[idx];
-    const oldImages: string[] = Array.isArray(old?.images) ? old.images : (old?.image ? [old.image] : []);
+    const oldImages: string[] = Array.isArray(old?.images)
+      ? old.images
+      : (old?.image ? [old.image] : []);
 
-    // If new images uploaded: upload new, update images array, and delete old image files
+    // If new images uploaded OR reorder-only edit, we set this.
     let newImages: string[] | undefined = undefined;
 
+    // NEW: parse and validate imagesOrder (reorder/removal for existing images)
+    let desiredOrder: string[] | undefined = undefined;
+    if (imagesOrderRaw) {
+      try {
+        const parsed = JSON.parse(imagesOrderRaw);
+        if (!Array.isArray(parsed) || !parsed.every((x) => typeof x === "string")) {
+          return json({ error: "imagesOrder must be a JSON array of strings" }, 400);
+        }
+
+        desiredOrder = parsed.map((s) => s.trim()).filter(Boolean);
+
+        // validate: only existing images allowed (no random paths)
+        const oldSet = new Set(oldImages);
+        for (const p of desiredOrder) {
+          if (!oldSet.has(p)) return json({ error: `imagesOrder contains unknown image: ${p}` }, 400);
+        }
+
+        // validate: no duplicates
+        const desiredSet = new Set(desiredOrder);
+        if (desiredSet.size !== desiredOrder.length) {
+          return json({ error: "imagesOrder contains duplicates" }, 400);
+        }
+      } catch {
+        return json({ error: "imagesOrder must be valid JSON" }, 400);
+      }
+    }
+
+    // If new images uploaded: upload new, update images array, and delete old image files
     if (files && files.length > 0) {
       const uploaded: string[] = [];
 
@@ -276,7 +313,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 
       // delete old images referenced (best-effort)
       for (const pubPath of oldImages) {
-        const repoPath = `public${pubPath}`.replace(/^public\/public\//, "public/");
+        const repoPath = repoPathFromPublicPath(pubPath);
         const sha = await tryGetSha(owner, repo, repoPath, branch);
         if (!sha) continue;
         try {
@@ -290,6 +327,31 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
           });
         } catch {
           // ignore delete failures
+        }
+      }
+    } else if (desiredOrder) {
+      // NEW: reorder/removal without uploading new files
+      newImages = desiredOrder;
+
+      // delete removed images (best-effort)
+      const desiredSet = new Set(desiredOrder);
+      const removed = oldImages.filter((p) => !desiredSet.has(p));
+
+      for (const pubPath of removed) {
+        const repoPath = repoPathFromPublicPath(pubPath);
+        const sha = await tryGetSha(owner, repo, repoPath, branch);
+        if (!sha) continue;
+        try {
+          await deleteFile({
+            owner,
+            repo,
+            path: repoPath,
+            branch,
+            message: `Delete removed product image: ${id}`,
+            sha,
+          });
+        } catch {
+          // ignore
         }
       }
     }
@@ -350,7 +412,9 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
 
     const product = products[idx];
-    const images: string[] = Array.isArray(product?.images) ? product.images : (product?.image ? [product.image] : []);
+    const images: string[] = Array.isArray(product?.images)
+      ? product.images
+      : (product?.image ? [product.image] : []);
 
     // remove product
     products.splice(idx, 1);
@@ -371,7 +435,7 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
 
     // delete images (best-effort)
     for (const pubPath of images) {
-      const repoPath = `public${pubPath}`.replace(/^public\/public\//, "public/");
+      const repoPath = repoPathFromPublicPath(pubPath);
       const sha = await tryGetSha(owner, repo, repoPath, branch);
       if (!sha) continue;
       try {
