@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+
 import Background from "./components/Background";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -9,6 +11,9 @@ import HeroIn from "./components/HeroIn";
 import CustomRequestModal from "./components/CustomRequestModal";
 
 export default function Home() {
+  // NEW: columns dropdown state (1..4)
+  const [columns, setColumns] = useState<number>(3);
+
   return (
     <main className="min-h-screen relative">
       <Navbar />
@@ -134,7 +139,39 @@ export default function Home() {
       {/* BROWSE CARDS SECTION */}
       <section className="relative z-10 pt-12 pb-12">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="grid gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {/* NEW: Columns dropdown (place it under your Sort dropdown in the shop page; here it's shown above cards) */}
+          <div className="mb-6 max-w-sm">
+            <label className="block text-white/70 text-sm mb-2">
+              Grid columns
+            </label>
+            <select
+              value={columns}
+              onChange={(e) => setColumns(Number(e.target.value))}
+              className="w-full rounded-xl bg-white/5 border border-white/20 text-white px-4 py-3 text-sm
+                backdrop-blur-xl backdrop-saturate-150 focus:outline-none focus:ring-2 focus:ring-white/20"
+            >
+              <option className="text-black" value={1}>
+                1 column
+              </option>
+              <option className="text-black" value={2}>
+                2 columns
+              </option>
+              <option className="text-black" value={3}>
+                3 columns
+              </option>
+              <option className="text-black" value={4}>
+                4 columns
+              </option>
+            </select>
+          </div>
+
+          {/* NEW: dynamic column grid */}
+          <div
+            className="grid gap-x-4 gap-y-10"
+            style={{
+              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+            }}
+          >
             {[
               {
                 title: "Featured Picks",
@@ -164,12 +201,15 @@ export default function Home() {
                 desc: "Pickup or delivery. Clear timelines and safe packaging.",
               },
             ].map((item, i) => {
-              // Card Content with Group-Hover Zoom on Text
               const cardContent = (
                 <div
                   className={`group h-[230px] flex flex-col rounded-2xl border border-white/10 bg-white/5
                     backdrop-blur-xl backdrop-saturate-150 p-5 w-full text-left transition-colors
-                    ${item.href || item.isModal ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
+                    ${
+                      item.href || item.isModal
+                        ? "cursor-pointer hover:bg-white/10"
+                        : "cursor-default"
+                    }`}
                 >
                   <div className="h-28 rounded-xl border border-white/10 bg-white/5 relative overflow-hidden flex items-center justify-center">
                     <div
@@ -181,8 +221,7 @@ export default function Home() {
                       style={{ background: "#3BC7C4" }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
-                    
-                    {/* Title Zooms 110% on Card Hover */}
+
                     <div className="relative px-4 text-center transition-transform duration-300 group-hover:scale-110">
                       <div className="text-white font-semibold text-[18px] sm:text-[19px]">
                         {item.title}
@@ -190,7 +229,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Desc Zooms 105% on Card Hover */}
                   <div className="mt-4 text-white/70 text-sm leading-relaxed line-clamp-2 transition-transform duration-300 group-hover:scale-105 origin-left">
                     {item.desc}
                   </div>
@@ -203,7 +241,6 @@ export default function Home() {
                     <Link href={item.href}>{cardContent}</Link>
                   ) : item.isModal ? (
                     <div className="relative group">
-                      {/* Invisible trigger overlaying the card */}
                       <div className="absolute inset-0 z-20 opacity-0">
                         <CustomRequestModal
                           productName="Custom Order"
@@ -233,15 +270,25 @@ export default function Home() {
               Why Creative Dimensions
             </h3>
             <p className="mt-3 text-white/70 text-base sm:text-lg">
-              Clean prints, clear timelines, and a finish you’ll actually want to keep.
+              Clean prints, clear timelines, and a finish you’ll actually want
+              to keep.
             </p>
           </div>
 
           <div className="mx-auto mt-10 max-w-3xl space-y-4">
             {[
-              { t: "Clean, consistent finish", d: "Dialed settings and careful post-processing for a premium look." },
-              { t: "Clear turnaround times", d: "We tell you the ETA up front and stick to it." },
-              { t: "Local delivery in Lebanon", d: "Pickup or delivery with safe packaging and updates." },
+              {
+                t: "Clean, consistent finish",
+                d: "Dialed settings and careful post-processing for a premium look.",
+              },
+              {
+                t: "Clear turnaround times",
+                d: "We tell you the ETA up front and stick to it.",
+              },
+              {
+                t: "Local delivery in Lebanon",
+                d: "Pickup or delivery with safe packaging and updates.",
+              },
             ].map((x) => (
               <div
                 key={x.t}
@@ -250,7 +297,9 @@ export default function Home() {
                 <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#FF8B64] shadow-[0_0_18px_rgba(255,139,100,0.35)]" />
                 <div>
                   <div className="text-white font-semibold">{x.t}</div>
-                  <div className="mt-1 text-white/70 text-sm leading-relaxed">{x.d}</div>
+                  <div className="mt-1 text-white/70 text-sm leading-relaxed">
+                    {x.d}
+                  </div>
                 </div>
               </div>
             ))}
