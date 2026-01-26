@@ -55,7 +55,6 @@ export default function Home() {
                       </Link>
                     </div>
 
-                    {/* Custom Request (mobile) */}
                     <div className="mt-4 sm:mt-10 flex justify-center">
                       <CustomRequestModal
                         productName="Custom Order"
@@ -65,7 +64,6 @@ export default function Home() {
                       />
                     </div>
 
-                    {/* Divider (mobile) */}
                     <div className="relative z-10 flex justify-center pt-10 pb-2">
                       <div className="h-[3px] w-36 sm:w-56 rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
                     </div>
@@ -113,7 +111,6 @@ export default function Home() {
                   </Link>
                 </div>
 
-                {/* Custom Request (PC) */}
                 <div className="mt-6 flex justify-center">
                   <CustomRequestModal
                     productName="Custom Order"
@@ -124,7 +121,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Divider (pc) */}
               <div className="relative z-10 flex justify-center pt-40 pb-2">
                 <div className="h-[3px] w-[520px] rounded-full bg-[#FF8B64]/55 shadow-[0_0_22px_rgba(255,139,100,0.30)]" />
               </div>
@@ -133,7 +129,7 @@ export default function Home() {
         </HeroIn>
       </section>
 
-      {/* FEATURED / BROWSE CARDS SECTION */}
+      {/* Rest of page (scroll) */}
       <section className="relative z-10 pt-12 pb-12">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -141,22 +137,21 @@ export default function Home() {
               {
                 title: "Featured Picks",
                 desc: "Curated designs we recommend first. Clean, reliable, giftable.",
-                href: "/shop", // Linked to Shop
+                href: "/shop",
               },
               {
                 title: "New Drops",
                 desc: "Fresh designs added regularly. Sometimes limited runs.",
-                href: "/new-arrivals", // Linked to new-arrivals folder
+                href: "/shop/new-arrivals", // Linked to the path shown in your video
               },
               {
                 title: "Custom Orders",
                 desc: "Send an idea, photo, or sketch. We design, print, and finish.",
-                href: "/custom-request", // Linked to custom-request folder
+                isModal: true,
               },
               {
                 title: "Customization",
                 desc: "Names, sizes, small tweaks. Made for you.",
-                // No href -> not clickable
               },
               {
                 title: "Quality Promise",
@@ -167,22 +162,16 @@ export default function Home() {
                 desc: "Pickup or delivery. Clear timelines and safe packaging.",
               },
             ].map((item, i) => {
-              // 1. Define the internal card UI
-              const CardContent = (
-                <div
-                  className={`h-[230px] flex flex-col rounded-2xl border border-white/10 bg-white/5
-                    backdrop-blur-xl backdrop-saturate-150 p-5
-                    transition-transform duration-200 ease-out
-                    hover:scale-[1.02] active:scale-[0.99]
-                    ${item.href ? "cursor-pointer" : "cursor-default"}`}
-                >
+              // Exact card styling from your original code
+              const cardClass = "h-[230px] flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-5 transition-transform duration-200 ease-out hover:scale-[1.02] active:scale-[0.99] w-full text-left";
+              
+              const cardContent = (
+                <div className={cardClass}>
                   <div className="h-28 rounded-xl border border-white/10 bg-white/5 relative overflow-hidden flex items-center justify-center">
-                    {/* Orange Sparkle */}
                     <div
                       className="absolute -top-10 -right-10 h-32 w-32 rounded-full blur-2xl opacity-60"
                       style={{ background: "#FF8B64" }}
                     />
-                    {/* Teal/Cyan Sparkle */}
                     <div
                       className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full blur-2xl opacity-50"
                       style={{ background: "#3BC7C4" }}
@@ -201,15 +190,26 @@ export default function Home() {
                 </div>
               );
 
-              // 2. Return the card, wrapped in Link ONLY if href exists
               return (
                 <Reveal key={item.title} delayMs={i * 80}>
                   {item.href ? (
-                    <Link href={item.href} className="block h-full">
-                      {CardContent}
-                    </Link>
+                    <Link href={item.href}>{cardContent}</Link>
+                  ) : item.isModal ? (
+                    /* Uses your CustomRequestModal function exactly as provided, but styled as a card */
+                    <div className="relative group">
+                      <div className="absolute inset-0 z-20 opacity-0">
+                        <CustomRequestModal
+                          productName="Custom Order"
+                          productUrl="https://creative-dimensions.vercel.app"
+                          className="w-full h-full cursor-pointer"
+                        />
+                      </div>
+                      <div className="relative z-10 pointer-events-none">
+                        {cardContent}
+                      </div>
+                    </div>
                   ) : (
-                    CardContent
+                    cardContent
                   )}
                 </Reveal>
               );
@@ -231,25 +231,15 @@ export default function Home() {
               Why Creative Dimensions
             </h3>
             <p className="mt-3 text-white/70 text-base sm:text-lg">
-              Clean prints, clear timelines, and a finish you’ll actually want to
-              keep.
+              Clean prints, clear timelines, and a finish you’ll actually want to keep.
             </p>
           </div>
 
           <div className="mx-auto mt-10 max-w-3xl space-y-4">
             {[
-              {
-                t: "Clean, consistent finish",
-                d: "Dialed settings and careful post-processing for a premium look.",
-              },
-              {
-                t: "Clear turnaround times",
-                d: "We tell you the ETA up front and stick to it.",
-              },
-              {
-                t: "Local delivery in Lebanon",
-                d: "Pickup or delivery with safe packaging and updates.",
-              },
+              { t: "Clean, consistent finish", d: "Dialed settings and careful post-processing for a premium look." },
+              { t: "Clear turnaround times", d: "We tell you the ETA up front and stick to it." },
+              { t: "Local delivery in Lebanon", d: "Pickup or delivery with safe packaging and updates." },
             ].map((x) => (
               <div
                 key={x.t}
@@ -258,9 +248,7 @@ export default function Home() {
                 <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#FF8B64] shadow-[0_0_18px_rgba(255,139,100,0.35)]" />
                 <div>
                   <div className="text-white font-semibold">{x.t}</div>
-                  <div className="mt-1 text-white/70 text-sm leading-relaxed">
-                    {x.d}
-                  </div>
+                  <div className="mt-1 text-white/70 text-sm leading-relaxed">{x.d}</div>
                 </div>
               </div>
             ))}
