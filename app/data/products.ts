@@ -217,4 +217,17 @@ export const products: Product[] = [
     "isNew": true,
     "featured": true
   }
+,
+{
+  id: "KECA009",
+  name: "Mercedes W204 back keychain",
+  slug: "mercedes-w204-back-keychain",
+  category: "keychains",
+  subCategory: "cars",
+  priceUSD: 3,
+  description: "Mercedes W204 back keychain, iconic rear silhouette, instantly recognizable.\r\n3D printed with clean layered details so it hits different on your keys.\r\nChain options: silver or gold.",
+  images: ["/products/keychains/cars/mercedes-w204-back-keychain-1.jpg", "/products/keychains/cars/mercedes-w204-back-keychain-2.jpg", "/products/keychains/cars/mercedes-w204-back-keychain-3.jpg", "/products/keychains/cars/mercedes-w204-back-keychain-4.jpg", "/products/keychains/cars/mercedes-w204-back-keychain-5.jpg", "/products/keychains/cars/mercedes-w204-back-keychain-6.jpg"],
+  isNew: true,
+  featured: false,
+},
 ];
