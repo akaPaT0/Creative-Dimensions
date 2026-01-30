@@ -230,4 +230,17 @@ export const products: Product[] = [
   isNew: true,
   featured: false,
 },
+
+{
+  id: "KECA009",
+  name: "Mercedes CLA 35 keychain",
+  slug: "mercedes-cla-35-keychain",
+  category: "keychains",
+  subCategory: "cars",
+  priceUSD: 2,
+  description: "Mercedes CLA 35 keychain, sharp lines and that sporty stance.\r\n3D printed with clean layered details so it looks slick on your everyday keys.\r\nChain options: silver or gold.",
+  images: ["/products/keychains/cars/mercedes-cla-35-keychain-1.jpg", "/products/keychains/cars/mercedes-cla-35-keychain-2.jpg", "/products/keychains/cars/mercedes-cla-35-keychain-3.jpg", "/products/keychains/cars/mercedes-cla-35-keychain-4.jpg", "/products/keychains/cars/mercedes-cla-35-keychain-5.jpg", "/products/keychains/cars/mercedes-cla-35-keychain-6.jpg"],
+  isNew: true,
+  featured: false,
+},
 ];
