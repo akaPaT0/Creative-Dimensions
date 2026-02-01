@@ -243,6 +243,9 @@ function EditModal({
         : []) as string[];
   const [existingImages, setExistingImages] = useState<string[]>(initialExistingImages);
 
+  // ✅ FIX: only send imagesOrder if user actually changed it
+  const initialImagesOrderStr = useMemo(() => JSON.stringify(initialExistingImages), []);
+
   // Optional: uploading new files replaces old images (backend handles deletion)
   const [images, setImages] = useState<File[]>([]);
   const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
@@ -272,8 +275,11 @@ function EditModal({
       fd.set("isNew", String(isNew));
       fd.set("featured", String(featured));
 
-      // ✅ persist order/removals (your PUT route reads this)
-      fd.set("imagesOrder", JSON.stringify(existingImages));
+      // ✅ FIX: persist order/removals ONLY if changed
+      const currentImagesOrderStr = JSON.stringify(existingImages);
+      if (currentImagesOrderStr !== initialImagesOrderStr) {
+        fd.set("imagesOrder", currentImagesOrderStr);
+      }
 
       // Optional: replace images by uploading new files
       for (const f of images) fd.append("images", f);
