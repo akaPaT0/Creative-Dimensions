@@ -32,14 +32,14 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Hidden listener so dropdown can open the same modal used on Home */}
+      {/* One hidden instance so dropdown can open the same modal */}
       <CustomRequestModal
         hideButton
         productName="Custom Order"
         productUrl="https://creative-dimensions.vercel.app"
       />
 
-      {/* PC Nav (lg and up) */}
+      {/* PC Nav */}
       <nav
         className={`fixed inset-x-0 top-0 z-20 hidden lg:block transition-all duration-200 ${
           scrolled
@@ -68,10 +68,7 @@ export default function Navbar() {
             <Link href="/shop" className="text-white hover:opacity-70 transition">
               Shop
             </Link>
-            <Link
-              href="/contact"
-              className="text-white hover:opacity-70 transition"
-            >
+            <Link href="/contact" className="text-white hover:opacity-70 transition">
               Contact
             </Link>
 
@@ -201,7 +198,6 @@ function AuthButtons({ onRequestCustom }: { onRequestCustom?: () => void }) {
 
       <SignedIn>
         <div ref={wrapRef} className="relative">
-          {/* Avatar trigger */}
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -221,7 +217,6 @@ function AuthButtons({ onRequestCustom }: { onRequestCustom?: () => void }) {
             )}
           </button>
 
-          {/* Dropdown */}
           {menuOpen && (
             <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
               <Link

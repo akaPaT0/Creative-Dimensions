@@ -21,10 +21,8 @@ type Props = {
   productUrl?: string;
   phoneE164?: string; // ex: 96170304007
   className?: string;
-
-  // Optional extras
   buttonLabel?: string;
-  hideButton?: boolean; // if true, component only listens for openCustomRequest()
+  hideButton?: boolean;
 };
 
 export default function CustomRequestModal({
@@ -37,7 +35,7 @@ export default function CustomRequestModal({
 }: Props) {
   const [open, setOpen] = useState(false);
 
-  // allow external triggers to override context
+  // context can be overridden by openCustomRequest()
   const [ctxName, setCtxName] = useState<string | undefined>(productName);
   const [ctxUrl, setCtxUrl] = useState<string | undefined>(productUrl);
 
@@ -56,10 +54,8 @@ export default function CustomRequestModal({
     const handler = (e: Event) => {
       const ce = e as CustomEvent<OpenPayload>;
       const d = ce?.detail || {};
-
       if (d.productName !== undefined) setCtxName(d.productName);
       if (d.productUrl !== undefined) setCtxUrl(d.productUrl);
-
       setOpen(true);
     };
 
@@ -91,11 +87,9 @@ export default function CustomRequestModal({
   function addFiles(newOnes: File[]) {
     if (!newOnes.length) return;
 
-    // de-dupe by name+size+lastModified
     const key = (f: File) => `${f.name}::${f.size}::${f.lastModified}`;
     const existing = new Set(files.map(key));
     const merged = [...files, ...newOnes.filter((f) => !existing.has(key(f)))];
-
     setFiles(merged);
   }
 
@@ -147,7 +141,6 @@ export default function CustomRequestModal({
       const urls: string[] = Array.isArray(data?.urls) ? data.urls : [];
       openWhatsApp(urls);
 
-      // reset
       setDetails("");
       setFiles([]);
       setOpen(false);
