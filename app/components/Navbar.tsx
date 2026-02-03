@@ -12,6 +12,8 @@ import {
   useUser,
 } from "@clerk/nextjs";
 
+import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal"; // adjust path if needed
+
 const ubuntu = Ubuntu({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
@@ -30,6 +32,13 @@ export default function MobileNav() {
 
   return (
     <>
+      {/* Hidden listener so dropdown can open the same modal used on Home */}
+      <CustomRequestModal
+        hideButton
+        productName="Custom Order"
+        productUrl="https://creative-dimensions.vercel.app"
+      />
+
       {/* PC Nav (lg and up) */}
       <nav
         className={`fixed inset-x-0 top-0 z-20 hidden lg:block transition-all duration-200 ${
@@ -66,8 +75,14 @@ export default function MobileNav() {
               Contact
             </Link>
 
-            {/* One button only: avatar that opens our menu */}
-            <AuthButtons />
+            <AuthButtons
+              onRequestCustom={() => {
+                openCustomRequest({
+                  productName: "Custom Order",
+                  productUrl: "https://creative-dimensions.vercel.app",
+                });
+              }}
+            />
           </div>
         </div>
       </nav>
@@ -128,8 +143,15 @@ export default function MobileNav() {
               Contact
             </Link>
 
-            {/* One button only: avatar that opens our menu */}
-            <AuthButtons />
+            <AuthButtons
+              onRequestCustom={() => {
+                setOpen(false);
+                openCustomRequest({
+                  productName: "Custom Order",
+                  productUrl: "https://creative-dimensions.vercel.app",
+                });
+              }}
+            />
           </div>
         </div>
       </nav>
@@ -137,14 +159,17 @@ export default function MobileNav() {
   );
 }
 
-export function AuthButtons() {
+export function AuthButtons({
+  onRequestCustom,
+}: {
+  onRequestCustom?: () => void;
+}) {
   const { signOut } = useClerk();
   const { user, isLoaded } = useUser();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
-  // close on outside click + Esc
   useEffect(() => {
     if (!menuOpen) return;
 
@@ -180,7 +205,6 @@ export function AuthButtons() {
 
       <SignedIn>
         <div ref={wrapRef} className="relative">
-          {/* Avatar trigger (single button) */}
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -200,7 +224,6 @@ export function AuthButtons() {
             )}
           </button>
 
-          {/* Dropdown */}
           {menuOpen && (
             <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
               <Link
@@ -210,6 +233,7 @@ export function AuthButtons() {
               >
                 My account
               </Link>
+
               <Link
                 href="/orders"
                 onClick={close}
@@ -217,13 +241,18 @@ export function AuthButtons() {
               >
                 My orders
               </Link>
-              <Link
-                href="/request-custom"
-                onClick={close}
-                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  onRequestCustom?.();
+                }}
+                className="w-full text-left px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
               >
                 Request custom
-              </Link>
+              </button>
+
               <Link
                 href="/admin"
                 onClick={close}

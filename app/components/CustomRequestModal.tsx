@@ -3,11 +3,28 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+export const CUSTOM_REQUEST_OPEN_EVENT = "cd:open-custom-request";
+
+type OpenPayload = {
+  productName?: string;
+  productUrl?: string;
+};
+
+export function openCustomRequest(payload?: OpenPayload) {
+  window.dispatchEvent(
+    new CustomEvent(CUSTOM_REQUEST_OPEN_EVENT, { detail: payload || {} })
+  );
+}
+
 type Props = {
   productName?: string;
   productUrl?: string;
   phoneE164?: string; // ex: 96170304007
   className?: string;
+
+  // Optional extras
+  buttonLabel?: string;
+  hideButton?: boolean; // if true, component only listens for openCustomRequest()
 };
 
 export default function CustomRequestModal({
@@ -15,8 +32,15 @@ export default function CustomRequestModal({
   productUrl,
   phoneE164 = "96170304007",
   className = "",
+  buttonLabel = "Request Custom",
+  hideButton = false,
 }: Props) {
   const [open, setOpen] = useState(false);
+
+  // allow external triggers to override context
+  const [ctxName, setCtxName] = useState<string | undefined>(productName);
+  const [ctxUrl, setCtxUrl] = useState<string | undefined>(productUrl);
+
   const [details, setDetails] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
@@ -26,6 +50,26 @@ export default function CustomRequestModal({
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // Listen for global open requests
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<OpenPayload>;
+      const d = ce?.detail || {};
+
+      if (d.productName !== undefined) setCtxName(d.productName);
+      if (d.productUrl !== undefined) setCtxUrl(d.productUrl);
+
+      setOpen(true);
+    };
+
+    window.addEventListener(CUSTOM_REQUEST_OPEN_EVENT, handler as EventListener);
+    return () =>
+      window.removeEventListener(
+        CUSTOM_REQUEST_OPEN_EVENT,
+        handler as EventListener
+      );
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +91,6 @@ export default function CustomRequestModal({
   function addFiles(newOnes: File[]) {
     if (!newOnes.length) return;
 
-    // de-dupe by name+size+lastModified
     const key = (f: File) => `${f.name}::${f.size}::${f.lastModified}`;
     const existing = new Set(files.map(key));
     const merged = [...files, ...newOnes.filter((f) => !existing.has(key(f)))];
@@ -64,7 +107,9 @@ export default function CustomRequestModal({
   }
 
   const waText = () => {
-    const base = `Custom request: ${productName || ""}${productUrl ? ` — ${productUrl}` : ""}`;
+    const base = `Custom request: ${ctxName || ""}${
+      ctxUrl ? ` — ${ctxUrl}` : ""
+    }`;
     const extra = details.trim() ? `\nDetails: ${details.trim()}` : "";
     return `${base}${extra}`.trim();
   };
@@ -89,8 +134,8 @@ export default function CustomRequestModal({
     try {
       const fd = new FormData();
       fd.set("details", details);
-      if (productName) fd.set("productName", productName);
-      if (productUrl) fd.set("productUrl", productUrl);
+      if (ctxName) fd.set("productName", ctxName);
+      if (ctxUrl) fd.set("productUrl", ctxUrl);
 
       for (const f of files) fd.append("files", f);
 
@@ -101,7 +146,6 @@ export default function CustomRequestModal({
       const urls: string[] = Array.isArray(data?.urls) ? data.urls : [];
       openWhatsApp(urls);
 
-      // reset
       setDetails("");
       setFiles([]);
       setOpen(false);
@@ -161,7 +205,6 @@ export default function CustomRequestModal({
                 <div>
                   <label className="text-white/80 text-sm">Files</label>
 
-                  {/* Hidden input so we can re-open without replacing */}
                   <input
                     ref={fileInputRef}
                     className="hidden"
@@ -171,8 +214,6 @@ export default function CustomRequestModal({
                     onChange={(e) => {
                       const incoming = Array.from(e.target.files || []);
                       addFiles(incoming);
-
-                      // reset input so selecting the same file again still triggers onChange
                       if (fileInputRef.current) fileInputRef.current.value = "";
                     }}
                   />
@@ -259,9 +300,19 @@ export default function CustomRequestModal({
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={className}>
-        Request Custom
-      </button>
+      {!hideButton && (
+        <button
+          type="button"
+          onClick={() => {
+            setCtxName(productName);
+            setCtxUrl(productUrl);
+            setOpen(true);
+          }}
+          className={className}
+        >
+          {buttonLabel}
+        </button>
+      )}
       {modal}
     </>
   );
