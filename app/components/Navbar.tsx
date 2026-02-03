@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Ubuntu } from "next/font/google";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  useClerk,
+  useUser,
+} from "@clerk/nextjs";
 
 const ubuntu = Ubuntu({
   subsets: ["latin"],
@@ -60,6 +66,7 @@ export default function MobileNav() {
               Contact
             </Link>
 
+            {/* One button only: avatar that opens our menu */}
             <AuthButtons />
           </div>
         </div>
@@ -121,6 +128,7 @@ export default function MobileNav() {
               Contact
             </Link>
 
+            {/* One button only: avatar that opens our menu */}
             <AuthButtons />
           </div>
         </div>
@@ -130,10 +138,13 @@ export default function MobileNav() {
 }
 
 export function AuthButtons() {
+  const { signOut } = useClerk();
+  const { user, isLoaded } = useUser();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
-  // Close on outside click + Esc
+  // close on outside click + Esc
   useEffect(() => {
     if (!menuOpen) return;
 
@@ -168,20 +179,30 @@ export function AuthButtons() {
       </SignedOut>
 
       <SignedIn>
-        <div ref={wrapRef} className="relative flex items-center gap-2">
-          {/* Our menu button (click to open/close) */}
+        <div ref={wrapRef} className="relative">
+          {/* Avatar trigger (single button) */}
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
-            className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white hover:bg-white/10 transition text-sm"
+            aria-label="Account menu"
+            className="h-10 w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition overflow-hidden flex items-center justify-center"
           >
-            Menu
+            {isLoaded && user?.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.imageUrl}
+                alt="Account"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="h-full w-full rounded-full bg-white/10" />
+            )}
           </button>
 
-          {/* Our click dropdown */}
+          {/* Dropdown */}
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
+            <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
               <Link
                 href="/account"
                 onClick={close}
@@ -210,11 +231,21 @@ export function AuthButtons() {
               >
                 Admin
               </Link>
+
+              <div className="h-px bg-white/10" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  signOut({ redirectUrl: "/" });
+                }}
+                className="w-full text-left px-4 py-3 text-sm text-white/80 hover:bg-white/5 transition"
+              >
+                Sign out
+              </button>
             </div>
           )}
-
-          {/* Clerk avatar menu stays separate */}
-          <UserButton afterSignOutUrl="/" userProfileMode="modal" />
         </div>
       </SignedIn>
     </div>
