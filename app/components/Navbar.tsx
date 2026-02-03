@@ -53,10 +53,14 @@ export default function MobileNav() {
             <Link href="/shop" className="text-white hover:opacity-70 transition">
               Shop
             </Link>
-            <Link href="/contact" className="text-white hover:opacity-70 transition">
+            <Link
+              href="/contact"
+              className="text-white hover:opacity-70 transition"
+            >
               Contact
             </Link>
 
+            {/* Auth only (links live inside UserButton menu) */}
             <AuthButtons />
           </div>
         </div>
@@ -118,6 +122,7 @@ export default function MobileNav() {
               Contact
             </Link>
 
+            {/* Auth only (links live inside UserButton menu) */}
             <AuthButtons />
           </div>
         </div>
@@ -138,8 +143,40 @@ export function AuthButtons() {
       </SignedOut>
 
       <SignedIn>
-        <UserButton afterSignOutUrl="/" />
-      </SignedIn>
+            <div className="relative group">
+              <UserButton afterSignOutUrl="/" />
+
+              {/* Custom menu (ours), shows on hover */}
+              <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+                <Link
+                  href="/account"
+                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                >
+                  My account
+                </Link>
+                <Link
+                  href="/orders"
+                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                >
+                  My orders
+                </Link>
+                <Link
+                  href="/request-custom"
+                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                >
+                  Request custom
+                </Link>
+                <Link
+                  href="/admin"
+                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                >
+                  Admin
+                </Link>
+              </div>
+            </div>
+            
+          </SignedIn>
+
     </div>
   );
 }
