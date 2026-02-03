@@ -12,14 +12,14 @@ import {
   useUser,
 } from "@clerk/nextjs";
 
-import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal"; // adjust path if needed
+import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
 
 const ubuntu = Ubuntu({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
 });
 
-export default function MobileNav() {
+export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -76,12 +76,12 @@ export default function MobileNav() {
             </Link>
 
             <AuthButtons
-              onRequestCustom={() => {
+              onRequestCustom={() =>
                 openCustomRequest({
                   productName: "Custom Order",
                   productUrl: "https://creative-dimensions.vercel.app",
-                });
-              }}
+                })
+              }
             />
           </div>
         </div>
@@ -159,11 +159,7 @@ export default function MobileNav() {
   );
 }
 
-export function AuthButtons({
-  onRequestCustom,
-}: {
-  onRequestCustom?: () => void;
-}) {
+function AuthButtons({ onRequestCustom }: { onRequestCustom?: () => void }) {
   const { signOut } = useClerk();
   const { user, isLoaded } = useUser();
 
@@ -205,6 +201,7 @@ export function AuthButtons({
 
       <SignedIn>
         <div ref={wrapRef} className="relative">
+          {/* Avatar trigger */}
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -224,10 +221,11 @@ export function AuthButtons({
             )}
           </button>
 
+          {/* Dropdown */}
           {menuOpen && (
             <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
               <Link
-                href="/account"
+                href="/user"
                 onClick={close}
                 className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
               >

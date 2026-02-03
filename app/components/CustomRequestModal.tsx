@@ -91,6 +91,7 @@ export default function CustomRequestModal({
   function addFiles(newOnes: File[]) {
     if (!newOnes.length) return;
 
+    // de-dupe by name+size+lastModified
     const key = (f: File) => `${f.name}::${f.size}::${f.lastModified}`;
     const existing = new Set(files.map(key));
     const merged = [...files, ...newOnes.filter((f) => !existing.has(key(f)))];
@@ -146,6 +147,7 @@ export default function CustomRequestModal({
       const urls: string[] = Array.isArray(data?.urls) ? data.urls : [];
       openWhatsApp(urls);
 
+      // reset
       setDetails("");
       setFiles([]);
       setOpen(false);
