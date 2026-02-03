@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Ubuntu } from "next/font/google";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
@@ -60,7 +60,6 @@ export default function MobileNav() {
               Contact
             </Link>
 
-            {/* Auth only (links live inside UserButton menu) */}
             <AuthButtons />
           </div>
         </div>
@@ -122,7 +121,6 @@ export default function MobileNav() {
               Contact
             </Link>
 
-            {/* Auth only (links live inside UserButton menu) */}
             <AuthButtons />
           </div>
         </div>
@@ -132,6 +130,33 @@ export default function MobileNav() {
 }
 
 export function AuthButtons() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  // Close on outside click + Esc
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const el = wrapRef.current;
+      if (!el) return;
+      if (!el.contains(e.target as Node)) setMenuOpen(false);
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
+  const close = () => setMenuOpen(false);
+
   return (
     <div className="flex items-center gap-3">
       <SignedOut>
@@ -143,40 +168,55 @@ export function AuthButtons() {
       </SignedOut>
 
       <SignedIn>
-            <div className="relative group">
-              <UserButton afterSignOutUrl="/" />
+        <div ref={wrapRef} className="relative flex items-center gap-2">
+          {/* Our menu button (click to open/close) */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white hover:bg-white/10 transition text-sm"
+          >
+            Menu
+          </button>
 
-              {/* Custom menu (ours), shows on hover */}
-              <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
-                <Link
-                  href="/account"
-                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-                >
-                  My account
-                </Link>
-                <Link
-                  href="/orders"
-                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-                >
-                  My orders
-                </Link>
-                <Link
-                  href="/request-custom"
-                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-                >
-                  Request custom
-                </Link>
-                <Link
-                  href="/admin"
-                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-                >
-                  Admin
-                </Link>
-              </div>
+          {/* Our click dropdown */}
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
+              <Link
+                href="/account"
+                onClick={close}
+                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+              >
+                My account
+              </Link>
+              <Link
+                href="/orders"
+                onClick={close}
+                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+              >
+                My orders
+              </Link>
+              <Link
+                href="/request-custom"
+                onClick={close}
+                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+              >
+                Request custom
+              </Link>
+              <Link
+                href="/admin"
+                onClick={close}
+                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+              >
+                Admin
+              </Link>
             </div>
-            
-          </SignedIn>
+          )}
 
+          {/* Clerk avatar menu stays separate */}
+          <UserButton afterSignOutUrl="/" userProfileMode="modal" />
+        </div>
+      </SignedIn>
     </div>
   );
 }
