@@ -247,9 +247,9 @@ export default async function KeychainSlugPage({
         </div>
 
         {/* DESKTOP */}
-        <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
-          {/* small bottom padding = better visual balance */}
-          <div className="min-h-[640px] pb-6">
+        <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          {/* no forced height (removes dead space under thumbs) */}
+          <div className="pb-2">
             <ProductGallery images={imgs} name={p.name} />
           </div>
 
