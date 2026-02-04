@@ -68,10 +68,14 @@ export default function Navbar() {
             <Link href="/shop" className="text-white hover:opacity-70 transition">
               Shop
             </Link>
-            <Link href="/contact" className="text-white hover:opacity-70 transition">
+            <Link
+              href="/contact"
+              className="text-white hover:opacity-70 transition"
+            >
               Contact
             </Link>
 
+            {/* Desktop account dropdown stays */}
             <AuthButtons
               onRequestCustom={() =>
                 openCustomRequest({
@@ -116,31 +120,12 @@ export default function Navbar() {
           </button>
         </div>
 
+        {/* OPTION 2: User shortcuts first, divider, then nav links */}
         <div id="mobile-menu" className={open ? "block" : "hidden"}>
-          <div className="px-4 py-3 flex flex-col items-center justify-center gap-3 text-sm border-t border-white/10">
-            <Link
-              href="/about"
-              onClick={() => setOpen(false)}
-              className="text-white hover:opacity-70 transition"
-            >
-              About
-            </Link>
-            <Link
-              href="/shop"
-              onClick={() => setOpen(false)}
-              className="text-white hover:opacity-70 transition"
-            >
-              Shop
-            </Link>
-            <Link
-              href="/contact"
-              onClick={() => setOpen(false)}
-              className="text-white hover:opacity-70 transition"
-            >
-              Contact
-            </Link>
-
-            <AuthButtons
+          <div className="px-4 pt-3 pb-4 border-t border-white/10">
+            {/* User shortcuts block (NO nested dropdown) */}
+            <MobileUserShortcuts
+              onClose={() => setOpen(false)}
               onRequestCustom={() => {
                 setOpen(false);
                 openCustomRequest({
@@ -149,10 +134,150 @@ export default function Navbar() {
                 });
               }}
             />
+
+            {/* Divider line (your 20% vibe) */}
+            <div className="mt-4 border-t border-white/10" />
+
+            {/* Nav links */}
+            <div className="mt-4 flex flex-col items-center justify-center gap-3 text-sm">
+              <Link
+                href="/about"
+                onClick={() => setOpen(false)}
+                className="text-white hover:opacity-70 transition"
+              >
+                About
+              </Link>
+              <Link
+                href="/shop"
+                onClick={() => setOpen(false)}
+                className="text-white hover:opacity-70 transition"
+              >
+                Shop
+              </Link>
+              <Link
+                href="/contact"
+                onClick={() => setOpen(false)}
+                className="text-white hover:opacity-70 transition"
+              >
+                Contact
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
     </>
+  );
+}
+
+function MobileUserShortcuts({
+  onRequestCustom,
+  onClose,
+}: {
+  onRequestCustom?: () => void;
+  onClose?: () => void;
+}) {
+  const { signOut } = useClerk();
+  const { user, isLoaded } = useUser();
+
+  const name =
+    user?.firstName ||
+    user?.username ||
+    user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
+    "Account";
+
+  return (
+    <div className="w-full">
+      {/* Avatar + name row */}
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full border border-white/15 bg-white/5 overflow-hidden flex items-center justify-center">
+          {isLoaded && user?.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.imageUrl}
+              alt="Account"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="h-full w-full rounded-full bg-white/10" />
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <span className="text-white text-sm font-medium leading-tight">
+            <SignedIn>{name}</SignedIn>
+            <SignedOut>Guest</SignedOut>
+          </span>
+          <span className="text-white/60 text-xs leading-tight">
+            <SignedIn>Signed in</SignedIn>
+            <SignedOut>Sign in to access your account</SignedOut>
+          </span>
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="mt-3 flex flex-col gap-2">
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition">
+              Sign in
+            </button>
+          </SignInButton>
+
+          <button
+            type="button"
+            onClick={onRequestCustom}
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+          >
+            Request custom
+          </button>
+        </SignedOut>
+
+        <SignedIn>
+          <Link
+            href="/user"
+            onClick={onClose}
+            className="w-full text-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+          >
+            My account
+          </Link>
+
+          <Link
+            href="/orders"
+            onClick={onClose}
+            className="w-full text-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+          >
+            My orders
+          </Link>
+
+          <button
+            type="button"
+            onClick={onRequestCustom}
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+          >
+            Request custom
+          </button>
+
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className="w-full text-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+          >
+            Admin
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              onClose?.();
+              signOut({ redirectUrl: "/" });
+            }}
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/80 hover:bg-white/10 transition"
+          >
+            Sign out
+          </button>
+        </SignedIn>
+      </div>
+    </div>
   );
 }
 
