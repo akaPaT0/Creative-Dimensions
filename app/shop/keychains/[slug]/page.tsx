@@ -119,6 +119,9 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
+  // ✅ Recommended logic (final):
+  // - default show 4
+  // - show >4 ONLY if there are 4+ in same subCategory (excluding current)
   const TOTAL = 4;
   const currentSub = (p as any).subCategory;
 
@@ -167,8 +170,8 @@ export default async function KeychainSlugPage({
       <Background />
       <Navbar />
 
-      {/* Wider desktop + less side empty space */}
-      <main className="relative z-10 mx-auto max-w-[1400px] px-6 lg:px-10 pt-24 pb-16">
+      {/* tighter overall width (removes dead space on right) */}
+      <main className="relative z-10 mx-auto max-w-[1240px] px-6 lg:px-8 pt-24 pb-16">
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/shop/keychains"
@@ -185,7 +188,9 @@ export default async function KeychainSlugPage({
           )}
         </div>
 
-        {/* MOBILE */}
+        {/* =========================
+            MOBILE LAYOUT (<lg)
+           ========================= */}
         <div className="mt-6 space-y-5 lg:hidden">
           <ProductGallery images={imgs} name={p.name} />
 
@@ -247,10 +252,12 @@ export default async function KeychainSlugPage({
           </div>
         </div>
 
-        {/* DESKTOP */}
-        <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-stretch">
-          {/* Give gallery more room + ensure it doesn't look short */}
-          <div className="min-h-[720px]">
+        {/* =========================
+            DESKTOP LAYOUT (lg+)
+           ========================= */}
+        <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
+          {/* slightly taller but not huge */}
+          <div className="min-h-[640px]">
             <ProductGallery images={imgs} name={p.name} />
           </div>
 
