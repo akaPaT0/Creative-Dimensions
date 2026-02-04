@@ -155,6 +155,8 @@ function MobileMenuContent({
     user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
     "Account";
 
+  const isAdmin = user?.publicMetadata?.role === "admin";
+
   // Slightly thinner than full width, centered
   const groupWrapClass = "mx-auto w-full max-w-[320px]";
 
@@ -230,9 +232,11 @@ function MobileMenuContent({
             Request custom
           </button>
 
-          <Link href="/admin" onClick={onClose} className={itemClass}>
-            Admin
-          </Link>
+          {isAdmin && (
+            <Link href="/admin" onClick={onClose} className={itemClass}>
+              Admin
+            </Link>
+          )}
 
           <div className={dividerClass} />
 
@@ -265,6 +269,8 @@ function MobileMenuContent({
 function AuthButtons({ onRequestCustom }: { onRequestCustom?: () => void }) {
   const { signOut } = useClerk();
   const { user, isLoaded } = useUser();
+
+  const isAdmin = user?.publicMetadata?.role === "admin";
 
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -352,13 +358,15 @@ function AuthButtons({ onRequestCustom }: { onRequestCustom?: () => void }) {
                 Request custom
               </button>
 
-              <Link
-                href="/admin"
-                onClick={close}
-                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-              >
-                Admin
-              </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={close}
+                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                >
+                  Admin
+                </Link>
+              )}
 
               <div className="h-px bg-white/10" />
 
