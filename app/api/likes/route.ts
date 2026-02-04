@@ -3,14 +3,14 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 function key(userId: string) {
-  return `user:${userId}:wishlist`;
+  return `user:${userId}:likes`;
 }
 
 export async function GET() {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
- const ids = ((await kv.smembers<string[]>(key(userId))) ?? []) as string[];
+  const ids = ((await kv.smembers<string[]>(key(userId))) ?? []) as string[];
 
   return NextResponse.json({ ids });
 }

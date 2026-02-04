@@ -8,6 +8,7 @@ import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
 import ShareButton from "../../../components/ShareButton";
 import CustomRequestModal from "../../../components/CustomRequestModal";
+import LikeWishlistRow from "../../../components/LikeWishlistRow";
 
 const SITE = "https://creative-dimensions.vercel.app";
 
@@ -169,7 +170,8 @@ export default async function KeychainSlugPage({
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-16">
+      {/* max-w bumped for alignment */}
+      <main className="relative z-10 mx-auto max-w-7xl px-6 pt-24 pb-16">
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/shop/keychains"
@@ -238,6 +240,9 @@ export default async function KeychainSlugPage({
               >
                 More Keychains
               </Link>
+
+              {/* Like / Wishlist row (below More Keychains) */}
+              <LikeWishlistRow productId={String(p.id)} />
             </div>
 
             {recommendedItems.length > 0 && (
@@ -301,6 +306,12 @@ export default async function KeychainSlugPage({
               >
                 More Keychains
               </Link>
+
+              {/* Like / Wishlist row (below More Keychains) */}
+              <LikeWishlistRow
+                productId={String(p.id)}
+                className="sm:col-span-2"
+              />
             </div>
 
             {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
