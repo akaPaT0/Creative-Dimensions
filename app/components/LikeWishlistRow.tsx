@@ -30,6 +30,7 @@ export default function LikeWishlistRow({ productId, className = "" }: Props) {
 
     async function load() {
       if (!isLoaded) return;
+
       if (!isSignedIn) {
         setLoading(false);
         setLiked(false);
@@ -70,19 +71,18 @@ export default function LikeWishlistRow({ productId, className = "" }: Props) {
       body: JSON.stringify({ productId: id }),
     });
 
-    if (!res.ok) {
-      // rollback
-      set(current);
-    }
+    if (!res.ok) set(current); // rollback
   }
 
+  // slimmer + cleaner row
   const btnBase =
-    "rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/85 hover:bg-white/10 transition flex items-center justify-center gap-2";
+    "flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white/85 hover:bg-white/10 hover:border-white/25 transition flex items-center justify-center gap-2";
+
   const activeLike = liked ? "border-white/30 bg-white/10 text-white" : "";
   const activeWish = wishlisted ? "border-white/30 bg-white/10 text-white" : "";
 
   return (
-    <div className={`grid grid-cols-2 gap-3 ${className}`}>
+    <div className={`flex items-center gap-2 ${className}`}>
       <SignedOut>
         <SignInButton mode="modal">
           <button className={btnBase} type="button">

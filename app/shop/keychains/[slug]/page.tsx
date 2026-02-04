@@ -119,9 +119,6 @@ export default async function KeychainSlugPage({
 
   const imgs = getImages(p);
 
-  // ✅ Recommended logic (final):
-  // - default show 4
-  // - show >4 ONLY if there are 4+ in same subCategory (excluding current)
   const TOTAL = 4;
   const currentSub = (p as any).subCategory;
 
@@ -170,8 +167,8 @@ export default async function KeychainSlugPage({
       <Background />
       <Navbar />
 
-      {/* max-w bumped for alignment */}
-      <main className="relative z-10 mx-auto max-w-7xl px-6 pt-24 pb-16">
+      {/* Wider desktop + less side empty space */}
+      <main className="relative z-10 mx-auto max-w-[1400px] px-6 lg:px-10 pt-24 pb-16">
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/shop/keychains"
@@ -188,9 +185,7 @@ export default async function KeychainSlugPage({
           )}
         </div>
 
-        {/* =========================
-            MOBILE LAYOUT (<lg)
-           ========================= */}
+        {/* MOBILE */}
         <div className="mt-6 space-y-5 lg:hidden">
           <ProductGallery images={imgs} name={p.name} />
 
@@ -241,7 +236,6 @@ export default async function KeychainSlugPage({
                 More Keychains
               </Link>
 
-              {/* Like / Wishlist row (below More Keychains) */}
               <LikeWishlistRow productId={String(p.id)} />
             </div>
 
@@ -253,11 +247,12 @@ export default async function KeychainSlugPage({
           </div>
         </div>
 
-        {/* =========================
-            DESKTOP LAYOUT (lg+)
-           ========================= */}
-        <div className="mt-6 hidden lg:grid gap-5 lg:grid-cols-2 lg:items-stretch">
-          <ProductGallery images={imgs} name={p.name} />
+        {/* DESKTOP */}
+        <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-stretch">
+          {/* Give gallery more room + ensure it doesn't look short */}
+          <div className="min-h-[720px]">
+            <ProductGallery images={imgs} name={p.name} />
+          </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6 h-full flex flex-col">
             <div className="text-white/70 text-sm capitalize">{p.category}</div>
@@ -307,11 +302,7 @@ export default async function KeychainSlugPage({
                 More Keychains
               </Link>
 
-              {/* Like / Wishlist row (below More Keychains) */}
-              <LikeWishlistRow
-                productId={String(p.id)}
-                className="sm:col-span-2"
-              />
+              <LikeWishlistRow productId={String(p.id)} className="sm:col-span-2" />
             </div>
 
             {recommendedItems.length > 0 && <RecommendedRow items={recommendedItems} />}
