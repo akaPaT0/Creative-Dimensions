@@ -75,7 +75,6 @@ export default function Navbar() {
               Contact
             </Link>
 
-            {/* Desktop account dropdown stays */}
             <AuthButtons
               onRequestCustom={() =>
                 openCustomRequest({
@@ -120,11 +119,10 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* OPTION 2: User shortcuts first, divider, then nav links */}
+        {/* Mobile menu dropdown */}
         <div id="mobile-menu" className={open ? "block" : "hidden"}>
           <div className="px-4 pt-3 pb-4 border-t border-white/10">
-            {/* User shortcuts block (NO nested dropdown) */}
-            <MobileUserShortcuts
+            <MobileMenuContent
               onClose={() => setOpen(false)}
               onRequestCustom={() => {
                 setOpen(false);
@@ -134,34 +132,6 @@ export default function Navbar() {
                 });
               }}
             />
-
-            {/* Divider line (your 20% vibe) */}
-            <div className="mt-4 border-t border-white/10" />
-
-            {/* Nav links */}
-            <div className="mt-4 flex flex-col items-center justify-center gap-3 text-sm">
-              <Link
-                href="/about"
-                onClick={() => setOpen(false)}
-                className="text-white hover:opacity-70 transition"
-              >
-                About
-              </Link>
-              <Link
-                href="/shop"
-                onClick={() => setOpen(false)}
-                className="text-white hover:opacity-70 transition"
-              >
-                Shop
-              </Link>
-              <Link
-                href="/contact"
-                onClick={() => setOpen(false)}
-                className="text-white hover:opacity-70 transition"
-              >
-                Contact
-              </Link>
-            </div>
           </div>
         </div>
       </nav>
@@ -169,7 +139,7 @@ export default function Navbar() {
   );
 }
 
-function MobileUserShortcuts({
+function MobileMenuContent({
   onRequestCustom,
   onClose,
 }: {
@@ -185,8 +155,18 @@ function MobileUserShortcuts({
     user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
     "Account";
 
+  // Slightly thinner than full width, centered
+  const groupWrapClass = "mx-auto w-full max-w-[320px]";
+
+  // Unified "menu pill" style for ALL items (My account -> Contact)
+  const itemClass =
+    "w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 hover:border-white/25 transition text-center";
+
+  // More visible divider (still subtle)
+  const dividerClass = "my-3 h-px w-full bg-white/20";
+
   return (
-    <div className="w-full">
+    <div className={groupWrapClass}>
       {/* Avatar + name row */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-full border border-white/15 bg-white/5 overflow-hidden flex items-center justify-center">
@@ -214,55 +194,56 @@ function MobileUserShortcuts({
         </div>
       </div>
 
-      {/* Buttons */}
+      {/* Everything same gap + same shape */}
       <div className="mt-3 flex flex-col gap-2">
         <SignedOut>
           <SignInButton mode="modal">
-            <button className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition">
-              Sign in
-            </button>
+            <button className={itemClass}>Sign in</button>
           </SignInButton>
 
-          <button
-            type="button"
-            onClick={onRequestCustom}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
-          >
+          <button type="button" onClick={onRequestCustom} className={itemClass}>
             Request custom
           </button>
+
+          <div className={dividerClass} />
+
+          <Link href="/about" onClick={onClose} className={itemClass}>
+            About
+          </Link>
+          <Link href="/shop" onClick={onClose} className={itemClass}>
+            Shop
+          </Link>
+          <Link href="/contact" onClick={onClose} className={itemClass}>
+            Contact
+          </Link>
         </SignedOut>
 
         <SignedIn>
-          <Link
-            href="/user"
-            onClick={onClose}
-            className="w-full text-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
-          >
+          <Link href="/user" onClick={onClose} className={itemClass}>
             My account
           </Link>
-
-          <Link
-            href="/orders"
-            onClick={onClose}
-            className="w-full text-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
-          >
+          <Link href="/orders" onClick={onClose} className={itemClass}>
             My orders
           </Link>
 
-          <button
-            type="button"
-            onClick={onRequestCustom}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
-          >
+          <button type="button" onClick={onRequestCustom} className={itemClass}>
             Request custom
           </button>
 
-          <Link
-            href="/admin"
-            onClick={onClose}
-            className="w-full text-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
-          >
+          <Link href="/admin" onClick={onClose} className={itemClass}>
             Admin
+          </Link>
+
+          <div className={dividerClass} />
+
+          <Link href="/about" onClick={onClose} className={itemClass}>
+            About
+          </Link>
+          <Link href="/shop" onClick={onClose} className={itemClass}>
+            Shop
+          </Link>
+          <Link href="/contact" onClick={onClose} className={itemClass}>
+            Contact
           </Link>
 
           <button
@@ -271,7 +252,7 @@ function MobileUserShortcuts({
               onClose?.();
               signOut({ redirectUrl: "/" });
             }}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/80 hover:bg-white/10 transition"
+            className={itemClass}
           >
             Sign out
           </button>
