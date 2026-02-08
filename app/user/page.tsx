@@ -132,6 +132,7 @@ function AccountPanel() {
   const [addressError, setAddressError] = useState("");
   const [addressSuccess, setAddressSuccess] = useState("");
   const [addressSaving, setAddressSaving] = useState(false);
+  const [addressesMinimized, setAddressesMinimized] = useState(true);
   const [showFloatingSavedToggle, setShowFloatingSavedToggle] = useState(false);
   const savedSectionRef = useRef<HTMLElement | null>(null);
 
@@ -267,6 +268,11 @@ function AccountPanel() {
     }
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
   }, [likedProducts, wishlistProducts]);
+
+  const currentAddress = useMemo(
+    () => addresses.find((x) => x.isDefault) ?? addresses[0] ?? null,
+    [addresses]
+  );
 
   async function onSaveProfile(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -794,221 +800,277 @@ function AccountPanel() {
                 Add multiple shipping addresses and choose a default for faster checkout.
               </p>
             </div>
-            {editingAddressId && (
+            <div className="flex items-center gap-2">
+              {!addressesMinimized && editingAddressId && (
+                <button
+                  type="button"
+                  onClick={resetAddressForm}
+                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/85 hover:bg-white/10 transition"
+                >
+                  Cancel edit
+                </button>
+              )}
               <button
                 type="button"
-                onClick={resetAddressForm}
-                className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/85 hover:bg-white/10 transition"
+                onClick={() => setAddressesMinimized((v) => !v)}
+                className="inline-flex items-center gap-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/85 hover:bg-white/10 transition"
               >
-                Cancel edit
-              </button>
-            )}
-          </div>
-
-          <form onSubmit={saveAddress} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <label className="text-sm text-white/80">
-              Label
-              <input
-                value={addressForm.label}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, label: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                placeholder="Home, Work..."
-              />
-            </label>
-            <label className="text-sm text-white/80">
-              Full name*
-              <input
-                value={addressForm.fullName}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, fullName: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                placeholder="Receiver full name"
-                required
-              />
-            </label>
-            <label className="text-sm text-white/80">
-              Phone*
-              <input
-                value={addressForm.phone}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, phone: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                placeholder="+1..."
-                required
-              />
-            </label>
-            <label className="text-sm text-white/80 sm:col-span-2 lg:col-span-3">
-              Address line 1*
-              <input
-                value={addressForm.line1}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, line1: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                placeholder="Street and number"
-                required
-              />
-            </label>
-            <label className="text-sm text-white/80 sm:col-span-2 lg:col-span-3">
-              Address line 2
-              <input
-                value={addressForm.line2}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, line2: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                placeholder="Apartment, suite, building (optional)"
-              />
-            </label>
-            <label className="text-sm text-white/80">
-              City*
-              <input
-                value={addressForm.city}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, city: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                required
-              />
-            </label>
-            <label className="text-sm text-white/80">
-              State / Province*
-              <input
-                value={addressForm.state}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, state: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                required
-              />
-            </label>
-            <label className="text-sm text-white/80">
-              ZIP / Postal code*
-              <input
-                value={addressForm.postalCode}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, postalCode: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                required
-              />
-            </label>
-            <label className="text-sm text-white/80">
-              Country*
-              <input
-                value={addressForm.country}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, country: e.target.value }))
-                }
-                className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-                placeholder="US"
-                required
-              />
-            </label>
-            <label className="text-sm text-white/80 flex items-center gap-2 mt-6">
-              <input
-                type="checkbox"
-                checked={addressForm.isDefault}
-                onChange={(e) =>
-                  setAddressForm((curr) => ({ ...curr, isDefault: e.target.checked }))
-                }
-                className="h-4 w-4 rounded border-white/20 bg-white/5 accent-[#FF8B64]"
-              />
-              Set as default shipping address
-            </label>
-
-            <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={addressSaving}
-                className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 disabled:opacity-60 transition"
-              >
-                {addressSaving
-                  ? "Saving..."
-                  : editingAddressId
-                    ? "Update address"
-                    : "Add address"}
+                {addressesMinimized ? (
+                  <>
+                    Expand <ChevronDown size={14} />
+                  </>
+                ) : (
+                  <>
+                    Collapse <ChevronUp size={14} />
+                  </>
+                )}
               </button>
             </div>
-          </form>
-
-          {addressError && <p className="mt-4 text-sm text-red-300">{addressError}</p>}
-          {addressSuccess && (
-            <p className="mt-4 text-sm text-emerald-300">{addressSuccess}</p>
-          )}
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {loadingAddresses ? (
-              <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-white/70">
-                Loading addresses...
-              </div>
-            ) : addresses.length > 0 ? (
-              addresses.map((addr) => (
-                <div
-                  key={addr.id}
-                  className="rounded-xl border border-white/10 bg-black/20 p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-white font-medium">
-                          {addr.label || "Address"}
-                        </p>
-                        {addr.isDefault && (
-                          <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200">
-                            Default
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-white/90">{addr.fullName}</p>
-                      <p className="text-sm text-white/75">{addr.phone}</p>
-                      <p className="mt-2 text-sm text-white/80">
-                        {addr.line1}
-                        {addr.line2 ? `, ${addr.line2}` : ""}
-                      </p>
-                      <p className="text-sm text-white/80">
-                        {addr.city}, {addr.state} {addr.postalCode}
-                      </p>
-                      <p className="text-sm text-white/80">{addr.country}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onStartEditAddress(addr)}
-                      className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
-                    >
-                      Edit
-                    </button>
-                    {!addr.isDefault && (
-                      <button
-                        type="button"
-                        onClick={() => void setDefaultAddress(addr.id)}
-                        className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
-                      >
-                        Set default
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => void deleteAddress(addr.id)}
-                      className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-100 hover:bg-red-500/20 transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-white/70">
-                No saved addresses yet.
-              </div>
-            )}
           </div>
+
+          {addressesMinimized ? (
+            <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4">
+              <p className="text-sm text-white/60">Current shipping address</p>
+              {loadingAddresses ? (
+                <p className="mt-2 text-sm text-white/75">Loading current address...</p>
+              ) : currentAddress ? (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <p className="text-white font-medium">
+                      {currentAddress.label || "Address"}
+                    </p>
+                    {currentAddress.isDefault && (
+                      <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-white/90">{currentAddress.fullName}</p>
+                  <p className="text-sm text-white/75">{currentAddress.phone}</p>
+                  <p className="mt-1 text-sm text-white/80">
+                    {currentAddress.line1}
+                    {currentAddress.line2 ? `, ${currentAddress.line2}` : ""}
+                  </p>
+                  <p className="text-sm text-white/80">
+                    {currentAddress.city}, {currentAddress.state}{" "}
+                    {currentAddress.postalCode}
+                  </p>
+                  <p className="text-sm text-white/80">{currentAddress.country}</p>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-white/75">
+                  No address saved yet. Expand to add one.
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <form onSubmit={saveAddress} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <label className="text-sm text-white/80">
+                  Label
+                  <input
+                    value={addressForm.label}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, label: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    placeholder="Home, Work..."
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  Full name*
+                  <input
+                    value={addressForm.fullName}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, fullName: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    placeholder="Receiver full name"
+                    required
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  Phone*
+                  <input
+                    value={addressForm.phone}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, phone: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    placeholder="+1..."
+                    required
+                  />
+                </label>
+                <label className="text-sm text-white/80 sm:col-span-2 lg:col-span-3">
+                  Address line 1*
+                  <input
+                    value={addressForm.line1}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, line1: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    placeholder="Street and number"
+                    required
+                  />
+                </label>
+                <label className="text-sm text-white/80 sm:col-span-2 lg:col-span-3">
+                  Address line 2
+                  <input
+                    value={addressForm.line2}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, line2: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    placeholder="Apartment, suite, building (optional)"
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  City*
+                  <input
+                    value={addressForm.city}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, city: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    required
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  State / Province*
+                  <input
+                    value={addressForm.state}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, state: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    required
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  ZIP / Postal code*
+                  <input
+                    value={addressForm.postalCode}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, postalCode: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    required
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  Country*
+                  <input
+                    value={addressForm.country}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, country: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+                    placeholder="US"
+                    required
+                  />
+                </label>
+                <label className="text-sm text-white/80 flex items-center gap-2 mt-6">
+                  <input
+                    type="checkbox"
+                    checked={addressForm.isDefault}
+                    onChange={(e) =>
+                      setAddressForm((curr) => ({ ...curr, isDefault: e.target.checked }))
+                    }
+                    className="h-4 w-4 rounded border-white/20 bg-white/5 accent-[#FF8B64]"
+                  />
+                  Set as default shipping address
+                </label>
+
+                <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={addressSaving}
+                    className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 disabled:opacity-60 transition"
+                  >
+                    {addressSaving
+                      ? "Saving..."
+                      : editingAddressId
+                        ? "Update address"
+                        : "Add address"}
+                  </button>
+                </div>
+              </form>
+
+              {addressError && <p className="mt-4 text-sm text-red-300">{addressError}</p>}
+              {addressSuccess && (
+                <p className="mt-4 text-sm text-emerald-300">{addressSuccess}</p>
+              )}
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {loadingAddresses ? (
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-white/70">
+                    Loading addresses...
+                  </div>
+                ) : addresses.length > 0 ? (
+                  addresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      className="rounded-xl border border-white/10 bg-black/20 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-white font-medium">
+                              {addr.label || "Address"}
+                            </p>
+                            {addr.isDefault && (
+                              <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 text-sm text-white/90">{addr.fullName}</p>
+                          <p className="text-sm text-white/75">{addr.phone}</p>
+                          <p className="mt-2 text-sm text-white/80">
+                            {addr.line1}
+                            {addr.line2 ? `, ${addr.line2}` : ""}
+                          </p>
+                          <p className="text-sm text-white/80">
+                            {addr.city}, {addr.state} {addr.postalCode}
+                          </p>
+                          <p className="text-sm text-white/80">{addr.country}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onStartEditAddress(addr)}
+                          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                        >
+                          Edit
+                        </button>
+                        {!addr.isDefault && (
+                          <button
+                            type="button"
+                            onClick={() => void setDefaultAddress(addr.id)}
+                            className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                          >
+                            Set default
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => void deleteAddress(addr.id)}
+                          className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-100 hover:bg-red-500/20 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-white/70">
+                    No saved addresses yet.
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </section>
 
         <div className="lg:col-span-12 rounded-2xl border border-white/10 bg-white/5 p-5">
