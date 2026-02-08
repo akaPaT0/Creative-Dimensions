@@ -42,6 +42,48 @@ type OrderItem = {
   raw: unknown;
 };
 
+type SavedAddress = {
+  id: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+function asText(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeAddresses(input: unknown): SavedAddress[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object")
+    .map((x) => ({
+      id: asText(x.id),
+      label: asText(x.label),
+      fullName: asText(x.fullName),
+      phone: asText(x.phone),
+      line1: asText(x.line1),
+      line2: asText(x.line2),
+      city: asText(x.city),
+      state: asText(x.state),
+      postalCode: asText(x.postalCode),
+      country: asText(x.country) || "US",
+      isDefault: x.isDefault === true,
+      createdAt: asText(x.createdAt),
+      updatedAt: asText(x.updatedAt),
+    }))
+    .filter((x) => x.id && x.fullName && x.line1);
+}
+
 function normalizeOrders(input: unknown): OrderItem[] {
   const records: unknown[] =
     Array.isArray(input)
@@ -160,6 +202,8 @@ export default async function AdminUserDetailsPage({
 
   const orderBlob = await kv.get<unknown>(`user:${decodedUserId}:orders`);
   const orders = normalizeOrders(orderBlob);
+  const addressBlob = await kv.get<unknown>(`user:${decodedUserId}:addresses`);
+  const addresses = normalizeAddresses(addressBlob);
 
   const productById = new Map<string, Product>();
   for (const p of products) productById.set(String(p.id), p);
@@ -306,6 +350,52 @@ export default async function AdminUserDetailsPage({
                   </div>
                 )}
               </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <h2 className="text-white text-xl font-semibold">Saved Addresses</h2>
+            <p className="mt-1 text-sm text-white/60">
+              Loaded from KV key <code>user:{decodedUserId}:addresses</code>
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {addresses.length > 0 ? (
+                addresses.map((addr) => (
+                  <div
+                    key={addr.id}
+                    className="rounded-xl border border-white/10 bg-black/20 p-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-medium">
+                        {addr.label || "Address"}
+                      </p>
+                      {addr.isDefault && (
+                        <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm text-white/90">{addr.fullName}</p>
+                    <p className="text-sm text-white/75">{addr.phone}</p>
+                    <p className="mt-2 text-sm text-white/80">
+                      {addr.line1}
+                      {addr.line2 ? `, ${addr.line2}` : ""}
+                    </p>
+                    <p className="text-sm text-white/80">
+                      {addr.city}, {addr.state} {addr.postalCode}
+                    </p>
+                    <p className="text-sm text-white/80">{addr.country}</p>
+                    <p className="mt-2 text-xs text-white/55">
+                      Updated {formatDate(addr.updatedAt || addr.createdAt)}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/65">
+                  No saved addresses found for this user.
+                </div>
+              )}
             </div>
           </section>
 
