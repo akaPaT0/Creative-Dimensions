@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
-import { products } from "../../../data/products";
+import { getProducts } from "../../../lib/products-db";
 
 function normalize(s: string) {
   return decodeURIComponent(s).trim().toLowerCase();
@@ -17,6 +17,7 @@ export default async function Page({
 }) {
   const { slug: rawSlug } = await params;
   const slug = normalize(rawSlug);
+  const products = await getProducts();
 
   const matches = (products as any[]).filter(
     (p) => p?.slug && normalize(String(p.slug)) === slug

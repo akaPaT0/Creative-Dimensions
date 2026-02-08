@@ -4,7 +4,8 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
-import { products, type Product } from "../../data/products";
+import type { Product } from "../../data/products";
+import { getProducts } from "../../lib/products-db";
 import LikeIconButton from "../../components/LikeIconButton";
 import WishlistIconButton from "../../components/WishlistIconButton";
 
@@ -15,7 +16,8 @@ function getCardImage(p: Product) {
   return "/products/placeholder.jpg";
 }
 
-export default function Page() {
+export default async function Page() {
+  const products = await getProducts();
   const keychains = products.filter((p) => p.category === "keychains");
   const hasAnySubCats = keychains.some((p) => Boolean(p.subCategory));
   const list = hasAnySubCats ? keychains.filter((p) => Boolean(p.subCategory)) : keychains;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { products } from "@/app/data/products";
+import { getProducts } from "@/app/lib/products-db";
 
 function pad3(n: number) {
   return String(n).padStart(3, "0");
@@ -40,6 +40,8 @@ export async function GET(req: Request) {
   if (!category || !subCategory) {
     return NextResponse.json({ error: "Missing category/subCategory" }, { status: 400 });
   }
+
+  const products = await getProducts();
 
   const prefix = prefixFrom(category, subCategory);
 

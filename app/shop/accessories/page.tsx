@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
-import { products } from "../../data/products";
+import { getProducts } from "../../lib/products-db";
 
 // ✅ CHANGE THESE 3
 const CATEGORY = "acessories"; // tools | accessories | new-arrivals | etc...
@@ -26,7 +26,8 @@ function getProductHref(p: any) {
   return "/shop";
 }
 
-export default function Page() {
+export default async function Page() {
+  const products = await getProducts();
   // Show real content so the page isn't empty:
   const featuredFromOtherCats = products
     .filter((p: any) => p?.featured === true && p?.category !== CATEGORY)

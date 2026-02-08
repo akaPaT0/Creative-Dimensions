@@ -414,8 +414,8 @@ export default function AdminProductForm() {
 
         <div className="mt-2 flex items-center gap-2">
           <p className="text-white/40 text-xs">
-            Order matters: first image becomes <b>-1</b> (cover). Saved as: /products/{category}/{subCategory}/{slug}
-            -1.webp, -2.webp...
+            Order matters: first image becomes <b>-1</b> (cover). Stored in Blob path:
+            products/{category}/{subCategory}/{slug}-1.webp, -2.webp...
           </p>
           {images.length > 0 && (
             <button
@@ -446,7 +446,7 @@ export default function AdminProductForm() {
           Upload a single <b>.glb</b> model for color customization. One model per product.
         </p>
         <p className="mt-1 text-white/40 text-xs">
-          Auto-saved as: <code>{targetModelPath}</code>
+          Blob path: <code>{targetModelPath.replace(/^\/+/, "")}</code>
         </p>
         {modelFile && (
           <div className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/80">

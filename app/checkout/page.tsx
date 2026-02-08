@@ -7,7 +7,7 @@ import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
-import { products } from "../data/products";
+import type { Product } from "../data/products";
 import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 
 type StoredCartItem = {
@@ -181,6 +181,7 @@ function computePromoDiscount(
 
 export default function CheckoutPage() {
   const { isLoaded, isSignedIn } = useUser();
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [cart, setCart] = useState<StoredCartItem[]>(() => readCart());
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -235,6 +236,20 @@ export default function CheckoutPage() {
       alive = false;
     };
   }, [isLoaded, isSignedIn]);
+
+  useEffect(() => {
+    let alive = true;
+    async function loadProducts() {
+      const res = await fetch("/api/products", { cache: "no-store" });
+      const data = (await res.json().catch(() => ({}))) as { products?: Product[] };
+      if (!alive) return;
+      if (res.ok && Array.isArray(data.products)) setProducts(data.products);
+    }
+    void loadProducts();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -294,7 +309,7 @@ export default function CheckoutPage() {
       if (!p) return sum;
       return sum + p.priceUSD * row.quantity;
     }, 0);
-  }, [cart]);
+  }, [cart, products]);
 
   const cartPreview = useMemo(() => {
     const byId = new Map(products.map((p) => [String(p.id), p]));
@@ -319,7 +334,7 @@ export default function CheckoutPage() {
           lineTotalUSD: number;
         } => Boolean(x)
       );
-  }, [cart]);
+  }, [cart, products]);
 
   const promoSummary = useMemo(
     () =>

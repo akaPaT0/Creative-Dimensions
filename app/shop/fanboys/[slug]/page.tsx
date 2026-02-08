@@ -4,7 +4,8 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
-import { products, type Product } from "../../../data/products";
+import type { Product } from "../../../data/products";
+import { getProducts } from "../../../lib/products-db";
 import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
 import ShareButton from "../../../components/ShareButton";
@@ -37,7 +38,8 @@ function getCardImage(p: Product) {
   return "/products/placeholder.jpg";
 }
 
-function getProduct(slug: string) {
+async function getProduct(slug: string) {
+  const products = await getProducts();
   return products.find(
     (x) => x.category === "fanboys" && normalize(String(x.slug)) === slug
   );
@@ -49,7 +51,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug: rawSlug } = await params;
-  const p = getProduct(normalize(rawSlug));
+  const p = await getProduct(normalize(rawSlug));
 
   if (!p) {
     return {
@@ -97,7 +99,10 @@ export default async function FanboySlugPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug: rawSlug } = await params;
-  const p = getProduct(normalize(rawSlug));
+  const products = await getProducts();
+  const p = products.find(
+    (x) => x.category === "fanboys" && normalize(String(x.slug)) === normalize(rawSlug)
+  );
 
   if (!p) {
     return (

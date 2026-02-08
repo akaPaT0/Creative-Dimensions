@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Background from "@/app/components/Background";
-import { products, type Product } from "@/app/data/products";
+import type { Product } from "@/app/data/products";
+import { getProducts } from "@/app/lib/products-db";
 
 function formatDate(value: unknown) {
   if (!value) return "N/A";
@@ -245,6 +246,7 @@ export default async function AdminUserDetailsPage({
   const orders = normalizeOrders(orderBlob);
   const addressBlob = await kv.get<unknown>(`user:${decodedUserId}:addresses`);
   const addresses = normalizeAddresses(addressBlob);
+  const products = await getProducts();
 
   const productById = new Map<string, Product>();
   for (const p of products) productById.set(String(p.id), p);

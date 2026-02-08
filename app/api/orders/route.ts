@@ -1,7 +1,7 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { kv } from "@vercel/kv";
 import { NextResponse } from "next/server";
-import { products } from "@/app/data/products";
+import { getProducts } from "@/app/lib/products-db";
 import { telegramNotify, telegramSendDocument } from "@/app/lib/telegram";
 import { generateInvoicePdf } from "@/app/lib/invoicePdf";
 import {
@@ -288,6 +288,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Address is required" }, { status: 400 });
   }
 
+  const products = await getProducts();
   const byId = new Map(products.map((p) => [String(p.id), p]));
   const resolvedItems = items.map((item) => {
     const product = byId.get(item.productId);

@@ -1,4 +1,4 @@
-import { products } from "../data/products";
+import { getProducts } from "../lib/products-db";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
@@ -98,7 +98,8 @@ function pickFeaturedByCategory(
   return picked.slice(0, total);
 }
 
-export default function Shop() {
+export default async function Shop() {
+  const products = await getProducts();
   const featured = pickFeaturedByCategory(
     products as any[],
     {

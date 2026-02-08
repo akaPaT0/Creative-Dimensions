@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import vm from "node:vm";
+import { del, put } from "@vercel/blob";
+import { getProducts, saveProducts } from "@/app/lib/products-db";
+import type { Product } from "@/app/data/products";
 
-function json(res: any, status = 200) {
+function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
-}
-
-function encodeRepoPath(p: string) {
-  return p.split("/").map(encodeURIComponent).join("/");
 }
 
 function normalizeSlug(s: string) {
@@ -23,7 +21,7 @@ function slugifyFolder(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function guessExt(filename: string, mime: string) {
+function guessImageExt(filename: string, mime: string) {
   const lower = filename.toLowerCase();
   if (lower.endsWith(".png") || mime === "image/png") return "png";
   if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || mime === "image/jpeg") return "jpg";
@@ -34,7 +32,9 @@ function guessExt(filename: string, mime: string) {
 function isGlbFile(file: File) {
   const name = file.name.toLowerCase();
   const mime = (file.type || "").toLowerCase();
-  return name.endsWith(".glb") || mime === "model/gltf-binary" || mime === "application/octet-stream";
+  return (
+    name.endsWith(".glb") || mime === "model/gltf-binary" || mime === "application/octet-stream"
+  );
 }
 
 function safeModelBaseName(slug: string, fallback: string) {
@@ -44,158 +44,32 @@ function safeModelBaseName(slug: string, fallback: string) {
   return fb || "model";
 }
 
-async function ghFetch(path: string, init?: RequestInit) {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) throw new Error("Missing GITHUB_TOKEN");
-
-  const r = await fetch(`https://api.github.com${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-    cache: "no-store",
-  });
-
-  const text = await r.text();
-  let data: any = null;
+function parseStringArray(raw: string) {
   try {
-    data = text ? JSON.parse(text) : null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const out = parsed.map((x) => (typeof x === "string" ? x.trim() : "")).filter(Boolean);
+    return out;
   } catch {
-    data = text;
+    return null;
   }
-
-  if (!r.ok) {
-    throw new Error(
-      `GitHub API error ${r.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`
-    );
-  }
-  return data;
 }
 
-async function getFile(owner: string, repo: string, filePath: string, branch: string) {
-  const encoded = encodeRepoPath(filePath);
-  const data = await ghFetch(
-    `/repos/${owner}/${repo}/contents/${encoded}?ref=${encodeURIComponent(branch)}`
-  );
-
-  const contentB64 = (data.content || "").replace(/\n/g, "");
-  const buff = Buffer.from(contentB64, "base64");
-  return { sha: data.sha as string, text: buff.toString("utf8") as string };
-}
-
-async function tryGetSha(owner: string, repo: string, filePath: string, branch: string) {
+async function safeDelete(url: string) {
+  if (!url) return;
   try {
-    const encoded = encodeRepoPath(filePath);
-    const data = await ghFetch(
-      `/repos/${owner}/${repo}/contents/${encoded}?ref=${encodeURIComponent(branch)}`
-    );
-    return data?.sha as string;
+    await del(url);
   } catch {
-    return undefined;
+    // ignore delete failures
   }
-}
-
-async function putFile(params: {
-  owner: string;
-  repo: string;
-  path: string;
-  branch: string;
-  message: string;
-  contentBase64: string;
-  sha?: string;
-}) {
-  const encoded = encodeRepoPath(params.path);
-  const body: any = { message: params.message, content: params.contentBase64, branch: params.branch };
-  if (params.sha) body.sha = params.sha;
-
-  return ghFetch(`/repos/${params.owner}/${params.repo}/contents/${encoded}`, {
-    method: "PUT",
-    body: JSON.stringify(body),
-  });
-}
-
-async function deleteFile(params: {
-  owner: string;
-  repo: string;
-  path: string;
-  branch: string;
-  message: string;
-  sha: string;
-}) {
-  const encoded = encodeRepoPath(params.path);
-  return ghFetch(`/repos/${params.owner}/${params.repo}/contents/${encoded}`, {
-    method: "DELETE",
-    body: JSON.stringify({
-      message: params.message,
-      sha: params.sha,
-      branch: params.branch,
-    }),
-  });
-}
-
-function extractProductsArrayLiteral(tsText: string) {
-  const anchor = "export const products";
-  const i = tsText.indexOf(anchor);
-  if (i === -1) throw new Error("Could not find 'export const products' in products.ts");
-
-  const startBracket = tsText.indexOf("[", i);
-  if (startBracket === -1) throw new Error("Could not find products array '['");
-
-  const end = tsText.indexOf("];", startBracket);
-  if (end === -1) throw new Error("Could not find products array closing '];'");
-
-  return tsText.slice(startBracket, end + 1);
-}
-
-function parseProducts(tsText: string) {
-  const arr = extractProductsArrayLiteral(tsText);
-  const script = `module.exports = ${arr};`;
-  const sandbox: any = { module: { exports: null } };
-  vm.createContext(sandbox);
-  vm.runInContext(script, sandbox, { timeout: 800 });
-  if (!Array.isArray(sandbox.module.exports)) throw new Error("Parsed products is not an array");
-  return sandbox.module.exports;
-}
-
-function renderProductsTs(products: any[]) {
-  const lines: string[] = [];
-  lines.push(`export type Category = string;`);
-  lines.push(``);
-  lines.push(`export type SubCategory = string;`);
-  lines.push(``);
-  lines.push(`export type Product = {`);
-  lines.push(`  id: string;`);
-  lines.push(`  name: string;`);
-  lines.push(`  slug: string;`);
-  lines.push(`  category: Category;`);
-  lines.push(`  subCategory?: SubCategory;`);
-  lines.push(`  priceUSD: number;`);
-  lines.push(`  description: string;`);
-  lines.push(`  isNew?: boolean;`);
-  lines.push(`  featured?: boolean;`);
-  lines.push(`  image?: string;`);
-  lines.push(`  images?: string[];`);
-  lines.push(`  customizeColors?: {`);
-  lines.push(`    modelUrl: string;`);
-  lines.push(`    defaultHexes: string[];`);
-  lines.push(`    slotLabels?: string[];`);
-  lines.push(`  };`);
-  lines.push(`};`);
-  lines.push(``);
-  lines.push(`export const products: Product[] = ${JSON.stringify(products, null, 2)};`);
-  lines.push(``);
-  return lines.join("\n");
 }
 
 async function requireAdmin() {
   const { userId } = await auth();
-  if (!userId) return { ok: false, res: json({ error: "Unauthorized" }, 401) };
+  if (!userId) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
 
   const user = await currentUser();
-  if (!user) return { ok: false, res: json({ error: "Unauthorized" }, 401) };
+  if (!user) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
 
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const primaryEmail =
@@ -204,13 +78,10 @@ async function requireAdmin() {
     "";
   const userEmail = primaryEmail.trim().toLowerCase();
 
-  if (!adminEmail || userEmail !== adminEmail) return { ok: false, res: json({ error: "Forbidden" }, 403) };
+  if (!adminEmail || userEmail !== adminEmail) {
+    return { ok: false as const, res: json({ error: "Forbidden" }, 403) };
+  }
   return { ok: true as const };
-}
-
-function repoPathFromPublicPath(pubPath: string) {
-  // pubPath like "/products/a/b/c-1.webp"
-  return `public${pubPath}`.replace(/^public\/public\//, "public/");
 }
 
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -219,16 +90,6 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     if (!admin.ok) return admin.res;
 
     const { id } = await ctx.params;
-
-    const owner = process.env.GITHUB_OWNER;
-    const repo = process.env.GITHUB_REPO;
-    const branch = process.env.GITHUB_BRANCH || "main";
-    const productsFilePath = process.env.PRODUCTS_FILE_PATH;
-
-    if (!owner || !repo || !productsFilePath) {
-      return json({ error: "Missing env: GITHUB_OWNER, GITHUB_REPO, PRODUCTS_FILE_PATH" }, 500);
-    }
-
     const form = await req.formData();
 
     const name = String(form.get("name") || "").trim();
@@ -237,200 +98,83 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const subCategoryRaw = String(form.get("subCategory") || "").trim();
     const priceUSDStr = String(form.get("priceUSD") || "").trim();
     const description = String(form.get("description") || "").trim();
-
     const isNew = String(form.get("isNew") || "false") === "true";
     const featured = String(form.get("featured") || "false") === "true";
-
-    // NEW: imagesOrder from edit UI (JSON string)
     const imagesOrderRaw = String(form.get("imagesOrder") || "").trim();
-
-    const files = form.getAll("images") as File[]; // optional
+    const imageFiles = form.getAll("images") as File[];
     const model = form.get("model");
     const modelFile = model instanceof File && model.size > 0 ? model : null;
 
     if (!name || !categoryRaw || !subCategoryRaw || !priceUSDStr || !description) {
       return json({ error: "Missing required fields" }, 400);
     }
-    if (modelFile && !isGlbFile(modelFile)) {
-      return json({ error: "3D model must be a .glb file" }, 400);
-    }
+    if (modelFile && !isGlbFile(modelFile)) return json({ error: "3D model must be a .glb file" }, 400);
 
     const priceUSD = Number(priceUSDStr);
     if (!Number.isFinite(priceUSD)) return json({ error: "priceUSD must be a number" }, 400);
 
     const slug = normalizeSlug(slugRaw || name);
-    const modelBase = safeModelBaseName(slug, id);
     const category = slugifyFolder(categoryRaw);
     const subCategory = slugifyFolder(subCategoryRaw);
+    const modelBase = safeModelBaseName(slug, id);
 
-    // read products from GitHub
-    const { sha: productsSha, text: productsText } = await getFile(owner, repo, productsFilePath, branch);
-    const products = parseProducts(productsText);
-
-    const idx = products.findIndex((p: any) => p?.id === id);
+    const products = await getProducts();
+    const idx = products.findIndex((p) => p.id === id);
     if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
 
-    const old = products[idx];
-    const oldImages: string[] = Array.isArray(old?.images)
-      ? old.images
-      : (old?.image ? [old.image] : []);
-    const oldModelUrl =
-      old?.customizeColors && typeof old.customizeColors === "object"
-        ? String(old.customizeColors.modelUrl || "").trim()
-        : "";
+    const prev = products[idx];
+    const prevImages = Array.isArray(prev.images) ? prev.images : [];
+    const prevModelUrl = prev.customizeColors?.modelUrl || "";
 
-    // If new images uploaded OR reorder-only edit, we set this.
-    let newImages: string[] | undefined = undefined;
-    let newCustomizeColors = old?.customizeColors;
-
-    // NEW: parse and validate imagesOrder (reorder/removal for existing images)
-    let desiredOrder: string[] | undefined = undefined;
-    if (imagesOrderRaw) {
-      try {
-        const parsed = JSON.parse(imagesOrderRaw);
-        if (!Array.isArray(parsed) || !parsed.every((x) => typeof x === "string")) {
-          return json({ error: "imagesOrder must be a JSON array of strings" }, 400);
-        }
-
-        desiredOrder = parsed.map((s) => s.trim()).filter(Boolean);
-
-        // validate: only existing images allowed (no random paths)
-        const oldSet = new Set(oldImages);
-        for (const p of desiredOrder) {
-          if (!oldSet.has(p)) return json({ error: `imagesOrder contains unknown image: ${p}` }, 400);
-        }
-
-        // validate: no duplicates
-        const desiredSet = new Set(desiredOrder);
-        if (desiredSet.size !== desiredOrder.length) {
-          return json({ error: "imagesOrder contains duplicates" }, 400);
-        }
-      } catch {
-        return json({ error: "imagesOrder must be valid JSON" }, 400);
-      }
-    }
-
-    // If new images uploaded: upload new, update images array, and delete old image files
-    if (files && files.length > 0) {
+    let nextImages = prevImages;
+    if (imageFiles.length > 0) {
       const uploaded: string[] = [];
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const ext = guessExt(file.name, file.type);
-        const n = i + 1;
-
-        const imageRepoPath = `public/products/${category}/${subCategory}/${slug}-${n}.${ext}`;
-        const imagePublicPath = `/products/${category}/${subCategory}/${slug}-${n}.${ext}`;
-
-        const imgB64 = Buffer.from(await file.arrayBuffer()).toString("base64");
-        const existingSha = await tryGetSha(owner, repo, imageRepoPath, branch);
-
-        await putFile({
-          owner,
-          repo,
-          path: imageRepoPath,
-          branch,
-          message: `Update product image ${n}: ${category}/${subCategory}/${slug}`,
-          contentBase64: imgB64,
-          sha: existingSha,
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        const ext = guessImageExt(file.name, file.type);
+        const blobPath = `products/${category}/${subCategory}/${slug}-${i + 1}.${ext}`;
+        const result = await put(blobPath, file, {
+          access: "public",
+          addRandomSuffix: false,
+          contentType: file.type || undefined,
         });
-
-        uploaded.push(imagePublicPath);
+        uploaded.push(result.url);
       }
-
-      newImages = uploaded;
-
-      // delete old images referenced (best-effort)
-      for (const pubPath of oldImages) {
-        const repoPath = repoPathFromPublicPath(pubPath);
-        const sha = await tryGetSha(owner, repo, repoPath, branch);
-        if (!sha) continue;
-        try {
-          await deleteFile({
-            owner,
-            repo,
-            path: repoPath,
-            branch,
-            message: `Delete old product image: ${id}`,
-            sha,
-          });
-        } catch {
-          // ignore delete failures
-        }
+      for (const oldUrl of prevImages) await safeDelete(oldUrl);
+      nextImages = uploaded;
+    } else if (imagesOrderRaw) {
+      const ordered = parseStringArray(imagesOrderRaw);
+      if (!ordered) return json({ error: "imagesOrder must be valid JSON array of strings" }, 400);
+      const prevSet = new Set(prevImages);
+      for (const url of ordered) {
+        if (!prevSet.has(url)) return json({ error: `imagesOrder contains unknown image: ${url}` }, 400);
       }
-    } else if (desiredOrder) {
-      // NEW: reorder/removal without uploading new files
-      newImages = desiredOrder;
-
-      // delete removed images (best-effort)
-      const desiredSet = new Set(desiredOrder);
-      const removed = oldImages.filter((p) => !desiredSet.has(p));
-
-      for (const pubPath of removed) {
-        const repoPath = repoPathFromPublicPath(pubPath);
-        const sha = await tryGetSha(owner, repo, repoPath, branch);
-        if (!sha) continue;
-        try {
-          await deleteFile({
-            owner,
-            repo,
-            path: repoPath,
-            branch,
-            message: `Delete removed product image: ${id}`,
-            sha,
-          });
-        } catch {
-          // ignore
-        }
-      }
+      const removed = prevImages.filter((x) => !ordered.includes(x));
+      for (const url of removed) await safeDelete(url);
+      nextImages = ordered;
     }
 
+    let nextCustomizeColors = prev.customizeColors;
     if (modelFile) {
-      const modelRepoPath = `public/models/${category}/${subCategory}/${modelBase}.glb`;
-      const modelPublicPath = `/models/${category}/${subCategory}/${modelBase}.glb`;
-      const modelB64 = Buffer.from(await modelFile.arrayBuffer()).toString("base64");
-      const existingSha = await tryGetSha(owner, repo, modelRepoPath, branch);
-
-      await putFile({
-        owner,
-        repo,
-        path: modelRepoPath,
-        branch,
-        message: `Update product model: ${id}`,
-        contentBase64: modelB64,
-        sha: existingSha,
+      const blobPath = `models/${category}/${subCategory}/${modelBase}.glb`;
+      const uploaded = await put(blobPath, modelFile, {
+        access: "public",
+        addRandomSuffix: false,
+        contentType: "model/gltf-binary",
       });
-
-      if (oldModelUrl && oldModelUrl !== modelPublicPath) {
-        const oldModelRepoPath = repoPathFromPublicPath(oldModelUrl);
-        const oldSha = await tryGetSha(owner, repo, oldModelRepoPath, branch);
-        if (oldSha) {
-          try {
-            await deleteFile({
-              owner,
-              repo,
-              path: oldModelRepoPath,
-              branch,
-              message: `Delete old product model: ${id}`,
-              sha: oldSha,
-            });
-          } catch {
-            // ignore
-          }
-        }
-      }
-
-      newCustomizeColors = {
-        ...(old?.customizeColors || {}),
-        modelUrl: modelPublicPath,
-        defaultHexes: Array.isArray(old?.customizeColors?.defaultHexes)
-          ? old.customizeColors.defaultHexes
-          : ["#ffffff"],
+      if (prevModelUrl && prevModelUrl !== uploaded.url) await safeDelete(prevModelUrl);
+      nextCustomizeColors = {
+        modelUrl: uploaded.url,
+        defaultHexes:
+          prev.customizeColors?.defaultHexes && prev.customizeColors.defaultHexes.length
+            ? prev.customizeColors.defaultHexes
+            : ["#ffffff"],
+        slotLabels: prev.customizeColors?.slotLabels,
       };
     }
 
-    products[idx] = {
-      ...old,
+    const updated: Product = {
+      ...prev,
       id,
       name,
       slug,
@@ -440,26 +184,18 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       description,
       isNew,
       featured,
-      ...(newCustomizeColors ? { customizeColors: newCustomizeColors } : {}),
-      ...(newImages ? { images: newImages } : {}),
+      images: nextImages,
+      ...(nextCustomizeColors ? { customizeColors: nextCustomizeColors } : {}),
     };
 
-    const updatedText = renderProductsTs(products);
-    const updatedB64 = Buffer.from(updatedText, "utf8").toString("base64");
+    const next = [...products];
+    next[idx] = updated;
+    await saveProducts(next);
 
-    await putFile({
-      owner,
-      repo,
-      path: productsFilePath,
-      branch,
-      message: `Edit product: ${id}`,
-      contentBase64: updatedB64,
-      sha: productsSha,
-    });
-
-    return json({ ok: true, product: products[idx] });
-  } catch (e: any) {
-    return json({ error: e?.message || "Unknown error" }, 500);
+    return json({ ok: true, product: updated });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return json({ error: message }, 500);
   }
 }
 
@@ -467,89 +203,24 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
   try {
     const admin = await requireAdmin();
     if (!admin.ok) return admin.res;
-
     const { id } = await ctx.params;
 
-    const owner = process.env.GITHUB_OWNER;
-    const repo = process.env.GITHUB_REPO;
-    const branch = process.env.GITHUB_BRANCH || "main";
-    const productsFilePath = process.env.PRODUCTS_FILE_PATH;
-
-    if (!owner || !repo || !productsFilePath) {
-      return json({ error: "Missing env: GITHUB_OWNER, GITHUB_REPO, PRODUCTS_FILE_PATH" }, 500);
-    }
-
-    const { sha: productsSha, text: productsText } = await getFile(owner, repo, productsFilePath, branch);
-    const products = parseProducts(productsText);
-
-    const idx = products.findIndex((p: any) => p?.id === id);
+    const products = await getProducts();
+    const idx = products.findIndex((p) => p.id === id);
     if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
 
-    const product = products[idx];
-    const images: string[] = Array.isArray(product?.images)
-      ? product.images
-      : (product?.image ? [product.image] : []);
-    const modelUrl =
-      product?.customizeColors && typeof product.customizeColors === "object"
-        ? String(product.customizeColors.modelUrl || "").trim()
-        : "";
+    const target = products[idx];
+    const next = [...products];
+    next.splice(idx, 1);
+    await saveProducts(next);
 
-    // remove product
-    products.splice(idx, 1);
-
-    // write updated products.ts
-    const updatedText = renderProductsTs(products);
-    const updatedB64 = Buffer.from(updatedText, "utf8").toString("base64");
-
-    await putFile({
-      owner,
-      repo,
-      path: productsFilePath,
-      branch,
-      message: `Delete product: ${id}`,
-      contentBase64: updatedB64,
-      sha: productsSha,
-    });
-
-    // delete images (best-effort)
-    for (const pubPath of images) {
-      const repoPath = repoPathFromPublicPath(pubPath);
-      const sha = await tryGetSha(owner, repo, repoPath, branch);
-      if (!sha) continue;
-      try {
-        await deleteFile({
-          owner,
-          repo,
-          path: repoPath,
-          branch,
-          message: `Delete product image: ${id}`,
-          sha,
-        });
-      } catch {
-        // ignore
-      }
-    }
-    if (modelUrl) {
-      const modelRepoPath = repoPathFromPublicPath(modelUrl);
-      const sha = await tryGetSha(owner, repo, modelRepoPath, branch);
-      if (sha) {
-        try {
-          await deleteFile({
-            owner,
-            repo,
-            path: modelRepoPath,
-            branch,
-            message: `Delete product model: ${id}`,
-            sha,
-          });
-        } catch {
-          // ignore
-        }
-      }
-    }
+    for (const url of target.images || []) await safeDelete(url);
+    if (target.customizeColors?.modelUrl) await safeDelete(target.customizeColors.modelUrl);
 
     return json({ ok: true });
-  } catch (e: any) {
-    return json({ error: e?.message || "Unknown error" }, 500);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return json({ error: message }, 500);
   }
 }
+

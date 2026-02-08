@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
-import { products } from "../../data/products";
+import { getProducts } from "../../lib/products-db";
 import LikeIconButton from "../../components/LikeIconButton";
 import WishlistIconButton from "../../components/WishlistIconButton";
 
@@ -21,7 +21,8 @@ function getProductHref(p: any) {
   return "/shop";
 }
 
-export default function Page() {
+export default async function Page() {
+  const products = await getProducts();
   const newArrivals = products.filter((p: any) => p.isNew === true);
 
   return (

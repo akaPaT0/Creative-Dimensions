@@ -7,7 +7,7 @@ import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
-import { products, type Product } from "../data/products";
+import type { Product } from "../data/products";
 
 type StoredCartItem = {
   productId: string;
@@ -80,9 +80,24 @@ function saveCartToStorage(items: StoredCartItem[]) {
 }
 
 export default function CartPage() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<StoredCartItem[]>(() =>
     readCartFromStorage()
   );
+
+  useEffect(() => {
+    let alive = true;
+    async function loadProducts() {
+      const res = await fetch("/api/products", { cache: "no-store" });
+      const data = (await res.json().catch(() => ({}))) as { products?: Product[] };
+      if (!alive) return;
+      if (res.ok && Array.isArray(data.products)) setProducts(data.products);
+    }
+    void loadProducts();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     saveCartToStorage(cartItems);
@@ -98,7 +113,7 @@ export default function CartPage() {
         return { product, quantity: item.quantity };
       })
       .filter((x): x is CartLine => Boolean(x));
-  }, [cartItems]);
+  }, [cartItems, products]);
 
   const itemCount = useMemo(
     () => cartLines.reduce((sum, line) => sum + line.quantity, 0),

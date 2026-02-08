@@ -14,7 +14,7 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
-import { products, type Product } from "../data/products";
+import type { Product } from "../data/products";
 import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 
 function formatDate(value?: Date | null) {
@@ -157,6 +157,7 @@ async function readIds(path: string): Promise<string[] | null> {
 function AccountPanel() {
   const { user, isLoaded } = useUser();
   const { signOut, openUserProfile } = useClerk();
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [likes, setLikes] = useState<string[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
@@ -193,6 +194,20 @@ function AccountPanel() {
     setLastName(user.lastName ?? "");
     setUsername(user.username ?? "");
   }, [user]);
+
+  useEffect(() => {
+    let alive = true;
+    async function loadProducts() {
+      const res = await fetch("/api/products", { cache: "no-store" });
+      const data = (await res.json().catch(() => ({}))) as { products?: Product[] };
+      if (!alive) return;
+      if (res.ok && Array.isArray(data.products)) setProducts(data.products);
+    }
+    void loadProducts();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -334,7 +349,7 @@ function AccountPanel() {
     const m = new Map<string, Product>();
     for (const p of products) m.set(String(p.id), p);
     return m;
-  }, []);
+  }, [products]);
 
   const likedProducts = useMemo(
     () => likes.map((id) => productById.get(id)).filter(Boolean) as Product[],
@@ -379,7 +394,7 @@ function AccountPanel() {
 
   const recommended = useMemo(
     () => products.filter((p) => !allSavedSet.has(p.id)).slice(0, 6),
-    [allSavedSet]
+    [allSavedSet, products]
   );
 
   const categoryCounts = useMemo(() => {
