@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Metrics = {
   totalUsers: number;
@@ -124,6 +125,7 @@ export default function AdminInsights() {
                 <th className="px-4 py-3">Username</th>
                 <th className="px-4 py-3">Last Sign In</th>
                 <th className="px-4 py-3">Joined</th>
+                <th className="px-4 py-3 text-right">Details</th>
               </tr>
             </thead>
             <tbody className="text-white/85">
@@ -131,18 +133,31 @@ export default function AdminInsights() {
                 users.map((u) => (
                   <tr key={u.id} className="border-b border-white/10 last:border-b-0">
                     <td className="px-4 py-3">
-                      <div className="font-medium">{u.fullName}</div>
+                      <Link
+                        href={`/admin/users/${u.id}`}
+                        className="font-medium hover:underline underline-offset-4"
+                      >
+                        {u.fullName}
+                      </Link>
                       <div className="text-xs text-white/45 font-mono">{u.id}</div>
                     </td>
                     <td className="px-4 py-3 text-white/80">{u.email || "-"}</td>
                     <td className="px-4 py-3 text-white/80">{u.username || "-"}</td>
                     <td className="px-4 py-3 text-white/80">{formatDate(u.lastSignInAt)}</td>
                     <td className="px-4 py-3 text-white/80">{formatDate(u.createdAt)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/admin/users/${u.id}`}
+                        className="inline-flex rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
+                      >
+                        Open
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               {!loading && users.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-white/60">
+                  <td colSpan={6} className="px-4 py-8 text-center text-white/60">
                     No user data found.
                   </td>
                 </tr>
