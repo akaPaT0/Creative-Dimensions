@@ -113,7 +113,7 @@ export default function Shop() {
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 pt-28 pb-16">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="text-center sm:text-left">
@@ -175,7 +175,7 @@ export default function Shop() {
             <Link
               key={c.title}
               href={c.href}
-              className="group rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:bg-white/10"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 transition hover:bg-white/10"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -195,7 +195,7 @@ export default function Shop() {
         {/* Featured */}
         <div
           id="featured"
-          className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6"
+          className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6"
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
             <h2 className="text-xl font-semibold text-white">Featured</h2>
@@ -209,7 +209,7 @@ export default function Shop() {
               <Link
                 key={getStableKey(p)}
                 href={getProductHref(p)}
-                className="group rounded-2xl border border-white/10 bg-black/20 p-5 hover:bg-black/30 transition"
+                className="group rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5 hover:bg-black/30 transition"
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
                   <Image
