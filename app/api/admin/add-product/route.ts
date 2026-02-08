@@ -109,6 +109,7 @@ export async function POST(req: Request) {
       const uploaded = await put(blobPath, file, {
         access: "public",
         addRandomSuffix: false,
+        allowOverwrite: true,
         contentType: file.type || undefined,
       });
       images.push(uploaded.url);
@@ -121,6 +122,7 @@ export async function POST(req: Request) {
       const uploaded = await put(modelPath, modelFile, {
         access: "public",
         addRandomSuffix: false,
+        allowOverwrite: true,
         contentType: "model/gltf-binary",
       });
       modelUrl = uploaded.url;

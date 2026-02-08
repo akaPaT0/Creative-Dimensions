@@ -136,6 +136,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
         const result = await put(blobPath, file, {
           access: "public",
           addRandomSuffix: false,
+          allowOverwrite: true,
           contentType: file.type || undefined,
         });
         uploaded.push(result.url);
@@ -160,6 +161,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       const uploaded = await put(blobPath, modelFile, {
         access: "public",
         addRandomSuffix: false,
+        allowOverwrite: true,
         contentType: "model/gltf-binary",
       });
       if (prevModelUrl && prevModelUrl !== uploaded.url) await safeDelete(prevModelUrl);
