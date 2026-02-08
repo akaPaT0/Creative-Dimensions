@@ -47,7 +47,7 @@ export default function Navbar() {
             : "bg-transparent border-b border-transparent shadow-none"
         }`}
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="mx-auto w-full max-w-[1700px] px-4 sm:px-6 lg:px-10 2xl:px-16 py-4 flex items-center">
           <Link
             href="/"
             className={`${ubuntu.className} text-[30px] font-semibold tracking-tight
@@ -61,7 +61,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-8 text-sm">
+          <div className="ml-auto flex items-center gap-8 text-sm">
             <Link href="/about" className="text-white hover:opacity-70 transition">
               About
             </Link>
