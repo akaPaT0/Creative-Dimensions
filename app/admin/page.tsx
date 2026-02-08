@@ -4,7 +4,11 @@ import Background from "../components/Background";
 import Link from "next/link";
 import AdminTabs from "./AdminTabs";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -20,6 +24,7 @@ export default async function AdminPage() {
     "";
 
   const userEmail = primaryEmail.trim().toLowerCase();
+  const sp = await searchParams;
 
   if (!adminEmail || userEmail !== adminEmail) {
     return (
@@ -57,6 +62,12 @@ export default async function AdminPage() {
 
               <div className="flex flex-wrap gap-2">
                 <Link
+                  href="/admin/filaments"
+                  className="rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition"
+                >
+                  Filaments DB
+                </Link>
+                <Link
                   href="/shop"
                   className="rounded-xl bg-[#FF8B64] px-4 py-2 text-sm font-medium text-black hover:opacity-90 transition"
                 >
@@ -66,7 +77,7 @@ export default async function AdminPage() {
             </div>
           </div>
 
-          <AdminTabs />
+          <AdminTabs initialTab={sp?.tab} />
         </div>
       </main>
     </div>

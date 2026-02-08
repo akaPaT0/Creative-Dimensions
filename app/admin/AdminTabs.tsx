@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import AdminProductForm from "./AdminProductForm";
 import AdminProductsManager from "./AdminProductsManager";
 import AdminInsights from "./AdminInsights";
@@ -9,8 +10,21 @@ import AdminOrders from "./AdminOrders";
 
 type TabKey = "create" | "catalog" | "insights" | "promocodes" | "orders";
 
-export default function AdminTabs() {
-  const [tab, setTab] = useState<TabKey>("create");
+function asTabKey(input: string | undefined): TabKey {
+  if (
+    input === "create" ||
+    input === "catalog" ||
+    input === "insights" ||
+    input === "promocodes" ||
+    input === "orders"
+  ) {
+    return input;
+  }
+  return "create";
+}
+
+export default function AdminTabs({ initialTab }: { initialTab?: string }) {
+  const [tab, setTab] = useState<TabKey>(asTabKey(initialTab));
 
   return (
     <section className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
@@ -59,6 +73,12 @@ export default function AdminTabs() {
         >
           Promo Codes
         </button>
+        <Link
+          href="/admin/filaments"
+          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+        >
+          Filaments
+        </Link>
         <button
           type="button"
           onClick={() => setTab("orders")}

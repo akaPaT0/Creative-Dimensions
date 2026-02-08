@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
@@ -38,7 +39,7 @@ export default async function Page({
           href="/shop/new-arrivals"
           className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
         >
-          <span className="text-lg leading-none">←</span>
+          <ChevronLeft size={16} strokeWidth={2.25} />
           Back to New Arrivals
         </Link>
 

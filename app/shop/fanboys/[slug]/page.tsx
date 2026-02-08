@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
@@ -107,7 +108,7 @@ export default async function FanboySlugPage({
             href="/shop/fanboys"
             className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
           >
-            <span className="text-lg leading-none">{"<-"}</span>
+            <ChevronLeft size={16} strokeWidth={2.25} />
             Back to Fanboys
           </Link>
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
@@ -164,7 +165,7 @@ export default async function FanboySlugPage({
             href="/shop/fanboys"
             className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
           >
-            <span className="text-lg leading-none">{"<-"}</span>
+            <ChevronLeft size={16} strokeWidth={2.25} />
             Back to Fanboys
           </Link>
 

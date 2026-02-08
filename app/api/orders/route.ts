@@ -1,7 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { kv } from "@vercel/kv";
 import { NextResponse } from "next/server";
 import { products } from "@/app/data/products";
+import { telegramNotify, telegramSendDocument } from "@/app/lib/telegram";
+import { generateInvoicePdf } from "@/app/lib/invoicePdf";
 import {
   PROMO_CODES_KEY,
   applyPromoRule,
@@ -128,6 +130,108 @@ function normalizeOrders(raw: unknown): OrderRecord[] {
   return raw
     .filter((x): x is OrderRecord => !!x && typeof x === "object")
     .map((x) => x);
+}
+
+function fmtMoney(value: number) {
+  return `$${value.toFixed(2)}`;
+}
+
+function fmtDate(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(d);
+}
+
+async function notifyOrderTelegram(params: {
+  userId: string;
+  order: OrderRecord;
+}) {
+  const { userId, order } = params;
+  let customerName = order.address.fullName || "Customer";
+  let customerEmail = "";
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const primaryEmail =
+      user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
+      user.emailAddresses[0]?.emailAddress ||
+      "";
+    customerEmail = primaryEmail;
+    customerName =
+      `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
+      user.username ||
+      customerName;
+  } catch {
+    // keep address-derived fallback
+  }
+
+  const lines = [
+    `New order placed: ${order.orderNumber}`,
+    `Invoice: ${order.invoice.invoiceNumber}`,
+    `Date: ${fmtDate(order.createdAt)}`,
+    `Customer: ${customerName}`,
+    `Email: ${customerEmail || "N/A"}`,
+    `Phone: ${order.address.phone || "N/A"}`,
+    `Address: ${order.address.line1}${order.address.line2 ? `, ${order.address.line2}` : ""}, ${order.address.city}${order.address.state ? `, ${order.address.state}` : ""}${order.address.postalCode ? ` ${order.address.postalCode}` : ""}, ${order.address.country}`,
+    `Items: ${order.items.length}`,
+    ...order.items.map(
+      (item) =>
+        `- ${item.name} x${item.quantity} (${fmtMoney(item.unitPriceUSD)}) = ${fmtMoney(item.lineTotalUSD)}`
+    ),
+    `Subtotal: ${fmtMoney(order.subtotalUSD)}`,
+    `Discount: -${fmtMoney(order.discountUSD)}`,
+    `Shipping: ${fmtMoney(order.shippingUSD)}`,
+    `Total: ${fmtMoney(order.totalUSD)}`,
+    `Promo: ${order.promoCode || "None"}`,
+    `Status: ${order.status}`,
+    `Payment: ${order.invoice.paymentStatus}`,
+    `User ID: ${userId}`,
+    `Order ID: ${order.id}`,
+  ];
+
+  await telegramNotify(lines.join("\n"));
+
+  const pdfBytes = generateInvoicePdf({
+    invoiceNumber: order.invoice.invoiceNumber,
+    orderNumber: order.orderNumber,
+    issuedAt: order.invoice.issuedAt || order.createdAt,
+    orderStatus: order.status,
+    paymentStatus: order.invoice.paymentStatus,
+    customerName,
+    customerEmail: customerEmail || undefined,
+    customerPhone: order.address.phone || undefined,
+    addressLines: [
+      order.address.fullName,
+      order.address.line1,
+      order.address.line2,
+      `${order.address.city}${order.address.state ? `, ${order.address.state}` : ""}${
+        order.address.postalCode ? ` ${order.address.postalCode}` : ""
+      }`,
+      order.address.country,
+    ],
+    promoCode: order.promoCode,
+    subtotalUSD: order.subtotalUSD,
+    discountUSD: order.discountUSD,
+    shippingUSD: order.shippingUSD,
+    totalUSD: order.totalUSD,
+    items: order.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unitPriceUSD: item.unitPriceUSD,
+      lineTotalUSD: item.lineTotalUSD,
+    })),
+  });
+
+  await telegramSendDocument({
+    filename: `${order.invoice.invoiceNumber || order.orderNumber}.pdf`,
+    bytes: pdfBytes,
+    caption: `Invoice ${order.invoice.invoiceNumber} | Order ${order.orderNumber} | Total ${fmtMoney(
+      order.totalUSD
+    )}`,
+  });
 }
 
 async function generateOrderNumber() {
@@ -263,6 +367,13 @@ export async function POST(req: Request) {
   const existingRaw = await kv.get<unknown>(ordersKey(userId));
   const existing = normalizeOrders(existingRaw);
   await kv.set(ordersKey(userId), [order, ...existing]);
+
+  try {
+    await notifyOrderTelegram({ userId, order });
+  } catch (error) {
+    console.error("Order placed but Telegram notification failed:", error);
+    // Do not block order placement if Telegram notification fails.
+  }
 
   return NextResponse.json({ ok: true, order });
 }

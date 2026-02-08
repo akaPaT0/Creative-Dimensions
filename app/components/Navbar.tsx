@@ -13,6 +13,7 @@ import {
 } from "@clerk/nextjs";
 
 import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
+import AdminShortcutFab from "./AdminShortcutFab";
 
 const CART_STORAGE_KEY = "cd_cart_v1";
 const CART_UPDATED_EVENT = "cd-cart-updated";
@@ -211,6 +212,8 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
+
+      <AdminShortcutFab />
     </>
   );
 }
