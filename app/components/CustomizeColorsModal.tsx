@@ -268,20 +268,18 @@ export default function CustomizeColorsModal(props: Props) {
               <div className="mt-5 grid gap-4 lg:grid-cols-[1.35fr,1fr]">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                   <div className="mb-2 text-white/75 text-sm">3D Preview</div>
-                  <div className="h-[300px] sm:h-[380px] w-full rounded-xl overflow-hidden border border-white/10 bg-black/25">
+                  <div className="h-[300px] sm:h-[380px] w-full rounded-xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#0D0D0D] via-[#111111] to-[#12100B]">
                     {checkingModel ? (
                       <div className="h-full w-full flex items-center justify-center text-white/60 text-sm">
                         Loading model...
                       </div>
                     ) : modelReady ? (
-                      <Canvas camera={{ position: [0, 0, 3.6], fov: 45 }}>
-                        <color attach="background" args={["#0b0b0b"]} />
-                        <hemisphereLight intensity={0.45} color="#ffffff" groundColor="#141414" />
-                        <ambientLight intensity={0.35} />
-                        <directionalLight position={[3.5, 4, 3]} intensity={1.15} />
-                        <directionalLight position={[-3, 2.2, 1.5]} intensity={0.55} />
-                        <directionalLight position={[0, 2, -4]} intensity={0.35} />
-                        <Environment preset="studio" />
+                      <Canvas camera={{ position: [0, 0, 3.6], fov: 45 }} gl={{ alpha: true }}>
+                        <hemisphereLight intensity={0.18} color="#e5e7eb" groundColor="#101010" />
+                        <ambientLight intensity={0.12} />
+                        <directionalLight position={[4, 5, 4]} intensity={0.42} />
+                        <directionalLight position={[-2.5, 2, -3.5]} intensity={0.12} />
+                        <Environment preset="apartment" />
                         <Suspense fallback={null}>
                           <ModelPreview
                             modelUrl={modelUrlWithVersion}
