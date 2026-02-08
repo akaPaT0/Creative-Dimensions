@@ -3,37 +3,31 @@ import Image from "next/image";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
-import { products } from "../../data/products";
+import { products, type Product } from "../../data/products";
 
-function getCardImage(p: any) {
+function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
   if (typeof p.image === "string" && p.image) return p.image;
-  if (p?.category && p?.slug) return `/products/${p.category}/${p.slug}-1.jpg`;
+  if (p.category && p.slug) return `/products/${p.category}/${p.slug}-1.jpg`;
   return "/products/placeholder.jpg";
 }
 
 export default function Page() {
-  const fanboys = products.filter((p: any) => p.category === "fanboys");
-
-  // ✅ Same behavior as your keychains page:
-  // If ANY item has subCategory, show only those with subCategory.
-  // Otherwise show all.
-  const hasAnySubCats = fanboys.some((p: any) => !!p.subCategory);
-  const list = hasAnySubCats
-    ? fanboys.filter((p: any) => !!p.subCategory)
-    : fanboys;
+  const fanboys = products.filter((p) => p.category === "fanboys");
+  const hasAnySubCats = fanboys.some((p) => Boolean(p.subCategory));
+  const list = hasAnySubCats ? fanboys.filter((p) => Boolean(p.subCategory)) : fanboys;
 
   return (
     <div className="relative min-h-screen">
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-6 pt-28 pb-16">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
         <Link
           href="/shop"
           className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
         >
-          <span className="text-lg leading-none">←</span>
+          <span className="text-lg leading-none">{"<-"}</span>
           Back to Shop
         </Link>
 
@@ -43,28 +37,13 @@ export default function Page() {
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((p: any) => (
+          {list.map((p) => (
             <Link
-              key={p.id ?? `${p.category}-${p.slug}`}
+              key={p.id}
               href={`/shop/fanboys/${encodeURIComponent(p.slug)}`}
-              className="
-                group rounded-2xl border border-white/10 bg-white/5 p-5
-                transition
-                hover:bg-white/10
-                lg:hover:-translate-y-[2px] lg:hover:scale-[1.01]
-                active:scale-[0.99]
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20
-              "
+              className="group rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:bg-white/10 lg:hover:-translate-y-[2px] lg:hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
             >
-              {/* Image */}
-              <div
-                className="
-                  relative aspect-[4/3] w-full overflow-hidden rounded-xl
-                  border border-white/10 bg-white/5
-                  transition
-                  lg:group-hover:scale-[1.02]
-                "
-              >
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/10 bg-white/5 transition lg:group-hover:scale-[1.02]">
                 <Image
                   src={getCardImage(p)}
                   alt={p.name}
@@ -77,11 +56,9 @@ export default function Page() {
 
               <div className="mt-4 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-white font-semibold transition lg:group-hover:text-white">
-                    {p.name}
-                  </div>
+                  <div className="text-white font-semibold">{p.name}</div>
                   <div className="mt-1 text-sm text-white/60 line-clamp-2">
-                    {p.description ?? "—"}
+                    {p.description || "-"}
                   </div>
                 </div>
 
