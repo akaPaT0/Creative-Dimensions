@@ -74,6 +74,11 @@ type TelegramDocumentParams = {
   caption?: string;
 };
 
+type TelegramPhotoParams = {
+  photoUrl: string;
+  caption?: string;
+};
+
 export async function telegramSendDocument(params: TelegramDocumentParams) {
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!chatId) throw new Error("TELEGRAM_CHAT_ID is missing.");
@@ -95,5 +100,23 @@ export async function telegramSendDocument(params: TelegramDocumentParams) {
   await telegramCall("/sendDocument", {
     method: "POST",
     body: form,
+  });
+}
+
+export async function telegramSendPhoto(params: TelegramPhotoParams) {
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!chatId) throw new Error("TELEGRAM_CHAT_ID is missing.");
+  const photoUrl = params.photoUrl.trim();
+  if (!photoUrl) throw new Error("photoUrl is required.");
+
+  await telegramCall("/sendPhoto", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      photo: photoUrl,
+      caption: params.caption ? params.caption.slice(0, 1024) : undefined,
+      disable_notification: false,
+    }),
   });
 }

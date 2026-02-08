@@ -2,7 +2,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { kv } from "@vercel/kv";
 import { NextResponse } from "next/server";
 import { getProducts } from "@/app/lib/products-db";
-import { telegramNotify, telegramSendDocument } from "@/app/lib/telegram";
+import { telegramNotify, telegramSendDocument, telegramSendPhoto } from "@/app/lib/telegram";
 import { generateInvoicePdf } from "@/app/lib/invoicePdf";
 import {
   PROMO_CODES_KEY,
@@ -71,6 +71,7 @@ type OrderRecord = {
     quantity: number;
     unitPriceUSD: number;
     lineTotalUSD: number;
+    previewImageUrl?: string;
     customizationSummary?: string;
     customizationSlots?: Array<{
       slot: string;
@@ -189,6 +190,12 @@ function fmtDate(value: string) {
   }).format(d);
 }
 
+function getProductPreviewImage(product: { images?: string[]; image?: string }) {
+  if (Array.isArray(product.images) && product.images.length > 0) return String(product.images[0] || "");
+  if (typeof product.image === "string") return product.image;
+  return "";
+}
+
 async function notifyOrderTelegram(params: {
   userId: string;
   order: OrderRecord;
@@ -237,6 +244,25 @@ async function notifyOrderTelegram(params: {
   ];
 
   await telegramNotify(lines.join("\n"));
+
+  const customizedItems = order.items.filter(
+    (item) => item.customizationSummary && item.previewImageUrl
+  );
+  for (const item of customizedItems) {
+    try {
+      await telegramSendPhoto({
+        photoUrl: item.previewImageUrl || "",
+        caption: [
+          `Custom item preview`,
+          `Order: ${order.orderNumber}`,
+          `Item: ${item.name} x${item.quantity}`,
+          `Colors: ${item.customizationSummary}`,
+        ].join("\n"),
+      });
+    } catch {
+      // continue sending remaining attachments and invoice
+    }
+  }
 
   const pdfBytes = generateInvoicePdf({
     invoiceNumber: order.invoice.invoiceNumber,
@@ -346,6 +372,7 @@ export async function POST(req: Request) {
       quantity: item.quantity,
       unitPriceUSD: product.priceUSD,
       lineTotalUSD,
+      previewImageUrl: getProductPreviewImage(product),
       customizationSummary: item.customization?.summary || undefined,
       customizationSlots: item.customization?.slots?.length ? item.customization.slots : undefined,
     };
