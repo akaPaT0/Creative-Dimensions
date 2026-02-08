@@ -43,6 +43,14 @@ type SlotBucket = {
 };
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const PREVIEW_SPARKLES = [
+  { top: "12%", left: "16%", size: 10 },
+  { top: "24%", left: "72%", size: 8 },
+  { top: "38%", left: "48%", size: 12 },
+  { top: "62%", left: "22%", size: 9 },
+  { top: "74%", left: "81%", size: 11 },
+  { top: "86%", left: "58%", size: 7 },
+];
 
 function toHex(input: string) {
   const s = input.trim();
@@ -268,7 +276,43 @@ export default function CustomizeColorsModal(props: Props) {
               <div className="mt-5 grid gap-4 lg:grid-cols-[1.35fr,1fr]">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                   <div className="mb-2 text-white/75 text-sm">3D Preview</div>
-                  <div className="h-[300px] sm:h-[380px] w-full rounded-xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#0D0D0D] via-[#111111] to-[#12100B]">
+                  <div className="relative h-[300px] sm:h-[380px] w-full rounded-xl overflow-hidden border border-white/10">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#0D0D0D] via-[#111111] to-[#12100B]" />
+                    <div className="pointer-events-none absolute inset-0">
+                      {PREVIEW_SPARKLES.map((s, i) => (
+                        <span
+                          key={`preview-sparkle-${i}`}
+                          className="absolute"
+                          style={{
+                            top: s.top,
+                            left: s.left,
+                            width: `${s.size}px`,
+                            height: `${s.size}px`,
+                          }}
+                        >
+                          <span
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: "#FF8B64",
+                              opacity: 0.14,
+                              filter: "blur(8px)",
+                              boxShadow: "0 0 14px rgba(255,139,100,0.35)",
+                            }}
+                          />
+                          <span
+                            className="absolute inset-0"
+                            style={{
+                              background: "#FF8B64",
+                              opacity: 0.45,
+                              clipPath:
+                                "polygon(50% 0%, 60% 38%, 100% 50%, 60% 62%, 50% 100%, 40% 62%, 0% 50%, 40% 38%)",
+                            }}
+                          />
+                        </span>
+                      ))}
+                    </div>
+                    <div className="pointer-events-none absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+                    <div className="relative z-10 h-full w-full">
                     {checkingModel ? (
                       <div className="h-full w-full flex items-center justify-center text-white/60 text-sm">
                         Loading model...
@@ -296,6 +340,7 @@ export default function CustomizeColorsModal(props: Props) {
                         Add the GLB file and reopen this modal.
                       </div>
                     )}
+                    </div>
                   </div>
                 </div>
 

@@ -1,7 +1,7 @@
-import { kv } from "@vercel/kv";
+import { list, put } from "@vercel/blob";
 import type { Product } from "@/app/data/products";
 
-const PRODUCTS_KEY = "catalog:products:v1";
+const CATALOG_PATH = "catalog/products.json";
 
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -82,7 +82,18 @@ function normalizeProducts(raw: unknown): Product[] {
 }
 
 export async function getProductsFromDb() {
-  const raw = await kv.get<unknown>(PRODUCTS_KEY);
+  const rows = await list({ prefix: CATALOG_PATH, limit: 20 });
+  const matches = rows.blobs.filter((b) => b.pathname === CATALOG_PATH);
+  if (!matches.length) return [];
+  matches.sort((a, b) => {
+    const aTime = new Date(a.uploadedAt || 0).getTime();
+    const bTime = new Date(b.uploadedAt || 0).getTime();
+    return bTime - aTime;
+  });
+  const latest = matches[0];
+  const res = await fetch(latest.url, { cache: "no-store" });
+  if (!res.ok) return [];
+  const raw = (await res.json().catch(() => null)) as unknown;
   return normalizeProducts(raw);
 }
 
@@ -91,7 +102,13 @@ export async function getProducts() {
 }
 
 export async function saveProducts(products: Product[]) {
-  await kv.set(PRODUCTS_KEY, products);
+  const payload = JSON.stringify(products, null, 2);
+  await put(CATALOG_PATH, payload, {
+    access: "public",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+  });
 }
 
 export async function upsertProduct(product: Product) {
