@@ -119,7 +119,11 @@ export default function LikeWishlistRow({ productId, className = "" }: Props) {
           aria-pressed={wishlisted}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Bookmark size={18} />
+          <Bookmark
+            size={18}
+            fill={wishlisted ? "currentColor" : "none"}
+            strokeWidth={wishlisted ? 2.2 : 2}
+          />
         </button>
       </SignedIn>
     </div>

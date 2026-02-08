@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Heart } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
 
 type Props = {
@@ -10,20 +10,14 @@ type Props = {
   positionClass?: string;
 };
 
-async function readLikeIds(): Promise<Set<string>> {
-  const res = await fetch("/api/likes", { method: "GET" });
-  if (!res.ok) return new Set();
-  const data = (await res.json()) as { ids?: string[] };
-  return new Set((data.ids ?? []).map(String));
-}
-
-export default function LikeIconButton({
+export default function WishlistIconButton({
   productId,
   className = "",
   positionClass = "bottom-2 right-2",
 }: Props) {
   const { isLoaded, isSignedIn } = useUser();
-  const [liked, setLiked] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [endpoint, setEndpoint] = useState("/api/wishlist");
 
   const id = useMemo(() => String(productId), [productId]);
 
@@ -33,13 +27,25 @@ export default function LikeIconButton({
     async function load() {
       if (!isLoaded) return;
       if (!isSignedIn) {
-        setLiked(false);
+        setWishlisted(false);
         return;
       }
 
-      const likedSet = await readLikeIds();
+      const primary = await fetch("/api/wishlist", { method: "GET" });
+      if (primary.ok) {
+        const data = (await primary.json()) as { ids?: string[] };
+        if (!alive) return;
+        setEndpoint("/api/wishlist");
+        setWishlisted(new Set((data.ids ?? []).map(String)).has(id));
+        return;
+      }
+
+      const legacy = await fetch("/api/whishlist", { method: "GET" });
+      if (!legacy.ok) return;
+      const data = (await legacy.json()) as { ids?: string[] };
       if (!alive) return;
-      setLiked(likedSet.has(id));
+      setEndpoint("/api/whishlist");
+      setWishlisted(new Set((data.ids ?? []).map(String)).has(id));
     }
 
     load();
@@ -49,21 +55,23 @@ export default function LikeIconButton({
   }, [id, isLoaded, isSignedIn]);
 
   async function toggle() {
-    const current = liked;
-    setLiked(!current);
+    const current = wishlisted;
+    setWishlisted(!current);
 
-    const res = await fetch("/api/likes", {
+    const res = await fetch(endpoint, {
       method: current ? "DELETE" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId: id }),
     });
 
-    if (!res.ok) setLiked(current);
+    if (!res.ok) setWishlisted(current);
   }
 
   const base =
     `absolute ${positionClass} z-10 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/35 text-white/90 backdrop-blur-sm transition`;
-  const active = liked ? "bg-[#FF8B64]/90 text-black border-[#FF8B64]/90" : "";
+  const active = wishlisted
+    ? "bg-[#3BC7C4]/90 text-black border-[#3BC7C4]/90"
+    : "";
 
   return (
     <div className={className}>
@@ -73,7 +81,7 @@ export default function LikeIconButton({
             role="button"
             tabIndex={0}
             className={base}
-            aria-label="Sign in to like"
+            aria-label="Sign in to wishlist"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -84,7 +92,7 @@ export default function LikeIconButton({
               e.stopPropagation();
             }}
           >
-            <Heart size={14} />
+            <Bookmark size={14} />
           </span>
         </SignInButton>
       </SignedOut>
@@ -94,8 +102,8 @@ export default function LikeIconButton({
           role="button"
           tabIndex={0}
           className={`${base} ${active}`}
-          aria-label={liked ? "Remove like" : "Like"}
-          aria-pressed={liked}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={wishlisted}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -108,10 +116,10 @@ export default function LikeIconButton({
             void toggle();
           }}
         >
-          <Heart
+          <Bookmark
             size={14}
-            fill={liked ? "currentColor" : "none"}
-            strokeWidth={liked ? 2.2 : 2}
+            fill={wishlisted ? "currentColor" : "none"}
+            strokeWidth={wishlisted ? 2.2 : 2}
           />
         </span>
       </SignedIn>
