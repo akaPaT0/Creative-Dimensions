@@ -86,6 +86,20 @@ type AddressFormState = {
   isDefault: boolean;
 };
 
+type SavedDisplayItem = {
+  id: string;
+  href: string;
+  image: string;
+};
+
+type AccountTab =
+  | "saved"
+  | "snapshot"
+  | "account"
+  | "details"
+  | "addresses"
+  | "recommended";
+
 const EMPTY_ADDRESS_FORM: AddressFormState = {
   label: "",
   fullName: "",
@@ -133,6 +147,7 @@ function AccountPanel() {
   const [addressSuccess, setAddressSuccess] = useState("");
   const [addressSaving, setAddressSaving] = useState(false);
   const [addressesMinimized, setAddressesMinimized] = useState(true);
+  const [accountTab, setAccountTab] = useState<AccountTab>("account");
   const [showFloatingSavedToggle, setShowFloatingSavedToggle] = useState(false);
   const savedSectionRef = useRef<HTMLElement | null>(null);
 
@@ -235,6 +250,22 @@ function AccountPanel() {
     [user]
   );
 
+  const accountGreetingName = useMemo(() => {
+    const fromUsername = user?.username?.trim();
+    if (fromUsername) return fromUsername;
+
+    const fromFullName = user?.fullName?.trim();
+    if (fromFullName) return fromFullName;
+
+    const fromFirstName = user?.firstName?.trim();
+    if (fromFirstName) return fromFirstName;
+
+    const emailHandle = primaryEmail.split("@")[0]?.trim();
+    if (emailHandle) return emailHandle;
+
+    return "there";
+  }, [user, primaryEmail]);
+
   const productById = useMemo(() => {
     const m = new Map<string, Product>();
     for (const p of products) m.set(String(p.id), p);
@@ -248,6 +279,32 @@ function AccountPanel() {
 
   const wishlistProducts = useMemo(
     () => wishlist.map((id) => productById.get(id)).filter(Boolean) as Product[],
+    [wishlist, productById]
+  );
+
+  const likedSavedItems = useMemo<SavedDisplayItem[]>(
+    () =>
+      likes.map((id) => {
+        const product = productById.get(id);
+        return {
+          id,
+          href: product ? getProductHref(product) : "/shop",
+          image: product ? getProductImage(product) : "/products/placeholder.jpg",
+        };
+      }),
+    [likes, productById]
+  );
+
+  const wishlistSavedItems = useMemo<SavedDisplayItem[]>(
+    () =>
+      wishlist.map((id) => {
+        const product = productById.get(id);
+        return {
+          id,
+          href: product ? getProductHref(product) : "/shop",
+          image: product ? getProductImage(product) : "/products/placeholder.jpg",
+        };
+      }),
     [wishlist, productById]
   );
 
@@ -481,17 +538,49 @@ function AccountPanel() {
   return (
     <section className="mx-auto max-w-6xl space-y-5">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-        <h1 className="text-3xl font-semibold text-white">My Account</h1>
+        <h1 className="text-3xl font-semibold text-white">
+          Welcome, {accountGreetingName}
+        </h1>
         <p className="mt-2 text-white/70">
-          Shop dashboard with your saved items, quick actions, and account
-          controls. Clerk runs auth and user data in the background.
+          Your personal dashboard for saved items, addresses, and account
+          settings.
         </p>
+      </div>
+
+      <div className="lg:hidden rounded-2xl border border-white/10 bg-white/5 p-3">
+        <div className="flex gap-2 overflow-x-auto">
+          {(
+            [
+              ["saved", "Saved"],
+              ["snapshot", "Snapshot"],
+              ["account", "Account"],
+              ["details", "Details"],
+              ["addresses", "Addresses"],
+              ["recommended", "Recommended"],
+            ] as Array<[AccountTab, string]>
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setAccountTab(key)}
+              className={`shrink-0 rounded-lg border px-3 py-1.5 text-sm transition ${
+                accountTab === key
+                  ? "border-[#FF8B64] bg-[#FF8B64] text-black"
+                  : "border-white/15 bg-white/5 text-white/85 hover:bg-white/10"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-12">
         <section
           ref={savedSectionRef}
-          className="lg:col-span-8 rounded-2xl border border-white/10 bg-white/5 p-5"
+          className={`${
+            accountTab === "saved" ? "block" : "hidden"
+          } lg:col-span-8 lg:block rounded-2xl border border-white/10 bg-white/5 p-5`}
         >
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-semibold text-white">
@@ -540,20 +629,20 @@ function AccountPanel() {
             <p className="mt-4 text-white/70">Loading saved products...</p>
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {(savedTab === "wishlist" ? wishlistProducts : likedProducts).map(
-                (p) => (
+              {(savedTab === "wishlist" ? wishlistSavedItems : likedSavedItems).map(
+                (item) => (
                   <div
-                    key={`${savedTab}-${p.id}`}
+                    key={`${savedTab}-${item.id}`}
                     className="rounded-xl border border-white/10 bg-black/20 p-2"
                   >
                     <div>
                       <Link
-                        href={getProductHref(p)}
+                        href={item.href}
                         className="relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-white/5"
                       >
                         <Image
-                          src={getProductImage(p)}
-                          alt={p.name}
+                          src={item.image}
+                          alt={`${savedTab} item`}
                           fill
                           className="object-cover"
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 34vw, 25vw"
@@ -562,17 +651,17 @@ function AccountPanel() {
                       <div className="mt-2 flex gap-1.5">
                         <button
                           type="button"
-                          onClick={() => updateSaved("likes", p.id)}
-                          aria-label={likes.includes(p.id) ? "Unlike" : "Like"}
+                          onClick={() => updateSaved("likes", item.id)}
+                          aria-label={likes.includes(item.id) ? "Unlike" : "Like"}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/85 hover:bg-white/10 transition"
                         >
                           <Heart size={14} />
                         </button>
                         <button
                           type="button"
-                          onClick={() => updateSaved("wishlist", p.id)}
+                          onClick={() => updateSaved("wishlist", item.id)}
                           aria-label={
-                            wishlist.includes(p.id)
+                            wishlist.includes(item.id)
                               ? "Remove from wishlist"
                               : "Add to wishlist"
                           }
@@ -585,7 +674,7 @@ function AccountPanel() {
                   </div>
                 )
               )}
-              {(savedTab === "wishlist" ? wishlistProducts : likedProducts)
+              {(savedTab === "wishlist" ? wishlistSavedItems : likedSavedItems)
                 .length === 0 && (
                 <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-white/70">
                   No items here yet. Browse the shop and start saving products.
@@ -596,7 +685,7 @@ function AccountPanel() {
 
         </section>
 
-        {showFloatingSavedToggle && (
+        {showFloatingSavedToggle && (accountTab === "saved" || typeof window === "undefined") && (
           <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2">
             <button
               type="button"
@@ -611,7 +700,11 @@ function AccountPanel() {
           </div>
         )}
 
-        <div className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div
+          className={`${
+            accountTab === "snapshot" ? "block" : "hidden"
+          } lg:col-span-4 lg:block rounded-2xl border border-white/10 bg-white/5 p-5`}
+        >
           <h2 className="text-xl font-semibold text-white">Shop Snapshot</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-white/10 bg-black/20 p-3">
@@ -651,6 +744,12 @@ function AccountPanel() {
 
           <div className="mt-4 grid gap-2">
             <Link
+              href="/cart"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+            >
+              View cart
+            </Link>
+            <Link
               href="/shop"
               className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
             >
@@ -671,7 +770,11 @@ function AccountPanel() {
           </div>
         </div>
 
-        <div className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div
+          className={`${
+            accountTab === "account" ? "block" : "hidden"
+          } lg:col-span-4 lg:block rounded-2xl border border-white/10 bg-white/5 p-5`}
+        >
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 overflow-hidden rounded-full border border-white/15 bg-white/5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -703,6 +806,12 @@ function AccountPanel() {
           </div>
 
           <div className="mt-5 grid gap-2">
+            <Link
+              href="/cart"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-left text-white/90 hover:bg-white/10 transition"
+            >
+              Cart
+            </Link>
             <button
               type="button"
               onClick={() => openUserProfile()}
@@ -722,7 +831,9 @@ function AccountPanel() {
 
         <form
           onSubmit={onSaveProfile}
-          className="lg:col-span-8 rounded-2xl border border-white/10 bg-white/5 p-5"
+          className={`${
+            accountTab === "details" ? "block" : "hidden"
+          } lg:col-span-8 lg:block rounded-2xl border border-white/10 bg-white/5 p-5`}
         >
           <h2 className="text-xl font-semibold text-white">Profile Details</h2>
           <p className="mt-1 text-sm text-white/65">
@@ -792,7 +903,11 @@ function AccountPanel() {
           </button>
         </form>
 
-        <section className="lg:col-span-12 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <section
+          className={`${
+            accountTab === "addresses" ? "block" : "hidden"
+          } lg:col-span-12 lg:block rounded-2xl border border-white/10 bg-white/5 p-5`}
+        >
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-white">Saved Addresses</h2>
@@ -1073,7 +1188,11 @@ function AccountPanel() {
           )}
         </section>
 
-        <div className="lg:col-span-12 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div
+          className={`${
+            accountTab === "recommended" ? "block" : "hidden"
+          } lg:col-span-12 lg:block rounded-2xl border border-white/10 bg-white/5 p-5`}
+        >
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-semibold text-white">
               Recommended For You

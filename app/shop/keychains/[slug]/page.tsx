@@ -9,6 +9,7 @@ import RecommendedRow from "../../../components/RecommendedRow";
 import ShareButton from "../../../components/ShareButton";
 import CustomRequestModal from "../../../components/CustomRequestModal";
 import LikeWishlistRow from "../../../components/LikeWishlistRow";
+import AddToCartButton from "../../../components/AddToCartButton";
 
 const SITE = "https://creative-dimensions.vercel.app";
 
@@ -188,6 +189,10 @@ export default async function KeychainSlugPage({
               </div>
             </div>
             <div className="mt-6 grid gap-3">
+              <AddToCartButton
+                productId={String(p.id)}
+                className="rounded-xl border border-white/15 bg-[#FF8B64] px-4 py-3 text-center font-medium text-black hover:opacity-90 transition"
+              />
               <a
                 href={`https://wa.me/96170304007?text=${encodeURIComponent(waText)}`}
                 target="_blank"
@@ -241,6 +246,10 @@ export default async function KeychainSlugPage({
               </div>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <AddToCartButton
+                  productId={String(p.id)}
+                  className="sm:col-span-2 rounded-xl border border-white/15 bg-[#FF8B64] px-4 py-3 text-center font-medium text-black hover:opacity-90 transition"
+                />
                 <a
                   href={`https://wa.me/96170304007?text=${encodeURIComponent(waText)}`}
                   target="_blank"
