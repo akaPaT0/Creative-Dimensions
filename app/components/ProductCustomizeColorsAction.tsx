@@ -11,6 +11,8 @@ type Props = {
 
 const STORAGE_KEY = "cd_cart_v1";
 const CART_UPDATED_EVENT = "cd-cart-updated";
+const CUSTOMIZE_COLORS_ENABLED =
+  process.env.NEXT_PUBLIC_CUSTOMIZE_COLORS === "1";
 
 type FilamentOption = {
   id: string;
@@ -143,6 +145,14 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
   const [slots, setSlots] = useState<SlotInfo[]>([]);
 
   if (!customizeConfig) return null;
+
+  if (!CUSTOMIZE_COLORS_ENABLED) {
+    return (
+      <button type="button" disabled className={className} aria-disabled="true">
+        Coming soon
+      </button>
+    );
+  }
 
   useEffect(() => {
     if (!open) return;
