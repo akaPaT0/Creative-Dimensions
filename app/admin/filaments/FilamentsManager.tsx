@@ -6,6 +6,7 @@ type FilamentItem = {
   id: string;
   type: string;
   color: string;
+  hex: string;
   brand: string;
   finish: string;
   notes: string;
@@ -18,6 +19,7 @@ type FormState = {
   id: string;
   type: string;
   color: string;
+  hex: string;
   brand: string;
   finish: string;
   notes: string;
@@ -28,6 +30,7 @@ const EMPTY_FORM: FormState = {
   id: "",
   type: "",
   color: "",
+  hex: "",
   brand: "",
   finish: "",
   notes: "",
@@ -39,6 +42,7 @@ function toFormState(item: FilamentItem): FormState {
     id: item.id,
     type: item.type,
     color: item.color,
+    hex: item.hex,
     brand: item.brand,
     finish: item.finish,
     notes: item.notes,
@@ -93,7 +97,7 @@ export default function FilamentsManager() {
       if (statusFilter === "active" && !x.isActive) return false;
       if (statusFilter === "inactive" && x.isActive) return false;
       if (!q) return true;
-      const hay = `${x.type} ${x.color} ${x.brand} ${x.finish} ${x.notes}`.toLowerCase();
+      const hay = `${x.type} ${x.color} ${x.hex} ${x.brand} ${x.finish} ${x.notes}`.toLowerCase();
       return hay.includes(q);
     });
   }, [items, query, statusFilter]);
@@ -213,6 +217,15 @@ export default function FilamentsManager() {
             />
           </div>
           <div>
+            <label className="text-sm text-white/80">Hex (used in preview)</label>
+            <input
+              value={form.hex}
+              onChange={(e) => setForm((prev) => ({ ...prev, hex: e.target.value }))}
+              placeholder="#ff8b64"
+              className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+            />
+          </div>
+          <div>
             <label className="text-sm text-white/80">Brand</label>
             <input
               value={form.brand}
@@ -307,11 +320,12 @@ export default function FilamentsManager() {
             {loading ? "Loading..." : `Showing ${filtered.length} filament option(s)`}
           </div>
           <div className="max-h-[560px] overflow-auto">
-            <table className="w-full min-w-[680px] text-left text-sm text-white/85">
+            <table className="w-full min-w-[760px] text-left text-sm text-white/85">
               <thead className="sticky top-0 bg-[#161616] text-white/65">
                 <tr>
                   <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">Color</th>
+                  <th className="px-3 py-2">Hex</th>
                   <th className="px-3 py-2">Brand</th>
                   <th className="px-3 py-2">Finish</th>
                   <th className="px-3 py-2">Status</th>
@@ -321,7 +335,7 @@ export default function FilamentsManager() {
               <tbody>
                 {!loading && filtered.length === 0 && (
                   <tr>
-                    <td className="px-3 py-5 text-center text-white/60" colSpan={6}>
+                    <td className="px-3 py-5 text-center text-white/60" colSpan={7}>
                       No filament records found.
                     </td>
                   </tr>
@@ -330,6 +344,15 @@ export default function FilamentsManager() {
                   <tr key={item.id} className="border-t border-white/10">
                     <td className="px-3 py-2">{item.type || "-"}</td>
                     <td className="px-3 py-2">{item.color || "-"}</td>
+                    <td className="px-3 py-2">
+                      <div className="inline-flex items-center gap-2">
+                        <span
+                          className="h-4 w-4 rounded border border-white/20"
+                          style={{ backgroundColor: item.hex || "transparent" }}
+                        />
+                        <span>{item.hex || "-"}</span>
+                      </div>
+                    </td>
                     <td className="px-3 py-2">{item.brand || "-"}</td>
                     <td className="px-3 py-2">{item.finish || "-"}</td>
                     <td className="px-3 py-2">

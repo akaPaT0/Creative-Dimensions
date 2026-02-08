@@ -6,19 +6,30 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import type { Product } from "@/app/data/products";
 import type { Material, Mesh } from "three";
-import { Color, Object3D } from "three";
+import { Box3, Color, Object3D, Vector3 } from "three";
 
 type CustomizeConfig = NonNullable<Product["customizeColors"]>;
+type FilamentOption = {
+  id: string;
+  type: string;
+  color: string;
+  hex: string;
+  brand: string;
+  finish: string;
+  label: string;
+};
 
 type Props = {
   open: boolean;
   onClose: () => void;
   productName: string;
   config: CustomizeConfig;
-  selectedHexes: string[];
-  onChangeHexes: (next: string[]) => void;
+  selectedFilamentIds: string[];
+  onChangeFilamentIds: (next: string[]) => void;
+  filamentOptions: FilamentOption[];
+  onSlotsChange?: (slots: SlotInfo[]) => void;
   onReset: () => void;
-  onSave: () => void;
+  onAddToCart: () => void;
 };
 
 type SlotInfo = {
@@ -32,23 +43,6 @@ type SlotBucket = {
 };
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const COLOR_OPTIONS = [
-  "#000000",
-  "#1f2937",
-  "#374151",
-  "#6b7280",
-  "#9ca3af",
-  "#d1d5db",
-  "#ffffff",
-  "#ef4444",
-  "#f97316",
-  "#facc15",
-  "#22c55e",
-  "#06b6d4",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
-];
 
 function toHex(input: string) {
   const s = input.trim();
@@ -98,16 +92,28 @@ function detectSlotBuckets(scene: Object3D) {
 
 function ModelPreview({
   modelUrl,
-  selectedHexes,
+  selectedColors,
+  defaultHexes,
   onSlotsDetected,
 }: {
   modelUrl: string;
-  selectedHexes: string[];
+  selectedColors: string[];
+  defaultHexes: string[];
   onSlotsDetected: (slots: SlotInfo[]) => void;
 }) {
   const gltf = useGLTF(modelUrl);
   const scene = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
   const buckets = useMemo(() => detectSlotBuckets(scene), [scene]);
+  const fit = useMemo(() => {
+    const box = new Box3().setFromObject(scene);
+    const center = new Vector3();
+    const size = new Vector3();
+    box.getCenter(center);
+    box.getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z, 1);
+    const scale = 1.6 / maxDim;
+    return { center, scale };
+  }, [scene]);
 
   useEffect(() => {
     onSlotsDetected(buckets.map((x) => x.slot));
@@ -115,21 +121,41 @@ function ModelPreview({
 
   useEffect(() => {
     buckets.forEach((bucket, index) => {
-      const hex = toHex(selectedHexes[index] || "#ffffff");
+      const raw = selectedColors[index] || defaultHexes[index] || "";
+      if (!raw) return;
       bucket.materials.forEach((material) => {
         if (!hasColor(material)) return;
         const anyMaterial = material as Material & { color: Color };
-        anyMaterial.color.set(hex);
+        try {
+          anyMaterial.color.set(raw);
+        } catch {
+          anyMaterial.color.set(toHex(raw));
+        }
         anyMaterial.needsUpdate = true;
       });
     });
-  }, [buckets, selectedHexes]);
+  }, [buckets, selectedColors, defaultHexes]);
 
-  return <primitive object={scene} scale={1.2} />;
+  return (
+    <group scale={fit.scale} position={[-fit.center.x * fit.scale, -fit.center.y * fit.scale, -fit.center.z * fit.scale]}>
+      <primitive object={scene} />
+    </group>
+  );
 }
 
 export default function CustomizeColorsModal(props: Props) {
-  const { open, onClose, productName, config, selectedHexes, onChangeHexes, onReset, onSave } =
+  const {
+    open,
+    onClose,
+    productName,
+    config,
+    selectedFilamentIds,
+    onChangeFilamentIds,
+    filamentOptions,
+    onSlotsChange,
+    onReset,
+    onAddToCart,
+  } =
     props;
   const [mounted, setMounted] = useState(false);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
@@ -175,17 +201,23 @@ export default function CustomizeColorsModal(props: Props) {
     };
   }, [config.modelUrl, open]);
 
-  const palette = useMemo(() => {
-    const merged = [...COLOR_OPTIONS, ...config.defaultHexes, ...selectedHexes]
-      .map((x) => toHex(x))
-      .filter(Boolean);
-    return [...new Set(merged)];
-  }, [config.defaultHexes, selectedHexes]);
+  useEffect(() => {
+    onSlotsChange?.(slots);
+  }, [slots, onSlotsChange]);
 
-  function updateSlot(index: number, hex: string) {
-    const next = [...selectedHexes];
-    next[index] = toHex(hex);
-    onChangeHexes(next);
+  const selectedColors = useMemo(
+    () =>
+      slots.map((_, index) => {
+        const option = filamentOptions.find((x) => x.id === selectedFilamentIds[index]);
+        return option?.hex || option?.color || "";
+      }),
+    [filamentOptions, selectedFilamentIds, slots]
+  );
+
+  function updateSlot(index: number, optionId: string) {
+    const next = [...selectedFilamentIds];
+    next[index] = optionId;
+    onChangeFilamentIds(next);
   }
 
   const modal =
@@ -232,18 +264,19 @@ export default function CustomizeColorsModal(props: Props) {
                         Loading model...
                       </div>
                     ) : modelReady ? (
-                      <Canvas camera={{ position: [0, 0.6, 2.4], fov: 45 }}>
+                      <Canvas camera={{ position: [0, 0, 3.6], fov: 45 }}>
                         <ambientLight intensity={0.8} />
                         <directionalLight position={[3, 3, 3]} intensity={1.1} />
                         <directionalLight position={[-2, 1, -2]} intensity={0.35} />
                         <Suspense fallback={null}>
                           <ModelPreview
                             modelUrl={config.modelUrl}
-                            selectedHexes={selectedHexes}
+                            selectedColors={selectedColors}
+                            defaultHexes={config.defaultHexes}
                             onSlotsDetected={setSlots}
                           />
                         </Suspense>
-                        <OrbitControls enablePan={false} />
+                        <OrbitControls enablePan={false} minDistance={1.8} maxDistance={8} target={[0, 0, 0]} />
                       </Canvas>
                     ) : (
                       <div className="h-full w-full flex items-center justify-center px-4 text-center text-white/60 text-sm">
@@ -269,28 +302,31 @@ export default function CustomizeColorsModal(props: Props) {
                       slots.map((slot, index) => {
                         const letter = LETTERS[index] || `${index + 1}`;
                         const label = config.slotLabels?.[index] || slot.materialName || `Slot ${letter}`;
-                        const value = toHex(
-                          selectedHexes[index] || config.defaultHexes[index] || "#ffffff"
-                        );
+                        const selectedId = selectedFilamentIds[index] || "";
+                        const selectedColor =
+                          filamentOptions.find((x) => x.id === selectedId)?.hex ||
+                          filamentOptions.find((x) => x.id === selectedId)?.color ||
+                          "";
+                        const swatch = selectedColor || config.defaultHexes[index] || "#ffffff";
                         return (
                           <label key={slot.key} className="block">
                             <div className="mb-1 text-sm text-white/80">Slot {letter}: {label}</div>
                             <div className="flex items-center gap-2">
                               <select
-                                value={value}
+                                value={selectedId}
                                 onChange={(e) => updateSlot(index, e.target.value)}
                                 className="w-full rounded-xl border border-white/15 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-[#FF8B64]"
                               >
-                                {palette.map((hex) => (
-                                  <option key={hex} value={hex}>
-                                    {hex.toUpperCase()}
+                                {filamentOptions.map((option) => (
+                                  <option key={option.id} value={option.id}>
+                                    {option.label}
                                   </option>
                                 ))}
                               </select>
                               <span
                                 className="h-8 w-8 rounded-lg border border-white/15"
-                                style={{ backgroundColor: value }}
-                                title={value}
+                                style={{ backgroundColor: swatch }}
+                                title={selectedColor || "Default"}
                               />
                             </div>
                           </label>
@@ -309,10 +345,10 @@ export default function CustomizeColorsModal(props: Props) {
                     </button>
                     <button
                       type="button"
-                      onClick={onSave}
+                      onClick={onAddToCart}
                       className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/95 hover:bg-white/15 transition"
                     >
-                      Save
+                      Add to cart
                     </button>
                   </div>
                 </div>

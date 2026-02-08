@@ -32,6 +32,7 @@ type InvoicePayload = {
     quantity: number;
     unitPriceUSD: number;
     lineTotalUSD: number;
+    customizationSummary?: string;
   }>;
   invoiceMeta: {
     invoiceNumber: string;
@@ -234,7 +235,12 @@ export default function InvoicePage() {
                           key={`${item.productId}-${idx}`}
                           className="border-b border-black/20 last:border-b-0"
                         >
-                          <td className="px-3 py-2">{item.name || item.productId}</td>
+                          <td className="px-3 py-2">
+                            <div>{item.name || item.productId}</div>
+                            {item.customizationSummary ? (
+                              <div className="text-[11px] text-black/60">{item.customizationSummary}</div>
+                            ) : null}
+                          </td>
                           <td className="px-3 py-2">{item.quantity}</td>
                           <td className="px-3 py-2">{formatMoney(item.unitPriceUSD)}</td>
                           <td className="px-3 py-2 text-right">{formatMoney(item.lineTotalUSD)}</td>

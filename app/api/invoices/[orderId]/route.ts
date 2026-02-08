@@ -17,6 +17,7 @@ type InvoiceOrder = {
     quantity?: number;
     unitPriceUSD?: number;
     lineTotalUSD?: number;
+    customizationSummary?: string;
   }>;
   address?: {
     fullName?: string;
@@ -104,6 +105,7 @@ export async function GET(
             quantity: asNumber(item.quantity),
             unitPriceUSD: asNumber(item.unitPriceUSD),
             lineTotalUSD: asNumber(item.lineTotalUSD),
+            customizationSummary: asText(item.customizationSummary),
           }))
         : [],
       invoiceMeta: {
@@ -114,4 +116,3 @@ export async function GET(
     },
   });
 }
-

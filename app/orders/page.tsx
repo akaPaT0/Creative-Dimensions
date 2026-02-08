@@ -23,6 +23,7 @@ type OrderRecord = {
     quantity: number;
     unitPriceUSD: number;
     lineTotalUSD: number;
+    customizationSummary?: string;
   }>;
   address?: {
     fullName?: string;
@@ -145,6 +146,11 @@ export default function OrdersPage() {
                       <div key={`${order.id}-${item.productId}`} className="flex justify-between gap-2">
                         <span className="truncate">
                           {item.name} x{item.quantity}
+                          {item.customizationSummary ? (
+                            <span className="block text-[11px] text-[#FFB9A3]">
+                              {item.customizationSummary}
+                            </span>
+                          ) : null}
                         </span>
                         <span>{formatMoney(item.lineTotalUSD)}</span>
                       </div>

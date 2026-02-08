@@ -12,11 +12,24 @@ import type { Product } from "../data/products";
 type StoredCartItem = {
   productId: string;
   quantity: number;
+  customization?: {
+    summary: string;
+    slots: Array<{
+      slot: string;
+      label: string;
+      filamentId: string;
+      filamentLabel: string;
+      colorValue: string;
+    }>;
+  };
 };
 
 type CartLine = {
+  key: string;
+  productId: string;
   product: Product;
   quantity: number;
+  customization?: StoredCartItem["customization"];
 };
 
 const STORAGE_KEY = "cd_cart_v1";
@@ -44,22 +57,55 @@ function formatMoney(value: number) {
 
 function parseStoredCart(raw: unknown): StoredCartItem[] {
   if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const row = item as Record<string, unknown>;
-      const id = typeof row.productId === "string" ? row.productId : "";
-      const qtyRaw =
-        typeof row.quantity === "number"
-          ? row.quantity
-          : typeof row.qty === "number"
-            ? row.qty
-            : 1;
-      const quantity = Math.max(1, Math.floor(qtyRaw));
-      if (!id) return null;
-      return { productId: id, quantity };
-    })
-    .filter((x): x is StoredCartItem => Boolean(x));
+  const out: StoredCartItem[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const row = entry as Record<string, unknown>;
+    const id = typeof row.productId === "string" ? row.productId : "";
+    const qtyRaw =
+      typeof row.quantity === "number"
+        ? row.quantity
+        : typeof row.qty === "number"
+          ? row.qty
+          : 1;
+    const quantity = Math.max(1, Math.floor(qtyRaw));
+    if (!id) continue;
+    const customizationRaw =
+      row.customization && typeof row.customization === "object"
+        ? (row.customization as Record<string, unknown>)
+        : null;
+    const slots = Array.isArray(customizationRaw?.slots)
+      ? customizationRaw.slots
+          .map((slot) => {
+            if (!slot || typeof slot !== "object") return null;
+            const s = slot as Record<string, unknown>;
+            const filamentId = typeof s.filamentId === "string" ? s.filamentId : "";
+            if (!filamentId) return null;
+            return {
+              slot: typeof s.slot === "string" ? s.slot : "",
+              label: typeof s.label === "string" ? s.label : "",
+              filamentId,
+              filamentLabel: typeof s.filamentLabel === "string" ? s.filamentLabel : "",
+              colorValue: typeof s.colorValue === "string" ? s.colorValue : "",
+            };
+          })
+          .filter((x): x is NonNullable<typeof x> => Boolean(x))
+      : [];
+    const summary = typeof customizationRaw?.summary === "string" ? customizationRaw.summary : "";
+    out.push({
+      productId: id,
+      quantity,
+      customization: slots.length ? { summary, slots } : undefined,
+    });
+  }
+  return out;
+}
+
+function cartLineKey(item: StoredCartItem) {
+  return JSON.stringify({
+    productId: item.productId,
+    slots: (item.customization?.slots || []).map((x) => ({ slot: x.slot, filamentId: x.filamentId })),
+  });
 }
 
 function readCartFromStorage(): StoredCartItem[] {
@@ -106,13 +152,19 @@ export default function CartPage() {
   const cartLines = useMemo<CartLine[]>(() => {
     const byId = new Map<string, Product>();
     for (const product of products) byId.set(product.id, product);
-    return cartItems
-      .map((item) => {
-        const product = byId.get(item.productId);
-        if (!product) return null;
-        return { product, quantity: item.quantity };
-      })
-      .filter((x): x is CartLine => Boolean(x));
+    const out: CartLine[] = [];
+    for (const item of cartItems) {
+      const product = byId.get(item.productId);
+      if (!product) continue;
+      out.push({
+        key: cartLineKey(item),
+        productId: item.productId,
+        product,
+        quantity: item.quantity,
+        customization: item.customization,
+      });
+    }
+    return out;
   }, [cartItems, products]);
 
   const itemCount = useMemo(
@@ -128,15 +180,15 @@ export default function CartPage() {
   const estimatedShipping = cartLines.length > 0 ? 5 : 0;
   const total = subtotal + estimatedShipping;
 
-  function setQuantity(productId: string, nextQuantity: number) {
+  function setQuantity(lineKey: string, nextQuantity: number) {
     const quantity = Math.max(1, Math.floor(nextQuantity));
     setCartItems((prev) =>
-      prev.map((x) => (x.productId === productId ? { ...x, quantity } : x))
+      prev.map((x) => (cartLineKey(x) === lineKey ? { ...x, quantity } : x))
     );
   }
 
-  function removeItem(productId: string) {
-    setCartItems((prev) => prev.filter((x) => x.productId !== productId));
+  function removeItem(lineKey: string) {
+    setCartItems((prev) => prev.filter((x) => cartLineKey(x) !== lineKey));
   }
 
   function clearCart() {
@@ -204,7 +256,7 @@ export default function CartPage() {
               <div className="mt-4 space-y-3">
                 {cartLines.map((line) => (
                   <article
-                    key={line.product.id}
+                    key={line.key}
                     className="rounded-xl border border-white/10 bg-black/20 p-3"
                   >
                     <div className="flex gap-3">
@@ -231,6 +283,11 @@ export default function CartPage() {
                         <p className="mt-1 text-sm text-white/75">
                           {formatMoney(line.product.priceUSD)} each
                         </p>
+                        {line.customization?.slots?.length ? (
+                          <p className="mt-1 text-xs text-[#FFB9A3]">
+                            {line.customization.summary || "Custom colors selected"}
+                          </p>
+                        ) : null}
 
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                           <div className="inline-flex items-center rounded-lg border border-white/15 bg-white/5">
@@ -238,7 +295,7 @@ export default function CartPage() {
                               type="button"
                               aria-label="Decrease quantity"
                               onClick={() =>
-                                setQuantity(line.product.id, line.quantity - 1)
+                                setQuantity(line.key, line.quantity - 1)
                               }
                               className="inline-flex h-8 w-8 items-center justify-center text-white/85 hover:bg-white/10 transition"
                             >
@@ -251,7 +308,7 @@ export default function CartPage() {
                               type="button"
                               aria-label="Increase quantity"
                               onClick={() =>
-                                setQuantity(line.product.id, line.quantity + 1)
+                                setQuantity(line.key, line.quantity + 1)
                               }
                               className="inline-flex h-8 w-8 items-center justify-center text-white/85 hover:bg-white/10 transition"
                             >
@@ -266,7 +323,7 @@ export default function CartPage() {
                             <button
                               type="button"
                               aria-label={`Remove ${line.product.name}`}
-                              onClick={() => removeItem(line.product.id)}
+                              onClick={() => removeItem(line.key)}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20 transition"
                             >
                               <Trash2 size={14} />

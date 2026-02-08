@@ -13,6 +13,16 @@ import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 type StoredCartItem = {
   productId: string;
   quantity: number;
+  customization?: {
+    summary: string;
+    slots: Array<{
+      slot: string;
+      label: string;
+      filamentId: string;
+      filamentLabel: string;
+      colorValue: string;
+    }>;
+  };
 };
 
 type Address = {
@@ -79,6 +89,7 @@ type PlacedOrderPrintData = {
     quantity?: number;
     unitPriceUSD?: number;
     lineTotalUSD?: number;
+    customizationSummary?: string;
   }>;
 };
 
@@ -99,19 +110,45 @@ const EMPTY_ADDRESS_FORM: AddressFormState = {
 
 function parseStoredCart(raw: unknown): StoredCartItem[] {
   if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const row = item as Record<string, unknown>;
-      const productId = typeof row.productId === "string" ? row.productId : "";
-      const quantity =
-        typeof row.quantity === "number" && Number.isFinite(row.quantity)
-          ? Math.max(1, Math.floor(row.quantity))
-          : 1;
-      if (!productId) return null;
-      return { productId, quantity };
-    })
-    .filter((x): x is StoredCartItem => Boolean(x));
+  const out: StoredCartItem[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const row = entry as Record<string, unknown>;
+    const productId = typeof row.productId === "string" ? row.productId : "";
+    const quantity =
+      typeof row.quantity === "number" && Number.isFinite(row.quantity)
+        ? Math.max(1, Math.floor(row.quantity))
+        : 1;
+    if (!productId) continue;
+    const customizationRaw =
+      row.customization && typeof row.customization === "object"
+        ? (row.customization as Record<string, unknown>)
+        : null;
+    const slots = Array.isArray(customizationRaw?.slots)
+      ? customizationRaw.slots
+          .map((slot) => {
+            if (!slot || typeof slot !== "object") return null;
+            const s = slot as Record<string, unknown>;
+            const filamentId = typeof s.filamentId === "string" ? s.filamentId : "";
+            if (!filamentId) return null;
+            return {
+              slot: typeof s.slot === "string" ? s.slot : "",
+              label: typeof s.label === "string" ? s.label : "",
+              filamentId,
+              filamentLabel: typeof s.filamentLabel === "string" ? s.filamentLabel : "",
+              colorValue: typeof s.colorValue === "string" ? s.colorValue : "",
+            };
+          })
+          .filter((x): x is NonNullable<typeof x> => Boolean(x))
+      : [];
+    const summary = typeof customizationRaw?.summary === "string" ? customizationRaw.summary : "";
+    out.push({
+      productId,
+      quantity,
+      customization: slots.length ? { summary, slots } : undefined,
+    });
+  }
+  return out;
 }
 
 function readCart(): StoredCartItem[] {
@@ -318,10 +355,15 @@ export default function CheckoutPage() {
         const product = byId.get(row.productId);
         if (!product) return null;
         return {
+          key: JSON.stringify({
+            productId: row.productId,
+            slots: (row.customization?.slots || []).map((x) => x.filamentId),
+          }),
           productId: row.productId,
           name: product.name,
           quantity: row.quantity,
           lineTotalUSD: product.priceUSD * row.quantity,
+          customizationSummary: row.customization?.summary || "",
         };
       })
       .filter(
@@ -329,9 +371,11 @@ export default function CheckoutPage() {
           x
         ): x is {
           productId: string;
+          key: string;
           name: string;
           quantity: number;
           lineTotalUSD: number;
+          customizationSummary: string;
         } => Boolean(x)
       );
   }, [cart, products]);
@@ -711,11 +755,16 @@ export default function CheckoutPage() {
                     <div className="mt-2 space-y-2">
                       {cartPreview.map((item) => (
                         <div
-                          key={item.productId}
+                          key={item.key}
                           className="flex items-start justify-between gap-2 text-xs text-white/80"
                         >
                           <div className="min-w-0 truncate">
                             {item.name} x{item.quantity}
+                            {item.customizationSummary ? (
+                              <span className="block truncate text-[11px] text-[#FFB9A3]">
+                                {item.customizationSummary}
+                              </span>
+                            ) : null}
                           </div>
                           <div className="shrink-0">{formatMoney(item.lineTotalUSD)}</div>
                         </div>

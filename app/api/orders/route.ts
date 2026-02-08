@@ -15,6 +15,16 @@ import {
 type OrderRequestItem = {
   productId: string;
   quantity: number;
+  customization?: {
+    summary: string;
+    slots: Array<{
+      slot: string;
+      label: string;
+      filamentId: string;
+      filamentLabel: string;
+      colorValue: string;
+    }>;
+  };
 };
 
 type Address = {
@@ -61,6 +71,14 @@ type OrderRecord = {
     quantity: number;
     unitPriceUSD: number;
     lineTotalUSD: number;
+    customizationSummary?: string;
+    customizationSlots?: Array<{
+      slot: string;
+      label: string;
+      filamentId: string;
+      filamentLabel: string;
+      colorValue: string;
+    }>;
   }>;
 };
 
@@ -91,16 +109,42 @@ function asPositiveInt(value: unknown) {
 
 function normalizeItems(raw: unknown): OrderRequestItem[] {
   if (!Array.isArray(raw)) return [];
-  return raw
-    .map((x) => {
-      if (!x || typeof x !== "object") return null;
-      const row = x as Record<string, unknown>;
-      const productId = asText(row.productId);
-      const quantity = asPositiveInt(row.quantity);
-      if (!productId) return null;
-      return { productId, quantity };
-    })
-    .filter((x): x is OrderRequestItem => Boolean(x));
+  const out: OrderRequestItem[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const row = entry as Record<string, unknown>;
+    const productId = asText(row.productId);
+    const quantity = asPositiveInt(row.quantity);
+    if (!productId) continue;
+    const customizationRaw =
+      row.customization && typeof row.customization === "object"
+        ? (row.customization as Record<string, unknown>)
+        : null;
+    const slots = Array.isArray(customizationRaw?.slots)
+      ? customizationRaw.slots
+          .map((slot) => {
+            if (!slot || typeof slot !== "object") return null;
+            const s = slot as Record<string, unknown>;
+            const filamentId = asText(s.filamentId);
+            if (!filamentId) return null;
+            return {
+              slot: asText(s.slot),
+              label: asText(s.label),
+              filamentId,
+              filamentLabel: asText(s.filamentLabel),
+              colorValue: asText(s.colorValue),
+            };
+          })
+          .filter((x): x is NonNullable<typeof x> => Boolean(x))
+      : [];
+    const summary = asText(customizationRaw?.summary);
+    out.push({
+      productId,
+      quantity,
+      customization: slots.length ? { summary, slots } : undefined,
+    });
+  }
+  return out;
 }
 
 function normalizeAddresses(raw: unknown): Address[] {
@@ -179,7 +223,7 @@ async function notifyOrderTelegram(params: {
     `Items: ${order.items.length}`,
     ...order.items.map(
       (item) =>
-        `- ${item.name} x${item.quantity} (${fmtMoney(item.unitPriceUSD)}) = ${fmtMoney(item.lineTotalUSD)}`
+        `- ${item.name} x${item.quantity} (${fmtMoney(item.unitPriceUSD)}) = ${fmtMoney(item.lineTotalUSD)}${item.customizationSummary ? ` | ${item.customizationSummary}` : ""}`
     ),
     `Subtotal: ${fmtMoney(order.subtotalUSD)}`,
     `Discount: -${fmtMoney(order.discountUSD)}`,
@@ -218,7 +262,7 @@ async function notifyOrderTelegram(params: {
     shippingUSD: order.shippingUSD,
     totalUSD: order.totalUSD,
     items: order.items.map((item) => ({
-      name: item.name,
+      name: item.customizationSummary ? `${item.name} (${item.customizationSummary})` : item.name,
       quantity: item.quantity,
       unitPriceUSD: item.unitPriceUSD,
       lineTotalUSD: item.lineTotalUSD,
@@ -302,6 +346,8 @@ export async function POST(req: Request) {
       quantity: item.quantity,
       unitPriceUSD: product.priceUSD,
       lineTotalUSD,
+      customizationSummary: item.customization?.summary || undefined,
+      customizationSlots: item.customization?.slots?.length ? item.customization.slots : undefined,
     };
   });
 

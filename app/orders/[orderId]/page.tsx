@@ -23,6 +23,7 @@ type OrderRecord = {
     quantity: number;
     unitPriceUSD: number;
     lineTotalUSD: number;
+    customizationSummary?: string;
   }>;
   address?: {
     fullName?: string;
@@ -154,7 +155,14 @@ export default function OrderDetailsPage() {
                 <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/80">
                   {order.items.map((item) => (
                     <div key={`${order.id}-${item.productId}`} className="flex items-center justify-between gap-2 py-1">
-                      <span className="truncate">{item.name} x{item.quantity}</span>
+                      <span className="truncate">
+                        {item.name} x{item.quantity}
+                        {item.customizationSummary ? (
+                          <span className="block text-[11px] text-[#FFB9A3]">
+                            {item.customizationSummary}
+                          </span>
+                        ) : null}
+                      </span>
                       <span>{formatMoney(item.lineTotalUSD)}</span>
                     </div>
                   ))}

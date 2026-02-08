@@ -10,6 +10,7 @@ type FilamentItem = {
   id: string;
   type: string;
   color: string;
+  hex: string;
   brand: string;
   finish: string;
   notes: string;
@@ -37,6 +38,14 @@ function cleanText(raw: unknown, maxLen = MAX_TEXT) {
 function cleanBool(raw: unknown, fallback = true) {
   if (typeof raw === "boolean") return raw;
   return fallback;
+}
+
+function cleanHex(raw: unknown) {
+  if (typeof raw !== "string") return "";
+  const value = raw.trim();
+  if (!value) return "";
+  const normalized = value.startsWith("#") ? value : `#${value}`;
+  return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toLowerCase() : "";
 }
 
 function hasOwn(input: Record<string, unknown> | null, key: string) {
@@ -86,6 +95,7 @@ function normalizeItems(raw: unknown): FilamentItem[] {
       id,
       type: cleanText(row.type),
       color: cleanText(row.color),
+      hex: cleanHex(row.hex),
       brand: cleanText(row.brand),
       finish: cleanText(row.finish),
       notes: cleanText(row.notes, MAX_NOTES),
@@ -110,6 +120,7 @@ function migrateFromLegacy(data: { types?: unknown; colors?: unknown }) {
           id: makeId(),
           type,
           color,
+          hex: "",
           brand: "",
           finish: "",
           notes: "",
@@ -127,6 +138,7 @@ function migrateFromLegacy(data: { types?: unknown; colors?: unknown }) {
       id: makeId(),
       type,
       color: "",
+      hex: "",
       brand: "",
       finish: "",
       notes: "",
@@ -140,6 +152,7 @@ function migrateFromLegacy(data: { types?: unknown; colors?: unknown }) {
       id: makeId(),
       type: "",
       color,
+      hex: "",
       brand: "",
       finish: "",
       notes: "",
@@ -196,6 +209,7 @@ export async function POST(req: Request) {
     const brand = cleanText(body?.brand);
     const finish = cleanText(body?.finish);
     const notes = cleanText(body?.notes, MAX_NOTES);
+    const hex = cleanHex(body?.hex);
     const isActive = cleanBool(body?.isActive, true);
 
     if (!type && !color) return json({ error: "Type or color is required." }, 400);
@@ -206,6 +220,7 @@ export async function POST(req: Request) {
       id: makeId(),
       type,
       color,
+      hex,
       brand,
       finish,
       notes,
@@ -242,6 +257,7 @@ export async function PUT(req: Request) {
     const nextBrand = hasOwn(body, "brand") ? cleanText(body?.brand) : prev.brand;
     const nextFinish = hasOwn(body, "finish") ? cleanText(body?.finish) : prev.finish;
     const nextNotes = hasOwn(body, "notes") ? cleanText(body?.notes, MAX_NOTES) : prev.notes;
+    const nextHex = hasOwn(body, "hex") ? cleanHex(body?.hex) : prev.hex;
     const nextIsActive = hasOwn(body, "isActive")
       ? cleanBool(body?.isActive, prev.isActive)
       : prev.isActive;
@@ -250,6 +266,7 @@ export async function PUT(req: Request) {
       ...prev,
       type: nextType,
       color: nextColor,
+      hex: nextHex,
       brand: nextBrand,
       finish: nextFinish,
       notes: nextNotes,
