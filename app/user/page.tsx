@@ -368,22 +368,23 @@ function AccountPanel() {
         return;
       }
 
-      if (data.address) {
+      const savedAddress = data.address;
+      if (savedAddress) {
         setAddresses((prev) => {
           if (editingAddressId) {
             const next = prev.map((x) =>
-              x.id === data.address?.id
-                ? (data.address as SavedAddress)
-                : data.address?.isDefault
+              x.id === savedAddress.id
+                ? savedAddress
+                : savedAddress.isDefault
                   ? { ...x, isDefault: false }
                   : x
             );
             return next;
           }
-          const next = data.address.isDefault
+          const next = savedAddress.isDefault
             ? prev.map((x) => ({ ...x, isDefault: false }))
             : prev;
-          return [...next, data.address];
+          return [...next, savedAddress];
         });
       }
 
