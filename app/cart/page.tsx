@@ -142,9 +142,11 @@ export default function CartPage() {
                 Review your selected items before checkout.
               </p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white/80">
-              <ShoppingCart size={16} />
-              <span>{itemCount} item(s)</span>
+            <div className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-3 text-sm text-white/90">
+              <ShoppingCart size={16} className="shrink-0" />
+              <span className="whitespace-nowrap font-medium">
+                {itemCount} {itemCount === 1 ? "item" : "items"}
+              </span>
             </div>
           </div>
         </section>

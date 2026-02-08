@@ -437,9 +437,9 @@ function AuthButtons({
               <Link
                 href="/cart"
                 onClick={close}
-                className="relative block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition text-center"
+                className="relative block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
               >
-                <span className="inline-block w-full text-center">Cart</span>
+                <span>Cart</span>
                 {cartCount > 0 && (
                   <span className="absolute right-3 top-1/2 inline-flex min-w-[20px] -translate-y-1/2 items-center justify-center rounded-full bg-[#FF8B64] px-1.5 text-xs font-semibold text-black">
                     {cartCount > 99 ? "99+" : cartCount}

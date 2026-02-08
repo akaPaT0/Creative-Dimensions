@@ -103,7 +103,7 @@ export default function CustomRequestModal({
 
   const waText = () => {
     const base = `Custom request: ${ctxName || ""}${
-      ctxUrl ? ` — ${ctxUrl}` : ""
+      ctxUrl ? ` - ${ctxUrl}` : ""
     }`;
     const extra = details.trim() ? `\nDetails: ${details.trim()}` : "";
     return `${base}${extra}`.trim();
@@ -144,8 +144,8 @@ export default function CustomRequestModal({
       setDetails("");
       setFiles([]);
       setOpen(false);
-    } catch (e: any) {
-      setErr(e?.message || "Something went wrong");
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setBusy(false);
     }
@@ -173,7 +173,7 @@ export default function CustomRequestModal({
                 <div>
                   <div className="text-white font-semibold text-lg">Custom request</div>
                   <div className="text-white/60 text-sm">
-                    Upload an image/STL and describe what you want.
+                    Share your idea with enough detail so we can quote and produce it correctly.
                   </div>
                 </div>
 
@@ -182,23 +182,30 @@ export default function CustomRequestModal({
                   onClick={() => setOpen(false)}
                   className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white/80 hover:bg-white/10 transition"
                 >
-                  ✕
+                  X
                 </button>
               </div>
 
               <div className="mt-5 space-y-4">
                 <div>
                   <label className="text-white/80 text-sm">Details</label>
+                  <p className="mt-1 text-xs text-white/55">
+                    Include size, quantity, colors, text/logo, finish, and deadline.
+                    Example: &quot;10cm keychain, matte black, logo engraved, qty 20, needed before Mar 20.&quot;
+                  </p>
                   <textarea
                     value={details}
                     onChange={(e) => setDetails(e.target.value)}
                     className="mt-1 w-full min-h-[120px] rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
-                    placeholder="Size, colors, text, reference, anything..."
+                    placeholder="Tell us exactly what you need: dimensions, quantity, colors, text/logo, delivery target, and any special notes..."
                   />
                 </div>
 
                 <div>
                   <label className="text-white/80 text-sm">Files</label>
+                  <p className="mt-1 text-xs text-white/55">
+                    Upload references or source files (PNG, JPG, WEBP, STL, 3MF, OBJ, ZIP). Clear photos or drawings help us estimate faster.
+                  </p>
 
                   <input
                     ref={fileInputRef}
@@ -268,6 +275,10 @@ export default function CustomRequestModal({
                   </div>
                 )}
 
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">
+                  After you press Send, you will be redirected to WhatsApp with your request pre-filled so you can review and send it directly.
+                </div>
+
                 <div className="grid gap-3 sm:grid-cols-2">
                   <button
                     type="button"
@@ -312,3 +323,5 @@ export default function CustomRequestModal({
     </>
   );
 }
+
+
