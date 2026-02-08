@@ -60,7 +60,13 @@ export const products: Product[] = [
       "/products/Cat Half Skel 1-6.webp"
     ],
     "isNew": true,
-    "featured": true
+    "featured": true,
+    "customizeColors": {
+      "modelUrl": "/models/keychains/cute/half-skeleton-cat-keychain.glb",
+      "defaultHexes": [
+        "#ffffff"
+      ]
+    }
   },
   {
     "id": "KECA001",
