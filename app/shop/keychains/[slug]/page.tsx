@@ -13,8 +13,9 @@ import CustomRequestModal from "../../../components/CustomRequestModal";
 import LikeWishlistRow from "../../../components/LikeWishlistRow";
 import AddToCartButton from "../../../components/AddToCartButton";
 import ProductCustomizeColorsAction from "../../../components/ProductCustomizeColorsAction";
+import { SITE_URL } from "../../../lib/site";
 
-const SITE = "https://creative-dimensions.vercel.app";
+export const revalidate = 300;
 
 function normalize(s: string) {
   try {
@@ -62,7 +63,10 @@ export async function generateMetadata({
 
   const imgs = getImages(p);
   const first = imgs[0] || "/products/placeholder.jpg";
-  const ogImage = String(first).startsWith("http") ? String(first) : `${SITE}${first}`;
+  const ogImages = imgs.map((img) => {
+    const url = String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`;
+    return { url, width: 1200, height: 630, alt: p.name };
+  });
 
   const title = `${p.name} | Creative Dimensions`;
   const desc =
@@ -70,7 +74,7 @@ export async function generateMetadata({
       ? p.description.trim().slice(0, 200)
       : "Custom 3D printed item in Lebanon.";
 
-  const url = `${SITE}/shop/keychains/${encodeURIComponent(p.slug)}`;
+  const url = `${SITE_URL}/shop/keychains/${encodeURIComponent(p.slug)}`;
 
   return {
     title,
@@ -82,13 +86,13 @@ export async function generateMetadata({
       url,
       siteName: "Creative Dimensions",
       type: "website",
-      images: [{ url: ogImage, width: 1200, height: 630, alt: p.name }],
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: desc,
-      images: [ogImage],
+      images: [ogImages[0]?.url || `${SITE_URL}${first}`],
     },
   };
 }
@@ -157,11 +161,42 @@ export default async function KeychainSlugPage({
     image: getCardImage(x),
   }));
 
-  const productUrl = `${SITE}/shop/keychains/${encodeURIComponent(p.slug)}`;
+  const productUrl = `${SITE_URL}/shop/keychains/${encodeURIComponent(p.slug)}`;
   const waText = `Hey! I'm interested in: ${p.name} - ${productUrl}`;
+  const productImages = imgs.map((img) =>
+    String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`
+  );
+  const hasPrice = typeof p.priceUSD === "number" && Number.isFinite(p.priceUSD);
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: p.name,
+    description: p.description || "",
+    image: productImages || [],
+    brand: {
+      "@type": "Brand",
+      name: "Creative Dimensions",
+    },
+    ...(hasPrice
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: productUrl,
+            priceCurrency: "USD",
+            price: String(p.priceUSD),
+            availability: "https://schema.org/InStock",
+            itemCondition: "https://schema.org/NewCondition",
+          },
+        }
+      : {}),
+  };
 
   return (
     <div className="relative min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <Background />
       <Navbar />
 

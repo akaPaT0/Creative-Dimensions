@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
 import HeroIn from "./components/HeroIn";
 import CustomRequestModal from "./components/CustomRequestModal";
+import { SITE_URL } from "./lib/site";
 
 export default function Home() {
   return (
@@ -60,7 +61,7 @@ export default function Home() {
                     <div className="mt-4 sm:mt-10 flex justify-center">
                       <CustomRequestModal
                         productName="Custom Order"
-                        productUrl="https://creative-dimensions.vercel.app"
+                        productUrl={SITE_URL}
                         className="w-full sm:w-auto px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
                           text-[20px] sm:text-2xl hover:bg-white/10 transition text-center"
                       />
@@ -116,7 +117,7 @@ export default function Home() {
                 <div className="mt-6 flex justify-center">
                   <CustomRequestModal
                     productName="Custom Order"
-                    productUrl="https://creative-dimensions.vercel.app"
+                    productUrl={SITE_URL}
                     className="w-[480px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
                       lg:text-[30px] hover:bg-white/10 transition text-center"
                   />
@@ -207,7 +208,7 @@ export default function Home() {
                       <div className="absolute inset-0 z-20 opacity-0">
                         <CustomRequestModal
                           productName="Custom Order"
-                          productUrl="https://creative-dimensions.vercel.app"
+                          productUrl={SITE_URL}
                           className="w-full h-full cursor-pointer"
                         />
                       </div>

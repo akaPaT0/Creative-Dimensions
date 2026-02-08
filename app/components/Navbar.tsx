@@ -14,6 +14,7 @@ import {
 
 import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
 import AdminShortcutFab from "./AdminShortcutFab";
+import { SITE_URL } from "../lib/site";
 
 const CART_STORAGE_KEY = "cd_cart_v1";
 const CART_UPDATED_EVENT = "cd-cart-updated";
@@ -84,7 +85,7 @@ export default function Navbar() {
       <CustomRequestModal
         hideButton
         productName="Custom Order"
-        productUrl="https://creative-dimensions.vercel.app"
+        productUrl={SITE_URL}
       />
 
       {/* PC Nav */}
@@ -140,7 +141,7 @@ export default function Navbar() {
               onRequestCustom={() =>
                 openCustomRequest({
                   productName: "Custom Order",
-                  productUrl: "https://creative-dimensions.vercel.app",
+                  productUrl: SITE_URL,
                 })
               }
             />
@@ -205,7 +206,7 @@ export default function Navbar() {
                 setOpen(false);
                 openCustomRequest({
                   productName: "Custom Order",
-                  productUrl: "https://creative-dimensions.vercel.app",
+                  productUrl: SITE_URL,
                 });
               }}
             />
