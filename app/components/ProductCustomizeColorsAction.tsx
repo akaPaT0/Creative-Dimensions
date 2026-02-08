@@ -30,6 +30,7 @@ type SlotInfo = {
 type StoredCartItem = {
   productId: string;
   quantity: number;
+  previewImageUrl?: string;
   customization?: {
     summary: string;
     slots: Array<{
@@ -79,6 +80,7 @@ function parseStoredCart(raw: unknown): StoredCartItem[] {
     out.push({
       productId,
       quantity,
+      previewImageUrl: typeof row.previewImageUrl === "string" ? row.previewImageUrl : undefined,
       customization: slots.length ? { summary, slots } : undefined,
     });
   }
@@ -209,7 +211,7 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
     setSelectedFilamentIds([]);
   }
 
-  function handleAddToCart() {
+  function handleAddToCart(previewImageUrl?: string) {
     if (typeof window === "undefined") return;
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const selectedSlots = slots
@@ -238,6 +240,7 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
     const newItem: StoredCartItem = {
       productId: String(product.id),
       quantity: 1,
+      previewImageUrl,
       customization: selectedSlots.length ? { summary, slots: selectedSlots } : undefined,
     };
 
@@ -252,7 +255,11 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
     const fingerprint = buildFingerprint(newItem);
     const idx = current.findIndex((x) => buildFingerprint(x) === fingerprint);
     if (idx >= 0) {
-      current[idx] = { ...current[idx], quantity: current[idx].quantity + 1 };
+      current[idx] = {
+        ...current[idx],
+        quantity: current[idx].quantity + 1,
+        previewImageUrl: previewImageUrl || current[idx].previewImageUrl,
+      };
     } else {
       current.push(newItem);
     }

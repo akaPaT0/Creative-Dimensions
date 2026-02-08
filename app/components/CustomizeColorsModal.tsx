@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
@@ -29,7 +29,7 @@ type Props = {
   filamentOptions: FilamentOption[];
   onSlotsChange?: (slots: SlotInfo[]) => void;
   onReset: () => void;
-  onAddToCart: () => void;
+  onAddToCart: (previewImageUrl?: string) => void;
 };
 
 type SlotInfo = {
@@ -170,6 +170,7 @@ export default function CustomizeColorsModal(props: Props) {
   const [modelReady, setModelReady] = useState(false);
   const [checkingModel, setCheckingModel] = useState(false);
   const [modelVersion, setModelVersion] = useState(0);
+  const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const modelUrlWithVersion = useMemo(() => {
     const sep = config.modelUrl.includes("?") ? "&" : "?";
     return `${config.modelUrl}${sep}v=${modelVersion}`;
@@ -236,6 +237,16 @@ export default function CustomizeColorsModal(props: Props) {
     const next = [...selectedFilamentIds];
     next[index] = optionId;
     onChangeFilamentIds(next);
+  }
+
+  function capturePreviewImage() {
+    try {
+      const canvas = previewWrapRef.current?.querySelector("canvas");
+      if (!canvas) return "";
+      return canvas.toDataURL("image/png");
+    } catch {
+      return "";
+    }
   }
 
   const modal =
@@ -312,13 +323,16 @@ export default function CustomizeColorsModal(props: Props) {
                       ))}
                     </div>
                     <div className="pointer-events-none absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
-                    <div className="relative z-10 h-full w-full">
+                    <div ref={previewWrapRef} className="relative z-10 h-full w-full">
                     {checkingModel ? (
                       <div className="h-full w-full flex items-center justify-center text-white/60 text-sm">
                         Loading model...
                       </div>
                     ) : modelReady ? (
-                      <Canvas camera={{ position: [0, 0, 3.6], fov: 45 }} gl={{ alpha: true }}>
+                      <Canvas
+                        camera={{ position: [0, 0, 3.6], fov: 45 }}
+                        gl={{ alpha: true, preserveDrawingBuffer: true }}
+                      >
                         <hemisphereLight intensity={0.18} color="#e5e7eb" groundColor="#101010" />
                         <ambientLight intensity={0.12} />
                         <directionalLight position={[4, 5, 4]} intensity={0.42} />
@@ -402,7 +416,7 @@ export default function CustomizeColorsModal(props: Props) {
                     </button>
                     <button
                       type="button"
-                      onClick={onAddToCart}
+                      onClick={() => onAddToCart(capturePreviewImage() || undefined)}
                       className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/95 hover:bg-white/15 transition"
                     >
                       Add to cart

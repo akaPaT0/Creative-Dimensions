@@ -1,4 +1,5 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { put } from "@vercel/blob";
 import { kv } from "@vercel/kv";
 import { NextResponse } from "next/server";
 import { getProducts } from "@/app/lib/products-db";
@@ -15,6 +16,7 @@ import {
 type OrderRequestItem = {
   productId: string;
   quantity: number;
+  previewImageUrl?: string;
   customization?: {
     summary: string;
     slots: Array<{
@@ -142,6 +144,7 @@ function normalizeItems(raw: unknown): OrderRequestItem[] {
     out.push({
       productId,
       quantity,
+      previewImageUrl: asText(row.previewImageUrl) || undefined,
       customization: slots.length ? { summary, slots } : undefined,
     });
   }
@@ -194,6 +197,45 @@ function getProductPreviewImage(product: { images?: string[]; image?: string }) 
   if (Array.isArray(product.images) && product.images.length > 0) return String(product.images[0] || "");
   if (typeof product.image === "string") return product.image;
   return "";
+}
+
+function parseDataImageUrl(raw: string) {
+  const value = raw.trim();
+  const match = value.match(/^data:(image\/png|image\/jpeg|image\/webp);base64,([A-Za-z0-9+/=]+)$/i);
+  if (!match) return null;
+  const mime = match[1].toLowerCase();
+  const base64 = match[2];
+  let ext = "png";
+  if (mime === "image/jpeg") ext = "jpg";
+  if (mime === "image/webp") ext = "webp";
+  try {
+    const bytes = Buffer.from(base64, "base64");
+    if (!bytes.length) return null;
+    return { bytes, mime, ext };
+  } catch {
+    return null;
+  }
+}
+
+async function persistCustomPreviewImage(params: {
+  rawUrl?: string;
+  orderNumber: string;
+  itemIndex: number;
+}) {
+  const raw = asText(params.rawUrl);
+  if (!raw) return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  const parsed = parseDataImageUrl(raw);
+  if (!parsed) return "";
+  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const pathname = `order-previews/${params.orderNumber}-${params.itemIndex + 1}-${unique}.${parsed.ext}`;
+  const blob = await put(pathname, parsed.bytes, {
+    access: "public",
+    addRandomSuffix: false,
+    allowOverwrite: false,
+    contentType: parsed.mime,
+  });
+  return blob.url;
 }
 
 async function notifyOrderTelegram(params: {
@@ -372,7 +414,7 @@ export async function POST(req: Request) {
       quantity: item.quantity,
       unitPriceUSD: product.priceUSD,
       lineTotalUSD,
-      previewImageUrl: getProductPreviewImage(product),
+      previewImageUrl: item.previewImageUrl || getProductPreviewImage(product),
       customizationSummary: item.customization?.summary || undefined,
       customizationSlots: item.customization?.slots?.length ? item.customization.slots : undefined,
     };
@@ -410,6 +452,20 @@ export async function POST(req: Request) {
   const orderNumber = await generateOrderNumber();
   const invoiceNumber = await generateInvoiceNumber();
   const createdAt = new Date().toISOString();
+  const finalizedItems = await Promise.all(
+    resolvedItems.map(async (item, index) => {
+      if (!item.customizationSummary) return item;
+      const previewImageUrl = await persistCustomPreviewImage({
+        rawUrl: item.previewImageUrl,
+        orderNumber,
+        itemIndex: index,
+      }).catch(() => "");
+      return {
+        ...item,
+        previewImageUrl: previewImageUrl || item.previewImageUrl || undefined,
+      };
+    })
+  );
 
   const order: OrderRecord = {
     id: `ORD-${Date.now()}`,
@@ -435,7 +491,7 @@ export async function POST(req: Request) {
       },
     ],
     address,
-    items: resolvedItems,
+    items: finalizedItems,
   };
 
   const existingRaw = await kv.get<unknown>(ordersKey(userId));

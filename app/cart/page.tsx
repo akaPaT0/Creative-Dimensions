@@ -12,6 +12,7 @@ import type { Product } from "../data/products";
 type StoredCartItem = {
   productId: string;
   quantity: number;
+  previewImageUrl?: string;
   customization?: {
     summary: string;
     slots: Array<{
@@ -29,6 +30,7 @@ type CartLine = {
   productId: string;
   product: Product;
   quantity: number;
+  previewImageUrl?: string;
   customization?: StoredCartItem["customization"];
 };
 
@@ -95,6 +97,7 @@ function parseStoredCart(raw: unknown): StoredCartItem[] {
     out.push({
       productId: id,
       quantity,
+      previewImageUrl: typeof row.previewImageUrl === "string" ? row.previewImageUrl : undefined,
       customization: slots.length ? { summary, slots } : undefined,
     });
   }
@@ -161,6 +164,7 @@ export default function CartPage() {
         productId: item.productId,
         product,
         quantity: item.quantity,
+        previewImageUrl: item.previewImageUrl,
         customization: item.customization,
       });
     }
@@ -264,13 +268,22 @@ export default function CartPage() {
                         href={getProductHref(line.product)}
                         className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5"
                       >
-                        <Image
-                          src={getProductImage(line.product)}
-                          alt={line.product.name}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
+                        {(line.previewImageUrl || "").startsWith("data:") ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={line.previewImageUrl}
+                            alt={line.product.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Image
+                            src={line.previewImageUrl || getProductImage(line.product)}
+                            alt={line.product.name}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                        )}
                       </Link>
 
                       <div className="min-w-0 flex-1">

@@ -174,6 +174,7 @@ export default function Navbar() {
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
               aria-controls="mobile-menu"
+              suppressHydrationWarning
               className="text-white p-2 rounded-lg border border-white/10 hover:border-white/20 transition"
             >
               {open ? <X size={20} /> : <Menu size={20} />}

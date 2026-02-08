@@ -13,6 +13,7 @@ import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 type StoredCartItem = {
   productId: string;
   quantity: number;
+  previewImageUrl?: string;
   customization?: {
     summary: string;
     slots: Array<{
@@ -145,6 +146,7 @@ function parseStoredCart(raw: unknown): StoredCartItem[] {
     out.push({
       productId,
       quantity,
+      previewImageUrl: typeof row.previewImageUrl === "string" ? row.previewImageUrl : undefined,
       customization: slots.length ? { summary, slots } : undefined,
     });
   }
