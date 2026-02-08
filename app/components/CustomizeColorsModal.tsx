@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
 import type { Product } from "@/app/data/products";
 import type { Material, Mesh } from "three";
 import { Box3, Color, Object3D, Vector3 } from "three";
@@ -161,8 +161,18 @@ export default function CustomizeColorsModal(props: Props) {
   const [slots, setSlots] = useState<SlotInfo[]>([]);
   const [modelReady, setModelReady] = useState(false);
   const [checkingModel, setCheckingModel] = useState(false);
+  const [modelVersion, setModelVersion] = useState(0);
+  const modelUrlWithVersion = useMemo(() => {
+    const sep = config.modelUrl.includes("?") ? "&" : "?";
+    return `${config.modelUrl}${sep}v=${modelVersion}`;
+  }, [config.modelUrl, modelVersion]);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!open) return;
+    setModelVersion(Date.now());
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -176,14 +186,14 @@ export default function CustomizeColorsModal(props: Props) {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     let alive = true;
     setCheckingModel(true);
     setModelReady(false);
-    fetch(config.modelUrl, { method: "HEAD", cache: "no-store" })
+    fetch(modelUrlWithVersion, { method: "HEAD", cache: "no-store" })
       .then((res) => {
         if (!alive) return;
         setModelReady(res.ok);
@@ -199,7 +209,7 @@ export default function CustomizeColorsModal(props: Props) {
     return () => {
       alive = false;
     };
-  }, [config.modelUrl, open]);
+  }, [modelUrlWithVersion, open]);
 
   useEffect(() => {
     onSlotsChange?.(slots);
@@ -222,9 +232,9 @@ export default function CustomizeColorsModal(props: Props) {
 
   const modal =
     open && mounted
-      ? createPortal(
+        ? createPortal(
           <div
-            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4"
             role="dialog"
             aria-modal="true"
             aria-label="Customize colors"
@@ -237,7 +247,7 @@ export default function CustomizeColorsModal(props: Props) {
             />
 
             <div
-              className="relative z-[10000] w-full sm:max-w-5xl rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl backdrop-saturate-150 p-5 sm:p-6 text-white shadow-2xl"
+              className="relative z-[10000] w-full sm:max-w-5xl max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl backdrop-saturate-150 p-5 sm:p-6 text-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-3">
@@ -265,12 +275,16 @@ export default function CustomizeColorsModal(props: Props) {
                       </div>
                     ) : modelReady ? (
                       <Canvas camera={{ position: [0, 0, 3.6], fov: 45 }}>
-                        <ambientLight intensity={0.8} />
-                        <directionalLight position={[3, 3, 3]} intensity={1.1} />
-                        <directionalLight position={[-2, 1, -2]} intensity={0.35} />
+                        <color attach="background" args={["#0b0b0b"]} />
+                        <hemisphereLight intensity={0.45} color="#ffffff" groundColor="#141414" />
+                        <ambientLight intensity={0.35} />
+                        <directionalLight position={[3.5, 4, 3]} intensity={1.15} />
+                        <directionalLight position={[-3, 2.2, 1.5]} intensity={0.55} />
+                        <directionalLight position={[0, 2, -4]} intensity={0.35} />
+                        <Environment preset="studio" />
                         <Suspense fallback={null}>
                           <ModelPreview
-                            modelUrl={config.modelUrl}
+                            modelUrl={modelUrlWithVersion}
                             selectedColors={selectedColors}
                             defaultHexes={config.defaultHexes}
                             onSlotsDetected={setSlots}

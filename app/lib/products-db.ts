@@ -1,5 +1,5 @@
 import { kv } from "@vercel/kv";
-import { products as snapshotProducts, type Product } from "@/app/data/products";
+import type { Product } from "@/app/data/products";
 
 const PRODUCTS_KEY = "catalog:products:v1";
 
@@ -87,9 +87,7 @@ export async function getProductsFromDb() {
 }
 
 export async function getProducts() {
-  const fromDb = await getProductsFromDb();
-  if (fromDb.length > 0) return fromDb;
-  return snapshotProducts;
+  return getProductsFromDb();
 }
 
 export async function saveProducts(products: Product[]) {

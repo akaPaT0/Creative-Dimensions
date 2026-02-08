@@ -160,7 +160,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       const blobPath = `models/${category}/${subCategory}/${modelBase}.glb`;
       const uploaded = await put(blobPath, modelFile, {
         access: "public",
-        addRandomSuffix: false,
+        addRandomSuffix: true,
         allowOverwrite: true,
         contentType: "model/gltf-binary",
       });

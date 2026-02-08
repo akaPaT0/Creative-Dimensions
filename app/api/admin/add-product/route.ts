@@ -121,7 +121,7 @@ export async function POST(req: Request) {
       const modelPath = `models/${category}/${subCategory}/${modelBase}.glb`;
       const uploaded = await put(modelPath, modelFile, {
         access: "public",
-        addRandomSuffix: false,
+        addRandomSuffix: true,
         allowOverwrite: true,
         contentType: "model/gltf-binary",
       });

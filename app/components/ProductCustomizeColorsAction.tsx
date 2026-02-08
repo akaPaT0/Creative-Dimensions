@@ -93,6 +93,46 @@ function buildFingerprint(item: StoredCartItem) {
   });
 }
 
+function tokenize(input: string) {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function pickBestFilamentId(slotLabel: string, options: FilamentOption[]) {
+  const slotTokens = tokenize(slotLabel);
+  if (!slotTokens.length || !options.length) return options[0]?.id || "";
+
+  let bestId = options[0]?.id || "";
+  let bestScore = -1;
+
+  for (const option of options) {
+    const hay = `${option.color} ${option.label} ${option.type} ${option.brand} ${option.finish}`;
+    const optionTokens = tokenize(hay);
+    const optionTokenSet = new Set(optionTokens);
+    let score = 0;
+
+    for (const token of slotTokens) {
+      if (optionTokenSet.has(token)) {
+        score += 5;
+        continue;
+      }
+      if (optionTokens.some((word) => word.includes(token) || token.includes(word))) {
+        score += 2;
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = option.id;
+    }
+  }
+
+  return bestId;
+}
+
 export default function ProductCustomizeColorsAction({ product, className = "" }: Props) {
   const customizeConfig = product.customizeColors;
   const [open, setOpen] = useState(false);
@@ -108,7 +148,12 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
     if (!filamentOptions.length) return;
     setSelectedFilamentIds((prev) => {
       const fallback = filamentOptions[0]?.id || "";
-      const next = slots.map((_, index) => prev[index] || fallback);
+      const next = slots.map((slot, index) => {
+        if (prev[index]) return prev[index];
+        const slotName = slot.materialName || `slot ${index + 1}`;
+        const guessed = pickBestFilamentId(slotName, filamentOptions);
+        return guessed || fallback;
+      });
       const same =
         prev.length === next.length && prev.every((value, index) => value === next[index]);
       return same ? prev : next;
