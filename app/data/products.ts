@@ -34,8 +34,10 @@ export const products: Product[] = [
       "/products/Cute_Crab_1.webp",
       "/products/Cute_Crab_2.webp"
     ],
+    "isNew": true,
+    "featured": true,
     "customizeColors": {
-      "modelUrl": "/models/cute-crab.glb",
+      "modelUrl": "/models/keychains/cute/cute-crab.glb",
       "defaultHexes": [
         "#ff8b64",
         "#ffffff",
@@ -47,14 +49,6 @@ export const products: Product[] = [
         "Eyes",
         "Claws",
         "Accent"
-      ]
-    },
-    "isNew": true,
-    "featured": true,
-    "customizeColors": {
-      "modelUrl": "/models/keychains/cute/cute-crab.glb",
-      "defaultHexes": [
-        "#ffffff"
       ]
     }
   },
