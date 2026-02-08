@@ -14,6 +14,11 @@ export type Product = {
   featured?: boolean;
   image?: string;
   images?: string[];
+  customizeColors?: {
+    modelUrl: string;
+    defaultHexes: string[];
+    slotLabels?: string[];
+  };
 };
 
 export const products: Product[] = [
@@ -30,7 +35,13 @@ export const products: Product[] = [
       "/products/Cute_Crab_2.webp"
     ],
     "isNew": true,
-    "featured": true
+    "featured": true,
+    "customizeColors": {
+      "modelUrl": "/models/keychains/cute/cute-crab.glb",
+      "defaultHexes": [
+        "#ffffff"
+      ]
+    }
   },
   {
     "id": "KECU002",
@@ -217,7 +228,6 @@ export const products: Product[] = [
     "isNew": true,
     "featured": true
   },
- 
   {
     "id": "KECA009",
     "name": "Mercedes CLA 35 keychain",
