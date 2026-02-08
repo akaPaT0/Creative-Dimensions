@@ -36,6 +36,19 @@ export default function ContactModalRoute() {
           </div>
 
           <div className="mt-6 space-y-3">
+            {/* Custom request */}
+            <a
+              className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"
+              href="https://wa.me/96170304007?text=Hey!%20I%E2%80%99m%20interested%20in%20a%20custom%203D%20print.%20I%20can%20send%20the%20file%20or%20a%20photo%20of%20the%20idea.%20What%20details%20do%20you%20need,%20and%20what%20size%20should%20it%20be%3F"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Custom Request
+              <div className="mt-1 text-white/60 text-sm">
+                Start a custom order conversation on WhatsApp.
+              </div>
+            </a>
+
             {/* WhatsApp */}
             <a
               className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"

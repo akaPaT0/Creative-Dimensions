@@ -253,7 +253,10 @@ export default async function Shop() {
 
         <div className="mt-10 text-center text-sm text-white/50">
           Want something specific? Hit{" "}
-          <span className="text-white/80">Custom Request</span>.
+          <Link href="/contact" className="text-white/80 hover:text-white transition">
+            Custom Request
+          </Link>
+          .
         </div>
 
         <Footer />
