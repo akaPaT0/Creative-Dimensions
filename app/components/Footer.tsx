@@ -4,12 +4,12 @@ import { Instagram, MessageCircle, Phone } from "lucide-react";
 export default function Footer() {
   return (
     <footer className="relative z-10 mt-16 border-t border-white/10">
-      <div className="mx-auto max-w-7xl px-3 sm:px-6 py-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col gap-6 items-center text-center sm:text-left sm:flex-row sm:items-center sm:justify-between">
           {/* Left */}
           <div>
             <p className="text-white/85 text-sm">
-              © 2025 Creative Dimensions. All rights reserved.
+              © 2026 Creative Dimensions. All rights reserved.
             </p>
             <p className="text-white/55 text-xs mt-1">
               Designed with taste. Printed with precision.
@@ -54,3 +54,4 @@ export default function Footer() {
     </footer>
   );
 }
+

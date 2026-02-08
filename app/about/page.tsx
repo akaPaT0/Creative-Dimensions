@@ -9,7 +9,7 @@ export default function AboutPage() {
       <Background />
       <Navbar />
 
-      <section className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 pt-28 pb-10">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-10">
         <div className="mx-auto w-full max-w-4xl text-center">
           <h1
             className="text-white font-semibold leading-tight text-center mt-2 tracking-tight

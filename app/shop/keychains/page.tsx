@@ -4,6 +4,7 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
 import { products, type Product } from "../../data/products";
+import LikeIconButton from "../../components/LikeIconButton";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -52,6 +53,7 @@ export default function Page() {
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-70 transition lg:group-hover:opacity-90" />
+                <LikeIconButton productId={String(p.id)} />
               </div>
 
               <div className="mt-4 flex items-start justify-between gap-3">

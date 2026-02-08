@@ -76,25 +76,23 @@ export default function LikeWishlistRow({ productId, className = "" }: Props) {
 
   // slimmer + cleaner row
   const btnBase =
-    "flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white/85 hover:bg-white/10 hover:border-white/25 transition flex items-center justify-center gap-2";
+    "h-10 w-10 rounded-xl border border-white/15 bg-white/5 text-white/85 hover:bg-white/10 hover:border-white/25 transition inline-flex items-center justify-center";
 
   const activeLike = liked ? "border-white/30 bg-white/10 text-white" : "";
   const activeWish = wishlisted ? "border-white/30 bg-white/10 text-white" : "";
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`w-full flex items-center justify-end gap-2 ${className}`}>
       <SignedOut>
         <SignInButton mode="modal">
-          <button className={btnBase} type="button">
+          <button className={btnBase} type="button" aria-label="Sign in to like">
             <Heart size={18} />
-            Like
           </button>
         </SignInButton>
 
         <SignInButton mode="modal">
-          <button className={btnBase} type="button">
+          <button className={btnBase} type="button" aria-label="Sign in to wishlist">
             <Bookmark size={18} />
-            Wishlist
           </button>
         </SignInButton>
       </SignedOut>
@@ -105,9 +103,13 @@ export default function LikeWishlistRow({ productId, className = "" }: Props) {
           className={`${btnBase} ${activeLike}`}
           onClick={() => toggle("likes", liked, setLiked)}
           aria-pressed={liked}
+          aria-label={liked ? "Remove like" : "Like"}
         >
-          <Heart size={18} />
-          Like
+          <Heart
+            size={18}
+            fill={liked ? "currentColor" : "none"}
+            strokeWidth={liked ? 2.2 : 2}
+          />
         </button>
 
         <button
@@ -115,9 +117,9 @@ export default function LikeWishlistRow({ productId, className = "" }: Props) {
           className={`${btnBase} ${activeWish}`}
           onClick={() => toggle("wishlist", wishlisted, setWishlisted)}
           aria-pressed={wishlisted}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Bookmark size={18} />
-          Wishlist
         </button>
       </SignedIn>
     </div>

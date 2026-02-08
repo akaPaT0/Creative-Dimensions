@@ -410,7 +410,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
       </div>
 
       {/* Controls */}
-      <div className="mt-5 grid gap-3 lg:grid-cols-[1.5fr_0.75fr_0.75fr_0.75fr]">
+      <div className="mt-5 grid gap-3 lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
         <ShopSearchBar
           products={products}
           value={search}
@@ -455,31 +455,28 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           ))}
         </select>
 
-        {/* Sort + Columns */}
-        <div className="flex flex-col gap-3">
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as any)}
-            className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
-          >
-            <option value="default">Sort: default</option>
-            <option value="price-asc">Price: low to high</option>
-            <option value="price-desc">Price: high to low</option>
-          </select>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+        >
+          <option value="default">Sort: default</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
+        </select>
 
-          <select
-            value={columns}
-            onChange={(e) =>
-              setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)
-            }
-            className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
-          >
-            <option value={1}>Columns: 1</option>
-            <option value={2}>Columns: 2</option>
-            <option value={3}>Columns: 3</option>
-            <option value={4}>Columns: 4</option>
-          </select>
-        </div>
+        <select
+          value={columns}
+          onChange={(e) =>
+            setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)
+          }
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+        >
+          <option value={1}>Columns: 1</option>
+          <option value={2}>Columns: 2</option>
+          <option value={3}>Columns: 3</option>
+          <option value={4}>Columns: 4</option>
+        </select>
       </div>
 
       {/* Results */}

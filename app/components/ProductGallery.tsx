@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 
 export default function ProductGallery({
   images,
@@ -23,6 +23,8 @@ export default function ProductGallery({
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const thumbsRef = useRef<HTMLDivElement | null>(null);
+  const modalThumbsRef = useRef<HTMLDivElement | null>(null);
 
   const current =
     imgs[Math.min(Math.max(active, 0), imgs.length - 1)] ||
@@ -54,6 +56,19 @@ export default function ProductGallery({
       document.body.style.overflow = prev;
     };
   }, [open]);
+
+  const scrollThumbs = (
+    ref: MutableRefObject<HTMLDivElement | null>,
+    direction: "left" | "right"
+  ) => {
+    const el = ref.current;
+    if (!el) return;
+    const amount = Math.max(120, Math.floor(el.clientWidth * 0.6));
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
 
   const modal = open ? (
     <div className="fixed inset-0 z-[999999] pointer-events-none">
@@ -92,28 +107,49 @@ export default function ProductGallery({
 
           {imgs.length > 1 && (
             <div className="mt-4 rounded-2xl border border-white/10 bg-[#0D0D0D]/40 backdrop-blur-xl p-3">
-              <div className="flex gap-2 overflow-x-auto">
-                {imgs.map((src, i) => (
-                  <button
-                    key={`modal-${src}-${i}`}
-                    type="button"
-                    onClick={() => setActive(i)}
-                    className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border transition ${
-                      i === active
-                        ? "border-white/40"
-                        : "border-white/10 hover:border-white/20"
-                    }`}
-                    aria-label={`View image ${i + 1}`}
-                  >
-                    <Image
-                      src={src}
-                      alt={`${name} ${i + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => scrollThumbs(modalThumbsRef, "left")}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
+                  aria-label="Scroll thumbnails left"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div
+                  ref={modalThumbsRef}
+                  className="flex flex-1 gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {imgs.map((src, i) => (
+                    <button
+                      key={`modal-${src}-${i}`}
+                      type="button"
+                      onClick={() => setActive(i)}
+                      className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border transition ${
+                        i === active
+                          ? "border-white/40"
+                          : "border-white/10 hover:border-white/20"
+                      }`}
+                      aria-label={`View image ${i + 1}`}
+                    >
+                      <Image
+                        src={src}
+                        alt={`${name} ${i + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                      />
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => scrollThumbs(modalThumbsRef, "right")}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
+                  aria-label="Scroll thumbnails right"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
           )}
@@ -124,7 +160,7 @@ export default function ProductGallery({
 
   return (
     <>
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-4">
+      <div className="w-full m-0 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-4">
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -149,28 +185,49 @@ export default function ProductGallery({
         </button>
 
         {imgs.length > 1 && (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {imgs.map((src, i) => (
-              <button
-                key={`${src}-${i}`}
-                type="button"
-                onClick={() => setActive(i)}
-                className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border transition ${
-                  i === active
-                    ? "border-white/40"
-                    : "border-white/10 hover:border-white/20"
-                }`}
-                aria-label={`View image ${i + 1}`}
-              >
-                <Image
-                  src={src}
-                  alt={`${name} ${i + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="64px"
-                />
-              </button>
-            ))}
+          <div className="mt-3 flex items-center gap-2 pb-1">
+            <button
+              type="button"
+              onClick={() => scrollThumbs(thumbsRef, "left")}
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
+              aria-label="Scroll thumbnails left"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            <div
+              ref={thumbsRef}
+              className="flex flex-1 gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {imgs.map((src, i) => (
+                <button
+                  key={`${src}-${i}`}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border transition ${
+                    i === active
+                      ? "border-white/40"
+                      : "border-white/10 hover:border-white/20"
+                  }`}
+                  aria-label={`View image ${i + 1}`}
+                >
+                  <Image
+                    src={src}
+                    alt={`${name} ${i + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => scrollThumbs(thumbsRef, "right")}
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
+              aria-label="Scroll thumbnails right"
+            >
+              <ChevronRight size={15} />
+            </button>
           </div>
         )}
       </div>

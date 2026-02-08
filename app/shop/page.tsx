@@ -5,6 +5,7 @@ import Background from "../components/Background";
 import Link from "next/link";
 import Image from "next/image";
 import ShopCatalogClient from "./ShopCatalogClient";
+import LikeIconButton from "../components/LikeIconButton";
 
 /** Helpers */
 function getCardImage(p: any) {
@@ -219,6 +220,7 @@ export default function Shop() {
                     className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
+                  <LikeIconButton productId={String(p.id)} />
                 </div>
 
                 <div className="mt-4 flex items-start justify-between gap-3">

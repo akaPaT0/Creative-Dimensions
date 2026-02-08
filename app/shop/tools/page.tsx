@@ -41,7 +41,7 @@ export default function Page() {
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 pt-28 pb-16">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
         {/* Top */}
         <div className="flex flex-col items-center text-center">
           {/* Back button: centered on mobile, left on pc */}

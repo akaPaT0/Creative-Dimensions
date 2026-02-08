@@ -33,7 +33,7 @@ export default async function Page({
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-3xl px-6 pt-28 pb-16 text-white">
+      <main className="relative z-10 mx-auto max-w-[1480px] px-6 lg:px-8 pt-24 pb-16 text-white">
         <Link
           href="/shop/new-arrivals"
           className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"

@@ -47,7 +47,7 @@ export default function Navbar() {
             : "bg-transparent border-b border-transparent shadow-none"
         }`}
       >
-        <div className="max-w-8xl mx-auto px-20 py-4 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link
             href="/"
             className={`${ubuntu.className} text-[30px] font-semibold tracking-tight

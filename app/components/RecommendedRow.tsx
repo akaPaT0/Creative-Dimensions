@@ -26,7 +26,7 @@ export default function RecommendedRow({ items }: { items: Item[] }) {
   if (!items?.length) return null;
 
   return (
-    <div className="mt-auto rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="mt-auto rounded-2xl border border-white/10 bg-black/20 p-3 lg:p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-white/85 font-semibold">Check similar</div>
 
@@ -65,8 +65,8 @@ export default function RecommendedRow({ items }: { items: Item[] }) {
               className="
                 group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2
                 shrink-0 snap-start
-                w-40 sm:w-44 md:w-48
-                lg:w-[calc(25%-0.75rem)]
+                w-36 sm:w-40 md:w-44
+                lg:w-48 xl:w-52
               "
             >
               {/* ✅ Make image smaller (~1.25x) by padding inside the square */}

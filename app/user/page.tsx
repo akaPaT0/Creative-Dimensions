@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Bookmark, Heart } from "lucide-react";
 import {
   SignedIn,
   SignedOut,
@@ -298,18 +299,30 @@ function AccountPanel() {
                           <button
                             type="button"
                             onClick={() => updateSaved("likes", p.id)}
-                            className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs text-white/85 hover:bg-white/10 transition"
+                            aria-label={likes.includes(p.id) ? "Unlike" : "Like"}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-xs text-white/85 hover:bg-white/10 transition sm:h-auto sm:w-auto sm:px-2.5 sm:py-1"
                           >
-                            {likes.includes(p.id) ? "Unlike" : "Like"}
+                            <Heart size={14} className="sm:hidden" />
+                            <span className="hidden sm:inline">
+                              {likes.includes(p.id) ? "Unlike" : "Like"}
+                            </span>
                           </button>
                           <button
                             type="button"
                             onClick={() => updateSaved("wishlist", p.id)}
-                            className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs text-white/85 hover:bg-white/10 transition"
+                            aria-label={
+                              wishlist.includes(p.id)
+                                ? "Remove from wishlist"
+                                : "Add to wishlist"
+                            }
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-xs text-white/85 hover:bg-white/10 transition sm:h-auto sm:w-auto sm:px-2.5 sm:py-1"
                           >
-                            {wishlist.includes(p.id)
-                              ? "Remove wishlist"
-                              : "Add wishlist"}
+                            <Bookmark size={14} className="sm:hidden" />
+                            <span className="hidden sm:inline">
+                              {wishlist.includes(p.id)
+                                ? "Remove wishlist"
+                                : "Add wishlist"}
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -557,16 +570,28 @@ function AccountPanel() {
                   <button
                     type="button"
                     onClick={() => updateSaved("likes", p.id)}
-                    className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs text-white/85 hover:bg-white/10 transition"
+                    aria-label={likes.includes(p.id) ? "Unlike" : "Like"}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-xs text-white/85 hover:bg-white/10 transition sm:h-auto sm:w-auto sm:px-2.5 sm:py-1"
                   >
-                    {likes.includes(p.id) ? "Liked" : "Like"}
+                    <Heart size={14} className="sm:hidden" />
+                    <span className="hidden sm:inline">
+                      {likes.includes(p.id) ? "Liked" : "Like"}
+                    </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => updateSaved("wishlist", p.id)}
-                    className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs text-white/85 hover:bg-white/10 transition"
+                    aria-label={
+                      wishlist.includes(p.id)
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                    }
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-xs text-white/85 hover:bg-white/10 transition sm:h-auto sm:w-auto sm:px-2.5 sm:py-1"
                   >
-                    {wishlist.includes(p.id) ? "Saved" : "Save"}
+                    <Bookmark size={14} className="sm:hidden" />
+                    <span className="hidden sm:inline">
+                      {wishlist.includes(p.id) ? "Saved" : "Save"}
+                    </span>
                   </button>
                 </div>
               </div>
