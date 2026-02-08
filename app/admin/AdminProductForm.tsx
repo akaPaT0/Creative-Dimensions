@@ -213,7 +213,18 @@ export default function AdminProductForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 w-full max-w-2xl space-y-4">
+    <section
+      id="create-product"
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5"
+    >
+      <div className="mb-4 border-b border-white/10 pb-4">
+        <h2 className="text-white text-xl font-semibold">Create Product</h2>
+        <p className="mt-1 text-sm text-white/60">
+          Add a new item with ordered images, category mapping, and metadata.
+        </p>
+      </div>
+
+      <form onSubmit={onSubmit} className="w-full space-y-4">
       {/* ID + price */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
@@ -475,7 +486,8 @@ export default function AdminProductForm() {
         {busy ? "Saving..." : "Save product"}
       </button>
 
-      {msg && <p className="text-white/70 text-sm">{msg}</p>}
-    </form>
+        {msg && <p className="text-white/70 text-sm">{msg}</p>}
+      </form>
+    </section>
   );
 }

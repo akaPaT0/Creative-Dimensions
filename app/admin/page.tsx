@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import AdminProductForm from "./AdminProductForm";
 import Background from "../components/Background";
 import AdminProductsManager from "./AdminProductsManager";
+import Link from "next/link";
+import AdminInsights from "./AdminInsights";
 
 export default async function AdminPage() {
   const { userId } = await auth();
@@ -39,15 +41,57 @@ export default async function AdminPage() {
     <div className="relative min-h-screen">
       <Background />
 
-      <main className="relative z-20 min-h-screen flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-2xl">
-          <div className="text-center">
-            <h1 className="text-white text-2xl font-semibold">Admin</h1>
-            <p className="text-white/70 mt-2">Welcome, {userEmail}</p>
+      <main className="relative z-20 min-h-screen px-4 sm:px-6 lg:px-8 py-10">
+        <div className="mx-auto w-full max-w-[1400px]">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-7">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-white/45">
+                  Control Center
+                </p>
+                <h1 className="mt-2 text-white text-3xl sm:text-4xl font-semibold">
+                  Admin Dashboard
+                </h1>
+                <p className="text-white/70 mt-2">
+                  Signed in as <span className="text-white/90">{userEmail}</span>
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href="#create-product"
+                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10 transition"
+                >
+                  Add Product
+                </a>
+                <a
+                  href="#manage-products"
+                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10 transition"
+                >
+                  Manage Catalog
+                </a>
+                <Link
+                  href="/shop"
+                  className="rounded-xl bg-[#FF8B64] px-4 py-2 text-sm font-medium text-black hover:opacity-90 transition"
+                >
+                  View Store
+                </Link>
+              </div>
+            </div>
           </div>
 
-          <AdminProductForm />
-          <AdminProductsManager />
+          <div className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
+            <div className="min-w-0">
+              <AdminProductForm />
+            </div>
+            <div className="min-w-0">
+              <AdminProductsManager />
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <AdminInsights />
+          </div>
         </div>
       </main>
     </div>

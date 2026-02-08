@@ -65,12 +65,30 @@ export default function AdminProductsManager() {
     });
   }, [products, q]);
 
+  const stats = useMemo(() => {
+    const total = products.length;
+    const featuredCount = products.filter((p) => p.featured).length;
+    const newCount = products.filter((p) => p.isNew).length;
+    const categories = new Set(products.map((p) => p.category));
+    return {
+      total,
+      featuredCount,
+      newCount,
+      categoriesCount: categories.size,
+    };
+  }, [products]);
+
   return (
-    <div className="mt-10">
+    <section
+      id="manage-products"
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5"
+    >
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-white text-xl font-semibold">Products</h2>
-          <p className="text-white/50 text-sm">View, edit, or delete.</p>
+          <h2 className="text-white text-xl font-semibold">Catalog Manager</h2>
+          <p className="text-white/50 text-sm">
+            Search, edit, and delete products from a single control table.
+          </p>
         </div>
 
         <div className="flex gap-2">
@@ -91,6 +109,33 @@ export default function AdminProductsManager() {
       </div>
 
       {msg && <p className="mt-3 text-white/70 text-sm">{msg}</p>}
+
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+          <div className="text-xs text-white/55">Total Products</div>
+          <div className="mt-1 text-2xl font-semibold text-white">
+            {stats.total}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+          <div className="text-xs text-white/55">Featured</div>
+          <div className="mt-1 text-2xl font-semibold text-white">
+            {stats.featuredCount}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+          <div className="text-xs text-white/55">New</div>
+          <div className="mt-1 text-2xl font-semibold text-white">
+            {stats.newCount}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+          <div className="text-xs text-white/55">Categories</div>
+          <div className="mt-1 text-2xl font-semibold text-white">
+            {stats.categoriesCount}
+          </div>
+        </div>
+      </div>
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
@@ -192,7 +237,7 @@ export default function AdminProductsManager() {
           }}
         />
       )}
-    </div>
+    </section>
   );
 }
 
