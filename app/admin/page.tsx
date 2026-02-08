@@ -1,10 +1,8 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import AdminProductForm from "./AdminProductForm";
 import Background from "../components/Background";
-import AdminProductsManager from "./AdminProductsManager";
 import Link from "next/link";
-import AdminInsights from "./AdminInsights";
+import AdminTabs from "./AdminTabs";
 
 export default async function AdminPage() {
   const { userId } = await auth();
@@ -58,18 +56,6 @@ export default async function AdminPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <a
-                  href="#create-product"
-                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10 transition"
-                >
-                  Add Product
-                </a>
-                <a
-                  href="#manage-products"
-                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10 transition"
-                >
-                  Manage Catalog
-                </a>
                 <Link
                   href="/shop"
                   className="rounded-xl bg-[#FF8B64] px-4 py-2 text-sm font-medium text-black hover:opacity-90 transition"
@@ -80,18 +66,7 @@ export default async function AdminPage() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
-            <div className="min-w-0">
-              <AdminProductForm />
-            </div>
-            <div className="min-w-0">
-              <AdminProductsManager />
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <AdminInsights />
-          </div>
+          <AdminTabs />
         </div>
       </main>
     </div>
