@@ -27,6 +27,19 @@ function guessExt(filename: string, mime: string) {
   return "webp";
 }
 
+function isGlbFile(file: File) {
+  const name = file.name.toLowerCase();
+  const mime = (file.type || "").toLowerCase();
+  return name.endsWith(".glb") || mime === "model/gltf-binary" || mime === "application/octet-stream";
+}
+
+function safeModelBaseName(slug: string, fallback: string) {
+  const normalized = slugifyFolder(slug);
+  if (normalized) return normalized;
+  const fb = slugifyFolder(fallback);
+  return fb || "model";
+}
+
 // GitHub contents API: encode each segment, keep slashes
 function encodeRepoPath(p: string) {
   return p.split("/").map(encodeURIComponent).join("/");
@@ -162,6 +175,7 @@ export async function POST(req: Request) {
     const name = String(form.get("name") || "").trim();
     const slugRaw = String(form.get("slug") || name || "");
     const slug = normalizeSlug(slugRaw);
+    const modelBase = safeModelBaseName(slug, id);
 
     const categoryRaw = String(form.get("category") || "").trim();
     const subCategoryRaw = String(form.get("subCategory") || "").trim();
@@ -175,6 +189,8 @@ export async function POST(req: Request) {
 
     // MULTI
     const files = form.getAll("images") as File[];
+    const model = form.get("model");
+    const modelFile = model instanceof File && model.size > 0 ? model : null;
 
     if (!id || !name || !slug || !category || !subCategory || !priceUSDStr || !description) {
       return json(
@@ -184,6 +200,9 @@ export async function POST(req: Request) {
     }
     if (!files || files.length === 0) {
       return json({ error: "Missing: images" }, 400);
+    }
+    if (modelFile && !isGlbFile(modelFile)) {
+      return json({ error: "3D model must be a .glb file" }, 400);
     }
 
     const priceUSD = Number(priceUSDStr);
@@ -219,6 +238,23 @@ export async function POST(req: Request) {
       publicPaths.push(imagePublicPath);
     }
 
+    let modelUrl: string | undefined;
+    if (modelFile) {
+      const modelRepoPath = `public/models/${category}/${subCategory}/${modelBase}.glb`;
+      modelUrl = `/models/${category}/${subCategory}/${modelBase}.glb`;
+      const modelB64 = Buffer.from(await modelFile.arrayBuffer()).toString("base64");
+      const existingSha = await tryGetSha(owner, repo, modelRepoPath, branch);
+      await putFile({
+        owner,
+        repo,
+        path: modelRepoPath,
+        branch,
+        message: `Add product model: ${category}/${subCategory}/${slug}`,
+        contentBase64: modelB64,
+        sha: existingSha,
+      });
+    }
+
     // 2) append to products.ts
     const { sha: productsSha, text: productsText } = await getFile(
       owner,
@@ -229,6 +265,14 @@ export async function POST(req: Request) {
 
     const imagesArrayLiteral = publicPaths.map((p) => JSON.stringify(p)).join(", ");
 
+    const customizeColorsLiteral = modelUrl
+      ? `
+  customizeColors: {
+    modelUrl: ${JSON.stringify(modelUrl)},
+    defaultHexes: ["#ffffff"]
+  },`
+      : "";
+
     const productLiteral = `{
   id: ${JSON.stringify(id)},
   name: ${JSON.stringify(name)},
@@ -238,6 +282,7 @@ export async function POST(req: Request) {
   priceUSD: ${priceUSD},
   description: ${JSON.stringify(description)},
   images: [${imagesArrayLiteral}],
+${customizeColorsLiteral}
   isNew: true,
   featured: false,
 },`;
@@ -257,7 +302,7 @@ export async function POST(req: Request) {
 
     return json({
       ok: true,
-      product: { id, name, slug, category, subCategory, images: publicPaths },
+      product: { id, name, slug, category, subCategory, images: publicPaths, modelUrl },
     });
   } catch (e: any) {
     return json({ error: e?.message || "Unknown error" }, 500);

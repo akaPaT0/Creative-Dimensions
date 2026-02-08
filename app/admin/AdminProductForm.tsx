@@ -14,6 +14,10 @@ function slugify(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+function safePathSegment(s: string) {
+  return slugify(s) || "model";
+}
+
 // ✅ Safe JSON reader (prevents "Unexpected token ..." crashes)
 async function readJsonSafe(res: Response) {
   const ct = res.headers.get("content-type") || "";
@@ -47,6 +51,8 @@ export default function AdminProductForm() {
 
   // MULTI images (order matters: first = cover => -1.webp)
   const [images, setImages] = useState<File[]>([]);
+  // Optional single 3D model (.glb)
+  const [modelFile, setModelFile] = useState<File | null>(null);
 
   // add-new option UI
   const [newCategory, setNewCategory] = useState("");
@@ -57,6 +63,12 @@ export default function AdminProductForm() {
 
   // previews
   const previewUrls = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
+  const targetModelPath = useMemo(() => {
+    const cat = safePathSegment(category);
+    const sub = safePathSegment(subCategory);
+    const base = safePathSegment(slug || name || id);
+    return `/models/${cat}/${sub}/${base}.glb`;
+  }, [category, subCategory, slug, name, id]);
 
   // Auto slug from name (unless user edited slug manually)
   useEffect(() => {
@@ -149,6 +161,7 @@ export default function AdminProductForm() {
   // Optional: prevent 413 payload too large (tweak to your server limits)
   const MAX_MB_TOTAL = 20;
   const MAX_MB_EACH = 8;
+  const MAX_MODEL_MB = 25;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -173,6 +186,16 @@ export default function AdminProductForm() {
         return setMsg(`"${f.name}" is ${mb.toFixed(1)}MB. Keep each image under ${MAX_MB_EACH}MB.`);
       }
     }
+    if (modelFile) {
+      const isGlb = modelFile.name.toLowerCase().endsWith(".glb");
+      if (!isGlb) return setMsg("3D model must be a .glb file.");
+      const modelMb = modelFile.size / (1024 * 1024);
+      if (modelMb > MAX_MODEL_MB) {
+        return setMsg(
+          `Model is ${modelMb.toFixed(1)}MB. Keep model under ${MAX_MODEL_MB}MB.`
+        );
+      }
+    }
 
     setBusy(true);
     try {
@@ -187,6 +210,7 @@ export default function AdminProductForm() {
 
       // Append multiple images in chosen order (first = cover)
       for (const file of images) fd.append("images", file);
+      if (modelFile) fd.set("model", modelFile);
 
       const res = await fetch("/api/admin/add-product", { method: "POST", body: fd });
       const data = await readJsonSafe(res);
@@ -203,6 +227,7 @@ export default function AdminProductForm() {
       setPriceUSD("2");
       setDescription("");
       setImages([]);
+      setModelFile(null);
 
       await regenerateId();
     } catch (err: any) {
@@ -402,6 +427,39 @@ export default function AdminProductForm() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Single model upload */}
+      <div>
+        <label className="text-white/80 text-sm">3D Model (optional, max 1)</label>
+        <input
+          className="mt-1 w-full text-white/80"
+          type="file"
+          accept=".glb,model/gltf-binary"
+          onChange={(e) => {
+            const file = e.target.files?.[0] || null;
+            setModelFile(file);
+            e.currentTarget.value = "";
+          }}
+        />
+        <p className="mt-1 text-white/40 text-xs">
+          Upload a single <b>.glb</b> model for color customization. One model per product.
+        </p>
+        <p className="mt-1 text-white/40 text-xs">
+          Auto-saved as: <code>{targetModelPath}</code>
+        </p>
+        {modelFile && (
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/80">
+            <span className="truncate">{modelFile.name}</span>
+            <button
+              type="button"
+              onClick={() => setModelFile(null)}
+              className="ml-auto rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-white hover:bg-white/10 transition"
+            >
+              Remove
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Preview grid + ordering controls */}

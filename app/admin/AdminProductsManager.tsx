@@ -15,6 +15,11 @@ type Product = {
   featured?: boolean;
   image?: string;
   images?: string[];
+  customizeColors?: {
+    modelUrl: string;
+    defaultHexes: string[];
+    slotLabels?: string[];
+  };
 };
 
 function slugify(s: string) {
@@ -24,6 +29,10 @@ function slugify(s: string) {
     .replace(/['"]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function safePathSegment(s: string) {
+  return slugify(s) || "model";
 }
 
 export default function AdminProductsManager() {
@@ -293,7 +302,14 @@ function EditModal({
 
   // Optional: uploading new files replaces old images (backend handles deletion)
   const [images, setImages] = useState<File[]>([]);
+  const [modelFile, setModelFile] = useState<File | null>(null);
   const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
+  const targetModelPath = useMemo(() => {
+    const cat = safePathSegment(category);
+    const sub = safePathSegment(subCategory);
+    const base = safePathSegment(slug || name || product.id);
+    return `/models/${cat}/${sub}/${base}.glb`;
+  }, [category, subCategory, slug, name, product.id]);
 
   useEffect(() => {
     if (slugTouched) return;
@@ -310,6 +326,13 @@ function EditModal({
     setMsg(null);
     setBusy(true);
     try {
+      if (modelFile) {
+        const isGlb = modelFile.name.toLowerCase().endsWith(".glb");
+        if (!isGlb) throw new Error("3D model must be a .glb file.");
+        const modelMb = modelFile.size / (1024 * 1024);
+        if (modelMb > 25) throw new Error("Model must be under 25MB.");
+      }
+
       const fd = new FormData();
       fd.set("name", name);
       fd.set("slug", slug);
@@ -328,6 +351,7 @@ function EditModal({
 
       // Optional: replace images by uploading new files
       for (const f of images) fd.append("images", f);
+      if (modelFile) fd.set("model", modelFile);
 
       const r = await fetch(`/api/admin/products/${encodeURIComponent(product.id)}`, {
         method: "PUT",
@@ -468,6 +492,25 @@ function EditModal({
           <p className="text-white/40 text-xs mt-1">
             If you upload images here, old images will be deleted and replaced with new ones.
           </p>
+        </div>
+
+        <div>
+          <label className="text-white/70 text-sm">Replace 3D model (optional, max 1 .glb)</label>
+          <input
+            type="file"
+            accept=".glb,model/gltf-binary"
+            className="mt-1 w-full text-white/70"
+            onChange={(e) => setModelFile(e.target.files?.[0] || null)}
+          />
+          <p className="text-white/40 text-xs mt-1">
+            Current model: {product.customizeColors?.modelUrl || "none"}
+          </p>
+          <p className="text-white/40 text-xs mt-1">
+            Auto-saved as: <code>{targetModelPath}</code>
+          </p>
+          {modelFile && (
+            <p className="text-white/60 text-xs mt-1">New model: {modelFile.name}</p>
+          )}
         </div>
 
         {previews.length > 0 && (

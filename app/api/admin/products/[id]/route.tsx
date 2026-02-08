@@ -31,6 +31,19 @@ function guessExt(filename: string, mime: string) {
   return "webp";
 }
 
+function isGlbFile(file: File) {
+  const name = file.name.toLowerCase();
+  const mime = (file.type || "").toLowerCase();
+  return name.endsWith(".glb") || mime === "model/gltf-binary" || mime === "application/octet-stream";
+}
+
+function safeModelBaseName(slug: string, fallback: string) {
+  const normalized = slugifyFolder(slug);
+  if (normalized) return normalized;
+  const fb = slugifyFolder(fallback);
+  return fb || "model";
+}
+
 async function ghFetch(path: string, init?: RequestInit) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error("Missing GITHUB_TOKEN");
@@ -165,6 +178,11 @@ function renderProductsTs(products: any[]) {
   lines.push(`  featured?: boolean;`);
   lines.push(`  image?: string;`);
   lines.push(`  images?: string[];`);
+  lines.push(`  customizeColors?: {`);
+  lines.push(`    modelUrl: string;`);
+  lines.push(`    defaultHexes: string[];`);
+  lines.push(`    slotLabels?: string[];`);
+  lines.push(`  };`);
   lines.push(`};`);
   lines.push(``);
   lines.push(`export const products: Product[] = ${JSON.stringify(products, null, 2)};`);
@@ -227,15 +245,21 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const imagesOrderRaw = String(form.get("imagesOrder") || "").trim();
 
     const files = form.getAll("images") as File[]; // optional
+    const model = form.get("model");
+    const modelFile = model instanceof File && model.size > 0 ? model : null;
 
     if (!name || !categoryRaw || !subCategoryRaw || !priceUSDStr || !description) {
       return json({ error: "Missing required fields" }, 400);
+    }
+    if (modelFile && !isGlbFile(modelFile)) {
+      return json({ error: "3D model must be a .glb file" }, 400);
     }
 
     const priceUSD = Number(priceUSDStr);
     if (!Number.isFinite(priceUSD)) return json({ error: "priceUSD must be a number" }, 400);
 
     const slug = normalizeSlug(slugRaw || name);
+    const modelBase = safeModelBaseName(slug, id);
     const category = slugifyFolder(categoryRaw);
     const subCategory = slugifyFolder(subCategoryRaw);
 
@@ -250,9 +274,14 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const oldImages: string[] = Array.isArray(old?.images)
       ? old.images
       : (old?.image ? [old.image] : []);
+    const oldModelUrl =
+      old?.customizeColors && typeof old.customizeColors === "object"
+        ? String(old.customizeColors.modelUrl || "").trim()
+        : "";
 
     // If new images uploaded OR reorder-only edit, we set this.
     let newImages: string[] | undefined = undefined;
+    let newCustomizeColors = old?.customizeColors;
 
     // NEW: parse and validate imagesOrder (reorder/removal for existing images)
     let desiredOrder: string[] | undefined = undefined;
@@ -356,6 +385,50 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       }
     }
 
+    if (modelFile) {
+      const modelRepoPath = `public/models/${category}/${subCategory}/${modelBase}.glb`;
+      const modelPublicPath = `/models/${category}/${subCategory}/${modelBase}.glb`;
+      const modelB64 = Buffer.from(await modelFile.arrayBuffer()).toString("base64");
+      const existingSha = await tryGetSha(owner, repo, modelRepoPath, branch);
+
+      await putFile({
+        owner,
+        repo,
+        path: modelRepoPath,
+        branch,
+        message: `Update product model: ${id}`,
+        contentBase64: modelB64,
+        sha: existingSha,
+      });
+
+      if (oldModelUrl && oldModelUrl !== modelPublicPath) {
+        const oldModelRepoPath = repoPathFromPublicPath(oldModelUrl);
+        const oldSha = await tryGetSha(owner, repo, oldModelRepoPath, branch);
+        if (oldSha) {
+          try {
+            await deleteFile({
+              owner,
+              repo,
+              path: oldModelRepoPath,
+              branch,
+              message: `Delete old product model: ${id}`,
+              sha: oldSha,
+            });
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      newCustomizeColors = {
+        ...(old?.customizeColors || {}),
+        modelUrl: modelPublicPath,
+        defaultHexes: Array.isArray(old?.customizeColors?.defaultHexes)
+          ? old.customizeColors.defaultHexes
+          : ["#ffffff"],
+      };
+    }
+
     products[idx] = {
       ...old,
       id,
@@ -367,6 +440,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       description,
       isNew,
       featured,
+      ...(newCustomizeColors ? { customizeColors: newCustomizeColors } : {}),
       ...(newImages ? { images: newImages } : {}),
     };
 
@@ -415,6 +489,10 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     const images: string[] = Array.isArray(product?.images)
       ? product.images
       : (product?.image ? [product.image] : []);
+    const modelUrl =
+      product?.customizeColors && typeof product.customizeColors === "object"
+        ? String(product.customizeColors.modelUrl || "").trim()
+        : "";
 
     // remove product
     products.splice(idx, 1);
@@ -449,6 +527,24 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
         });
       } catch {
         // ignore
+      }
+    }
+    if (modelUrl) {
+      const modelRepoPath = repoPathFromPublicPath(modelUrl);
+      const sha = await tryGetSha(owner, repo, modelRepoPath, branch);
+      if (sha) {
+        try {
+          await deleteFile({
+            owner,
+            repo,
+            path: modelRepoPath,
+            branch,
+            message: `Delete product model: ${id}`,
+            sha,
+          });
+        } catch {
+          // ignore
+        }
       }
     }
 
