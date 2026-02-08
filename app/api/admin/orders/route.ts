@@ -12,6 +12,11 @@ type OrderRecord = {
   discountUSD?: number;
   totalUSD?: number;
   promoCode?: string;
+  trackingHistory?: Array<{
+    status?: string;
+    at?: string;
+    note?: string;
+  }>;
   items?: Array<{
     productId?: string;
     name?: string;
@@ -41,6 +46,18 @@ type AdminOrderRow = {
   totalUSD: number;
   promoCode: string;
   itemsCount: number;
+  items: Array<{
+    productId: string;
+    name: string;
+    quantity: number;
+    unitPriceUSD: number;
+    lineTotalUSD: number;
+  }>;
+  invoice: {
+    invoiceNumber: string;
+    issuedAt: string;
+    paymentStatus: string;
+  };
   user: {
     id: string;
     fullName: string;
@@ -95,6 +112,21 @@ function normalizeOrders(raw: unknown) {
   return raw.filter((x): x is OrderRecord => !!x && typeof x === "object");
 }
 
+const ORDER_STATUSES = [
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded",
+] as const;
+
+function normalizeStatus(value: unknown) {
+  const status = asText(value).toLowerCase();
+  return ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number]) ? status : "";
+}
+
 export async function GET() {
   try {
     const admin = await requireAdmin();
@@ -138,6 +170,20 @@ export async function GET() {
           totalUSD: asNumber(order.totalUSD),
           promoCode: asText(order.promoCode),
           itemsCount: itemCount,
+          items: items.map((item) => ({
+            productId: asText(item.productId),
+            name: asText(item.name),
+            quantity: asNumber(item.quantity),
+            unitPriceUSD: asNumber(item.unitPriceUSD),
+            lineTotalUSD: asNumber(item.lineTotalUSD),
+          })),
+          invoice: {
+            invoiceNumber: asText((order as { invoice?: { invoiceNumber?: unknown } }).invoice?.invoiceNumber),
+            issuedAt: asText((order as { invoice?: { issuedAt?: unknown } }).invoice?.issuedAt),
+            paymentStatus:
+              asText((order as { invoice?: { paymentStatus?: unknown } }).invoice?.paymentStatus) ||
+              "pending",
+          },
           user: {
             id: user.id,
             fullName,
@@ -169,6 +215,59 @@ export async function GET() {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load admin orders";
+    return json({ error: message }, 500);
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.res;
+
+    const body = (await req.json().catch(() => null)) as
+      | { userId?: unknown; orderId?: unknown; status?: unknown }
+      | null;
+    const userId = asText(body?.userId);
+    const orderId = asText(body?.orderId);
+    const status = normalizeStatus(body?.status);
+
+    if (!userId || !orderId || !status) {
+      return json({ error: "userId, orderId, and valid status are required" }, 400);
+    }
+
+    const key = `user:${userId}:orders`;
+    const raw = await kv.get<unknown>(key);
+    const orders = normalizeOrders(raw);
+    const idx = orders.findIndex((x) => asText(x.id) === orderId);
+
+    if (idx < 0) {
+      return json({ error: "Order not found" }, 404);
+    }
+
+    const next = [...orders];
+    const current = next[idx];
+    const existingHistory = Array.isArray(current.trackingHistory)
+      ? current.trackingHistory
+      : [];
+    const lastStatus = asText(existingHistory[existingHistory.length - 1]?.status);
+    const trackingHistory =
+      lastStatus === status
+        ? existingHistory
+        : [
+            ...existingHistory,
+            {
+              status,
+              at: new Date().toISOString(),
+              note: "Updated by admin",
+            },
+          ];
+
+    next[idx] = { ...current, status, trackingHistory };
+    await kv.set(key, next);
+
+    return json({ ok: true, order: next[idx] });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to update order status";
     return json({ error: message }, 500);
   }
 }

@@ -315,7 +315,7 @@ function MobileMenuContent({
             )}
           </Link>
           <Link href="/orders" onClick={onClose} className={itemClass}>
-            My orders
+            Track orders
           </Link>
 
           <button type="button" onClick={onRequestCustom} className={itemClass}>
@@ -452,7 +452,7 @@ function AuthButtons({
                 onClick={close}
                 className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
               >
-                My orders
+                Track orders
               </Link>
 
               <button

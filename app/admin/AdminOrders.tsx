@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { Printer } from "lucide-react";
+import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 
 type AdminOrder = {
   id: string;
@@ -14,6 +16,18 @@ type AdminOrder = {
   totalUSD: number;
   promoCode: string;
   itemsCount: number;
+  items: Array<{
+    productId: string;
+    name: string;
+    quantity: number;
+    unitPriceUSD: number;
+    lineTotalUSD: number;
+  }>;
+  invoice: {
+    invoiceNumber: string;
+    issuedAt: string;
+    paymentStatus: string;
+  };
   user: {
     id: string;
     fullName: string;
@@ -40,6 +54,16 @@ type OrdersResponse = {
   orders: AdminOrder[];
 };
 
+const ORDER_STATUS_OPTIONS = [
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded",
+] as const;
+
 function formatDate(value: string) {
   if (!value) return "N/A";
   const d = new Date(value);
@@ -58,28 +82,52 @@ function formatMoney(value: number) {
   }).format(value);
 }
 
+async function safeReadJson<T>(res: Response): Promise<T | null> {
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+  return (await res.json().catch(() => null)) as T | null;
+}
+
 export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [metrics, setMetrics] = useState<OrdersResponse["metrics"] | null>(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | (typeof ORDER_STATUS_OPTIONS)[number]>(
+    "all"
+  );
+  const [updatingOrderId, setUpdatingOrderId] = useState("");
+  const [inspectOrderId, setInspectOrderId] = useState("");
+
+  function recalcMetrics(nextOrders: AdminOrder[]) {
+    const totalOrders = nextOrders.length;
+    const pendingOrders = nextOrders.filter((x) => x.status.toLowerCase() === "pending").length;
+    const revenueUSD = nextOrders.reduce((sum, x) => sum + x.totalUSD, 0);
+    setMetrics({ totalOrders, pendingOrders, revenueUSD });
+  }
 
   async function load() {
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/admin/orders", { cache: "no-store" });
-      const data = (await res.json()) as OrdersResponse | { error?: string };
+      const data = await safeReadJson<OrdersResponse | { error?: string }>(res);
       if (!res.ok) {
-        const message = "error" in data ? data.error || "Failed to load" : "Failed to load";
+        const message =
+          data && "error" in data
+            ? data.error || "Failed to load"
+            : "Failed to load admin orders.";
         throw new Error(message);
+      }
+      if (!data || !("orders" in data)) {
+        throw new Error("Invalid response returned by /api/admin/orders.");
       }
       const parsed = data as OrdersResponse;
       setMetrics(parsed.metrics);
       setOrders(parsed.orders ?? []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
+      setError(e instanceof Error ? e.message : "Failed to load admin orders.");
     } finally {
       setLoading(false);
     }
@@ -89,10 +137,40 @@ export default function AdminOrders() {
     void load();
   }, []);
 
+  async function updateOrderStatus(orderId: string, userId: string, status: string) {
+    setError("");
+    setUpdatingOrderId(orderId);
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, orderId, status }),
+      });
+      const data = await safeReadJson<{ error?: string }>(res);
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to update order status");
+      }
+      let nextOrders: AdminOrder[] = [];
+      setOrders((prev) => {
+        nextOrders = prev.map((x) => (x.id === orderId ? { ...x, status } : x));
+        return nextOrders;
+      });
+      recalcMetrics(nextOrders);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update order status");
+    } finally {
+      setUpdatingOrderId("");
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return orders;
-    return orders.filter((o) => {
+    const byStatus =
+      statusFilter === "all"
+        ? orders
+        : orders.filter((o) => o.status.toLowerCase() === statusFilter);
+    if (!q) return byStatus;
+    return byStatus.filter((o) => {
       const bag = [
         o.orderNumber,
         o.status,
@@ -106,7 +184,7 @@ export default function AdminOrders() {
         .toLowerCase();
       return bag.includes(q);
     });
-  }, [orders, search]);
+  }, [orders, search, statusFilter]);
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
@@ -124,6 +202,24 @@ export default function AdminOrders() {
             placeholder="Search order, email, promo..."
             className="w-full sm:w-72 rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#FF8B64]"
           />
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value as "all" | (typeof ORDER_STATUS_OPTIONS)[number]
+              )
+            }
+            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#FF8B64]"
+          >
+            <option value="all" className="bg-[#1b1b1b]">
+              All statuses
+            </option>
+            {ORDER_STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status} className="bg-[#1b1b1b]">
+                {status}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={() => void load()}
@@ -170,52 +266,136 @@ export default function AdminOrders() {
                 <th className="px-4 py-3">Totals</th>
                 <th className="px-4 py-3">Promo</th>
                 <th className="px-4 py-3">Address</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="text-white/85">
               {!loading &&
                 filtered.map((o) => (
-                  <tr key={o.id} className="border-b border-white/10 last:border-b-0">
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{o.orderNumber || o.id}</div>
-                      <div className="text-xs text-white/60">{formatDate(o.createdAt)}</div>
-                      <div className="mt-1 inline-flex rounded-full border border-white/15 px-2 py-0.5 text-[11px] text-white/80">
-                        {o.status}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/users/${o.user.id}`}
-                        className="font-medium hover:underline underline-offset-4"
-                      >
-                        {o.user.fullName}
-                      </Link>
-                      <div className="text-xs text-white/60">{o.user.email || "No email"}</div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-white/80">
-                      <div>Items: {o.itemsCount}</div>
-                      <div>Subtotal: {formatMoney(o.subtotalUSD)}</div>
-                      <div>Discount: -{formatMoney(o.discountUSD)}</div>
-                      <div>Shipping: {formatMoney(o.shippingUSD)}</div>
-                      <div className="font-semibold text-white mt-0.5">
-                        Total: {formatMoney(o.totalUSD)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-white/80">{o.promoCode || "-"}</td>
-                    <td className="px-4 py-3 text-xs text-white/80">
-                      <div>{o.address.fullName || "-"}</div>
-                      <div>{o.address.line1 || "-"}</div>
-                      <div>
-                        {o.address.city || "-"}, {o.address.state || "-"}{" "}
-                        {o.address.postalCode || ""}
-                      </div>
-                      <div>{o.address.country || "-"}</div>
-                    </td>
-                  </tr>
+                  <Fragment key={o.id}>
+                    <tr className="border-b border-white/10">
+                      <td className="px-4 py-3">
+                        <div className="font-medium">{o.orderNumber || o.id}</div>
+                        <div className="text-xs text-white/60">{formatDate(o.createdAt)}</div>
+                        <div className="mt-2">
+                          <label className="sr-only" htmlFor={`status-${o.id}`}>
+                            Order status
+                          </label>
+                          <select
+                            id={`status-${o.id}`}
+                            value={
+                              ORDER_STATUS_OPTIONS.includes(
+                                o.status as (typeof ORDER_STATUS_OPTIONS)[number]
+                              )
+                                ? o.status
+                                : "pending"
+                            }
+                            onChange={(e) =>
+                              void updateOrderStatus(o.id, o.user.id, e.target.value)
+                            }
+                            disabled={updatingOrderId === o.id}
+                            className="rounded-lg border border-white/20 bg-white/5 px-2 py-1 text-[11px] text-white outline-none focus:border-[#FF8B64] disabled:opacity-60"
+                          >
+                            {ORDER_STATUS_OPTIONS.map((status) => (
+                              <option key={status} value={status} className="bg-[#1b1b1b]">
+                                {status}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/admin/users/${o.user.id}`}
+                          className="font-medium hover:underline underline-offset-4"
+                        >
+                          {o.user.fullName}
+                        </Link>
+                        <div className="text-xs text-white/60">{o.user.email || "No email"}</div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-white/80">
+                        <div>Items: {o.itemsCount}</div>
+                        <div>Subtotal: {formatMoney(o.subtotalUSD)}</div>
+                        <div>Discount: -{formatMoney(o.discountUSD)}</div>
+                        <div>Shipping: {formatMoney(o.shippingUSD)}</div>
+                        <div className="font-semibold text-white mt-0.5">
+                          Total: {formatMoney(o.totalUSD)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-white/80">{o.promoCode || "-"}</td>
+                      <td className="px-4 py-3 text-xs text-white/80">
+                        <div>{o.address.fullName || "-"}</div>
+                        <div>{o.address.line1 || "-"}</div>
+                        <div>
+                          {o.address.city || "-"}, {o.address.state || "-"}{" "}
+                          {o.address.postalCode || ""}
+                        </div>
+                        <div>{o.address.country || "-"}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setInspectOrderId((curr) => (curr === o.id ? "" : o.id))
+                          }
+                          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                        >
+                          {inspectOrderId === o.id ? "Hide" : "Inspect"}
+                        </button>
+                      </td>
+                    </tr>
+
+                    {inspectOrderId === o.id && (
+                      <tr className="border-b border-white/10 last:border-b-0">
+                        <td colSpan={6} className="px-4 pb-4">
+                          <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <div className="text-white/90">
+                                Invoice:{" "}
+                                <span className="font-semibold">
+                                  {o.invoice?.invoiceNumber || "Pending"}
+                                </span>
+                              </div>
+                              <div className="text-white/70">
+                                Issued: {formatDate(o.invoice?.issuedAt || o.createdAt)}
+                              </div>
+                              <div className="text-white/70 capitalize">
+                                Payment: {o.invoice?.paymentStatus || "pending"}
+                              </div>
+                              <button
+                                type="button"
+                                aria-label="Print invoice"
+                                onClick={() =>
+                                  openInvoiceWindow(
+                                    `/invoice/${encodeURIComponent(o.id)}?userId=${encodeURIComponent(
+                                      o.user.id
+                                    )}`
+                                  )
+                                }
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/85 hover:bg-white/10 transition"
+                              >
+                                <Printer size={13} />
+                              </button>
+                            </div>
+                            <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-2 text-xs text-white/80">
+                              <div className="flex items-center justify-between gap-2 py-1">
+                                <span className="text-white/70">
+                                  Items preview hidden
+                                </span>
+                                <span className="font-semibold text-white">
+                                  {formatMoney(o.totalUSD)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-white/60">
+                  <td colSpan={6} className="px-4 py-8 text-center text-white/60">
                     No orders found.
                   </td>
                 </tr>

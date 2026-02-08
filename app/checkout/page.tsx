@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Printer } from "lucide-react";
 import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
 import { products } from "../data/products";
+import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 
 type StoredCartItem = {
   productId: string;
@@ -47,6 +49,37 @@ type PromoRule = {
   value: number;
   minSubtotal?: number;
   maxDiscount?: number;
+};
+
+type PlacedOrderPrintData = {
+  id?: string;
+  orderNumber?: string;
+  createdAt?: string;
+  subtotalUSD?: number;
+  discountUSD?: number;
+  shippingUSD?: number;
+  totalUSD?: number;
+  status?: string;
+  invoice?: {
+    invoiceNumber?: string;
+    issuedAt?: string;
+    paymentStatus?: string;
+  };
+  address?: {
+    fullName?: string;
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
+  items?: Array<{
+    name?: string;
+    quantity?: number;
+    unitPriceUSD?: number;
+    lineTotalUSD?: number;
+  }>;
 };
 
 const STORAGE_KEY = "cd_cart_v1";
@@ -155,7 +188,10 @@ export default function CheckoutPage() {
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
-  const [successOrderNumber, setSuccessOrderNumber] = useState("");
+  const [successOrderMessage, setSuccessOrderMessage] = useState("");
+  const [placedOrderPrintData, setPlacedOrderPrintData] = useState<PlacedOrderPrintData | null>(
+    null
+  );
 
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addingAddress, setAddingAddress] = useState(false);
@@ -207,6 +243,8 @@ export default function CheckoutPage() {
       const data = (await res.json().catch(() => ({}))) as {
         promos?: Array<{
           code?: string;
+          label?: string;
+          description?: string;
           type?: PromoRule["type"];
           value?: number;
           minSubtotal?: number;
@@ -258,6 +296,31 @@ export default function CheckoutPage() {
     }, 0);
   }, [cart]);
 
+  const cartPreview = useMemo(() => {
+    const byId = new Map(products.map((p) => [String(p.id), p]));
+    return cart
+      .map((row) => {
+        const product = byId.get(row.productId);
+        if (!product) return null;
+        return {
+          productId: row.productId,
+          name: product.name,
+          quantity: row.quantity,
+          lineTotalUSD: product.priceUSD * row.quantity,
+        };
+      })
+      .filter(
+        (
+          x
+        ): x is {
+          productId: string;
+          name: string;
+          quantity: number;
+          lineTotalUSD: number;
+        } => Boolean(x)
+      );
+  }, [cart]);
+
   const promoSummary = useMemo(
     () =>
       computePromoDiscount(
@@ -275,7 +338,8 @@ export default function CheckoutPage() {
   async function placeOrder() {
     if (placing) return;
     setError("");
-    setSuccessOrderNumber("");
+    setSuccessOrderMessage("");
+    setPlacedOrderPrintData(null);
 
     if (cart.length === 0) {
       setError("Your cart is empty.");
@@ -299,14 +363,21 @@ export default function CheckoutPage() {
       });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
-        order?: { id?: string; orderNumber?: string };
+        order?: PlacedOrderPrintData;
       };
       if (!res.ok) {
         setError(data.error || "Could not place order.");
         return;
       }
 
-      setSuccessOrderNumber(data.order?.orderNumber || data.order?.id || "Order placed");
+      const orderLabel = data.order?.orderNumber || data.order?.id || "Order placed";
+      const invoiceLabel = data.order?.invoice?.invoiceNumber;
+      setSuccessOrderMessage(
+        invoiceLabel
+          ? `${orderLabel} | Invoice ${invoiceLabel}`
+          : orderLabel
+      );
+      setPlacedOrderPrintData(data.order ?? null);
       setCart([]);
       if (typeof window !== "undefined") {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
@@ -566,9 +637,28 @@ export default function CheckoutPage() {
               )}
 
               {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
-              {successOrderNumber && (
+              {successOrderMessage && (
                 <div className="mt-4 rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-emerald-100">
-                  Order placed successfully: <span className="font-semibold">{successOrderNumber}</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>
+                      Order placed successfully:{" "}
+                      <span className="font-semibold">{successOrderMessage}</span>
+                    </span>
+                    {placedOrderPrintData?.id && (
+                      <button
+                        type="button"
+                        aria-label="Print invoice"
+                        onClick={() =>
+                          openInvoiceWindow(
+                            `/invoice/${encodeURIComponent(placedOrderPrintData.id!)}`
+                          )
+                        }
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-300/35 bg-emerald-200/10 text-emerald-100 hover:bg-emerald-200/20 transition"
+                      >
+                        <Printer size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -598,6 +688,26 @@ export default function CheckoutPage() {
               </div>
 
               <div className="mt-4 space-y-2 text-sm">
+                <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                  <div className="text-sm text-white/75">Items preview</div>
+                  {cartPreview.length === 0 ? (
+                    <p className="mt-2 text-xs text-white/60">No items in cart.</p>
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      {cartPreview.map((item) => (
+                        <div
+                          key={item.productId}
+                          className="flex items-start justify-between gap-2 text-xs text-white/80"
+                        >
+                          <div className="min-w-0 truncate">
+                            {item.name} x{item.quantity}
+                          </div>
+                          <div className="shrink-0">{formatMoney(item.lineTotalUSD)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center justify-between text-white/75">
                   <span>Items</span>
                   <span>{itemCount}</span>

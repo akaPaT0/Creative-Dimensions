@@ -35,13 +35,23 @@ type OrderRecord = {
   id: string;
   orderNumber: string;
   userId: string;
-  status: "pending";
+  status: string;
   createdAt: string;
   shippingUSD: number;
   subtotalUSD: number;
   discountUSD: number;
   totalUSD: number;
   promoCode?: string;
+  invoice: {
+    invoiceNumber: string;
+    issuedAt: string;
+    paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  };
+  trackingHistory: Array<{
+    status: string;
+    at: string;
+    note?: string;
+  }>;
   address: Address;
   items: Array<{
     productId: string;
@@ -62,6 +72,10 @@ function addressesKey(userId: string) {
 
 function orderCounterKey() {
   return "orders:counter";
+}
+
+function invoiceCounterKey() {
+  return "invoices:counter";
 }
 
 function asText(value: unknown) {
@@ -120,6 +134,12 @@ async function generateOrderNumber() {
   const next = await kv.incr(orderCounterKey());
   const padded = String(next).padStart(7, "0");
   return `CD-${padded}`;
+}
+
+async function generateInvoiceNumber() {
+  const next = await kv.incr(invoiceCounterKey());
+  const padded = String(next).padStart(7, "0");
+  return `INV-${padded}`;
 }
 
 export async function GET() {
@@ -210,18 +230,32 @@ export async function POST(req: Request) {
   const totalUSD = subtotalUSD - discountUSD + shippingUSD;
 
   const orderNumber = await generateOrderNumber();
+  const invoiceNumber = await generateInvoiceNumber();
+  const createdAt = new Date().toISOString();
 
   const order: OrderRecord = {
     id: `ORD-${Date.now()}`,
     orderNumber,
     userId,
     status: "pending",
-    createdAt: new Date().toISOString(),
+    createdAt,
     shippingUSD,
     subtotalUSD,
     discountUSD,
     totalUSD,
     promoCode: appliedPromoCode || undefined,
+    invoice: {
+      invoiceNumber,
+      issuedAt: createdAt,
+      paymentStatus: "pending",
+    },
+    trackingHistory: [
+      {
+        status: "pending",
+        at: createdAt,
+        note: "Order created",
+      },
+    ],
     address,
     items: resolvedItems,
   };

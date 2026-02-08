@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Bookmark, ChevronDown, ChevronUp, Heart } from "lucide-react";
+import { Bookmark, ChevronDown, ChevronUp, Heart, Printer } from "lucide-react";
 import {
   SignedIn,
   SignedOut,
@@ -15,6 +15,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
 import { products, type Product } from "../data/products";
+import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 
 function formatDate(value?: Date | null) {
   if (!value) return "N/A";
@@ -57,6 +58,14 @@ function formatPrice(p: Product) {
   return `$${p.priceUSD}`;
 }
 
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 type SavedAddress = {
   id: string;
   label: string;
@@ -92,11 +101,36 @@ type SavedDisplayItem = {
   image: string;
 };
 
+type UserOrderRecord = {
+  id: string;
+  orderNumber?: string;
+  status: string;
+  createdAt: string;
+  totalUSD: number;
+  items: Array<{
+    productId: string;
+    name: string;
+    quantity: number;
+    unitPriceUSD?: number;
+    lineTotalUSD: number;
+  }>;
+  invoice?: {
+    invoiceNumber?: string;
+    issuedAt?: string;
+    paymentStatus?: string;
+  };
+  trackingHistory?: Array<{
+    status?: string;
+    at?: string;
+  }>;
+};
+
 type AccountTab =
   | "saved"
   | "snapshot"
   | "account"
   | "details"
+  | "orders"
   | "addresses"
   | "recommended";
 
@@ -139,6 +173,8 @@ function AccountPanel() {
   const [success, setSuccess] = useState("");
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [orders, setOrders] = useState<UserOrderRecord[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [addressForm, setAddressForm] = useState<AddressFormState>(
     EMPTY_ADDRESS_FORM
   );
@@ -185,6 +221,34 @@ function AccountPanel() {
     }
 
     loadSaved();
+    return () => {
+      alive = false;
+    };
+  }, [isLoaded, user]);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function loadOrders() {
+      if (!isLoaded || !user) return;
+      setLoadingOrders(true);
+      try {
+        const res = await fetch("/api/orders", { cache: "no-store" });
+        const data = (await res.json().catch(() => ({}))) as {
+          orders?: UserOrderRecord[];
+        };
+        if (!alive) return;
+        if (res.ok && Array.isArray(data.orders)) {
+          setOrders(data.orders);
+        } else {
+          setOrders([]);
+        }
+      } finally {
+        if (alive) setLoadingOrders(false);
+      }
+    }
+
+    void loadOrders();
     return () => {
       alive = false;
     };
@@ -556,6 +620,7 @@ function AccountPanel() {
               ["snapshot", "Snapshot"],
               ["account", "Account"],
               ["details", "Details"],
+              ["orders", "Orders"],
               ["addresses", "Addresses"],
               ["recommended", "Recommended"],
             ] as Array<[AccountTab, string]>
@@ -745,6 +810,12 @@ function AccountPanel() {
 
           <div className="mt-4 grid gap-2">
             <Link
+              href="/orders"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
+            >
+              Track orders
+            </Link>
+            <Link
               href="/cart"
               className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
             >
@@ -807,6 +878,12 @@ function AccountPanel() {
           </div>
 
           <div className="mt-5 grid gap-2">
+            <Link
+              href="/orders"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-left text-white/90 hover:bg-white/10 transition"
+            >
+              Track orders
+            </Link>
             <Link
               href="/cart"
               className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-left text-white/90 hover:bg-white/10 transition"
@@ -903,6 +980,90 @@ function AccountPanel() {
             {saving ? "Saving..." : "Save changes"}
           </button>
         </form>
+
+        <section
+          className={`${
+            accountTab === "orders" ? "block" : "hidden"
+          } lg:col-span-12 lg:block rounded-2xl border border-white/10 bg-white/5 p-5`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-white">Order Tracking</h2>
+              <p className="mt-1 text-sm text-white/65">
+                See order progress and open invoice details.
+              </p>
+            </div>
+            <Link
+              href="/orders"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10 transition"
+            >
+              View all orders
+            </Link>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {loadingOrders ? (
+              <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-white/70">
+                Loading orders...
+              </div>
+            ) : orders.length > 0 ? (
+              orders.slice(0, 6).map((order) => (
+                <article
+                  key={order.id}
+                  className="rounded-xl border border-white/10 bg-black/20 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="font-medium text-white">
+                        {order.orderNumber || order.id}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        {formatDate(new Date(order.createdAt))}
+                      </div>
+                    </div>
+                    <span className="rounded-full border border-white/20 px-2 py-0.5 text-xs text-white/85 capitalize">
+                      {order.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 text-xs text-white/75">
+                    <span>Invoice: {order.invoice?.invoiceNumber || "Pending"}</span>
+                    <button
+                      type="button"
+                      aria-label="Print invoice"
+                      onClick={() =>
+                        openInvoiceWindow(`/invoice/${encodeURIComponent(order.id)}`)
+                      }
+                      className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10 transition"
+                    >
+                      <Printer size={12} />
+                    </button>
+                    <span className="ml-2">| Total: {formatMoney(order.totalUSD)}</span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                    >
+                      Track order
+                    </Link>
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                    >
+                      View invoice
+                    </Link>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-white/70">
+                No orders yet.
+              </div>
+            )}
+          </div>
+        </section>
 
         <section
           className={`${

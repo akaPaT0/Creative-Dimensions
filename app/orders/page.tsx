@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Printer } from "lucide-react";
 import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
+import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 
 type OrderRecord = {
   id: string;
@@ -28,6 +30,16 @@ type OrderRecord = {
     city?: string;
     state?: string;
   };
+  invoice?: {
+    invoiceNumber?: string;
+    issuedAt?: string;
+    paymentStatus?: string;
+  };
+  trackingHistory?: Array<{
+    status?: string;
+    at?: string;
+    note?: string;
+  }>;
 };
 
 function formatMoney(value: number) {
@@ -141,8 +153,55 @@ export default function OrdersPage() {
 
                   <div className="mt-3 h-px bg-white/10" />
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-white/80">
-                    <span>Total</span>
-                    <span className="font-semibold text-white">{formatMoney(order.totalUSD)}</span>
+                    <div>
+                      <span>Total: </span>
+                      <span className="font-semibold text-white">{formatMoney(order.totalUSD)}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-2 text-xs text-white/65">
+                      <span>Invoice: {order.invoice?.invoiceNumber || "Pending"}</span>
+                      <button
+                        type="button"
+                        aria-label="Print invoice"
+                        onClick={() =>
+                          openInvoiceWindow(`/invoice/${encodeURIComponent(order.id)}`)
+                        }
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10 transition"
+                      >
+                        <Printer size={12} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {Array.isArray(order.trackingHistory) && order.trackingHistory.length > 0 && (
+                    <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                      <div className="text-xs text-white/60">Tracking</div>
+                      <div className="mt-2 text-xs text-white/75 space-y-1">
+                        {[...order.trackingHistory]
+                          .slice(-3)
+                          .reverse()
+                          .map((event, index) => (
+                            <div key={`${order.id}-track-${index}`} className="flex items-center justify-between gap-2">
+                              <span className="capitalize">{event.status || "update"}</span>
+                              <span>{event.at ? formatDate(event.at) : "N/A"}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                    >
+                      View invoice
+                    </Link>
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                    >
+                      Track order
+                    </Link>
                   </div>
                 </article>
               ))}
