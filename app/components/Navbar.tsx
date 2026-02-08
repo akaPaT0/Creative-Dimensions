@@ -12,9 +12,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 
-import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
 import AdminShortcutFab from "./AdminShortcutFab";
-import { SITE_URL } from "../lib/site";
 
 const CART_STORAGE_KEY = "cd_cart_v1";
 const CART_UPDATED_EVENT = "cd-cart-updated";
@@ -81,13 +79,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* One hidden instance so dropdown can open the same modal */}
-      <CustomRequestModal
-        hideButton
-        productName="Custom Order"
-        productUrl={SITE_URL}
-      />
-
       {/* PC Nav */}
       <nav
         className={`fixed inset-x-0 top-0 z-20 hidden lg:block transition-all duration-200 ${
@@ -138,12 +129,6 @@ export default function Navbar() {
 
             <AuthButtons
               cartCount={cartCount}
-              onRequestCustom={() =>
-                openCustomRequest({
-                  productName: "Custom Order",
-                  productUrl: SITE_URL,
-                })
-              }
             />
           </div>
         </div>
@@ -202,13 +187,6 @@ export default function Navbar() {
             <MobileMenuContent
               cartCount={cartCount}
               onClose={() => setOpen(false)}
-              onRequestCustom={() => {
-                setOpen(false);
-                openCustomRequest({
-                  productName: "Custom Order",
-                  productUrl: SITE_URL,
-                });
-              }}
             />
           </div>
         </div>
@@ -221,11 +199,9 @@ export default function Navbar() {
 
 function MobileMenuContent({
   cartCount,
-  onRequestCustom,
   onClose,
 }: {
   cartCount: number;
-  onRequestCustom?: () => void;
   onClose?: () => void;
 }) {
   const { signOut } = useClerk();
@@ -285,9 +261,9 @@ function MobileMenuContent({
             <button className={itemClass}>Sign in</button>
           </SignInButton>
 
-          <button type="button" onClick={onRequestCustom} className={itemClass}>
+          <Link href="/contact" onClick={onClose} className={itemClass}>
             Request custom
-          </button>
+          </Link>
 
           <div className={dividerClass} />
 
@@ -322,9 +298,9 @@ function MobileMenuContent({
             Track orders
           </Link>
 
-          <button type="button" onClick={onRequestCustom} className={itemClass}>
+          <Link href="/contact" onClick={onClose} className={itemClass}>
             Request custom
-          </button>
+          </Link>
 
           {isAdmin && (
             <Link href="/admin" onClick={onClose} className={itemClass}>
@@ -362,10 +338,8 @@ function MobileMenuContent({
 
 function AuthButtons({
   cartCount,
-  onRequestCustom,
 }: {
   cartCount: number;
-  onRequestCustom?: () => void;
 }) {
   const { signOut } = useClerk();
   const { user, isLoaded } = useUser();
@@ -459,16 +433,13 @@ function AuthButtons({
                 Track orders
               </Link>
 
-              <button
-                type="button"
-                onClick={() => {
-                  close();
-                  onRequestCustom?.();
-                }}
-                className="w-full text-left px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+              <Link
+                href="/contact"
+                onClick={close}
+                className="block w-full text-left px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
               >
                 Request custom
-              </button>
+              </Link>
 
               {isAdmin && (
                 <Link

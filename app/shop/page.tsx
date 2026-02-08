@@ -128,14 +128,12 @@ export default async function Shop() {
           </div>
 
           <div className="flex gap-3 justify-center sm:justify-end">
-            <a
-              href="https://wa.me/96170304007?text=Hey!%20I%E2%80%99m%20interested%20in%20a%20custom%203D%20print.%20I%20can%20send%20the%20file%20or%20a%20photo%20of%20the%20idea.%20What%20details%20do%20you%20need,%20and%20what%20size%20should%20it%20be%3F"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/contact"
               className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-white/90 hover:bg-white/10 transition"
             >
               Custom Request
-            </a>
+            </Link>
 
             <Link
               href="#all"

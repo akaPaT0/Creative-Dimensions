@@ -9,7 +9,6 @@ import { getProducts } from "../../../lib/products-db";
 import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
 import ShareButton from "../../../components/ShareButton";
-import CustomRequestModal from "../../../components/CustomRequestModal";
 import LikeWishlistRow from "../../../components/LikeWishlistRow";
 import AddToCartButton from "../../../components/AddToCartButton";
 import ProductCustomizeColorsAction from "../../../components/ProductCustomizeColorsAction";
@@ -255,11 +254,12 @@ export default async function KeychainSlugPage({
                 title={p.name}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
               />
-              <CustomRequestModal
-                productName={p.name}
-                productUrl={productUrl}
+              <Link
+                href="/contact"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
-              />
+              >
+                Request Custom
+              </Link>
               <Link
                 href="/shop/keychains"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
@@ -321,11 +321,12 @@ export default async function KeychainSlugPage({
                   className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
                 />
 
-                <CustomRequestModal
-                  productName={p.name}
-                  productUrl={productUrl}
+                <Link
+                  href="/contact"
                   className="sm:col-span-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
-                />
+                >
+                  Request Custom
+                </Link>
 
                 <Link
                   href="/shop/keychains"
