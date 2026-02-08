@@ -36,8 +36,15 @@ function getPrimaryEmail(user: {
 
 type OrderItem = {
   id: string;
+  orderNumber: string;
   status: string;
+  subtotal: string;
+  shipping: string;
+  discount: string;
   total: string;
+  promoCode: string;
+  itemsCount: number;
+  addressLine: string;
   createdAt: unknown;
   raw: unknown;
 };
@@ -117,14 +124,48 @@ function normalizeOrders(input: unknown): OrderItem[] {
       const totalRaw =
         typeof order.total === "number" || typeof order.total === "string"
           ? order.total
+          : typeof order.totalUSD === "number" || typeof order.totalUSD === "string"
+            ? order.totalUSD
           : typeof order.amount === "number" || typeof order.amount === "string"
             ? order.amount
             : null;
 
       return {
         id,
+        orderNumber:
+          typeof order.orderNumber === "string" ? order.orderNumber : id,
         status,
+        subtotal:
+          typeof order.subtotalUSD === "number" || typeof order.subtotalUSD === "string"
+            ? String(order.subtotalUSD)
+            : "N/A",
+        shipping:
+          typeof order.shippingUSD === "number" || typeof order.shippingUSD === "string"
+            ? String(order.shippingUSD)
+            : "N/A",
+        discount:
+          typeof order.discountUSD === "number" || typeof order.discountUSD === "string"
+            ? String(order.discountUSD)
+            : "0",
         total: totalRaw === null ? "N/A" : String(totalRaw),
+        promoCode: typeof order.promoCode === "string" ? order.promoCode : "",
+        itemsCount: Array.isArray(order.items)
+          ? order.items.reduce((sum, item) => {
+              if (!item || typeof item !== "object") return sum;
+              const qty = (item as { quantity?: unknown }).quantity;
+              return sum + (typeof qty === "number" ? qty : 0);
+            }, 0)
+          : 0,
+        addressLine:
+          order.address && typeof order.address === "object"
+            ? [
+                asText((order.address as { line1?: unknown }).line1),
+                asText((order.address as { city?: unknown }).city),
+                asText((order.address as { state?: unknown }).state),
+              ]
+                .filter(Boolean)
+                .join(", ")
+            : "",
         createdAt: order.createdAt ?? order.created_at ?? order.date ?? null,
         raw: x,
       };
@@ -410,12 +451,23 @@ export default async function AdminUserDetailsPage({
                 orders.map((order) => (
                   <div key={order.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="text-sm text-white/90 font-medium">{order.id}</div>
+                      <div>
+                        <div className="text-sm text-white/90 font-medium">
+                          {order.orderNumber || order.id}
+                        </div>
+                        <div className="text-[11px] text-white/60">{order.id}</div>
+                      </div>
                       <div className="text-xs text-white/70">{formatDate(order.createdAt)}</div>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-white/80">
                       <span>Status: {order.status}</span>
+                      <span>Items: {order.itemsCount}</span>
+                      <span>Subtotal: {order.subtotal}</span>
+                      <span>Discount: {order.discount}</span>
+                      <span>Shipping: {order.shipping}</span>
                       <span>Total: {order.total}</span>
+                      <span>Promo: {order.promoCode || "-"}</span>
+                      <span>Address: {order.addressLine || "-"}</span>
                     </div>
                     <details className="mt-2 text-xs text-white/65">
                       <summary className="cursor-pointer">Raw order payload</summary>

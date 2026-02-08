@@ -4,8 +4,10 @@ import { useState } from "react";
 import AdminProductForm from "./AdminProductForm";
 import AdminProductsManager from "./AdminProductsManager";
 import AdminInsights from "./AdminInsights";
+import AdminPromoCodes from "./AdminPromoCodes";
+import AdminOrders from "./AdminOrders";
 
-type TabKey = "create" | "catalog" | "insights";
+type TabKey = "create" | "catalog" | "insights" | "promocodes" | "orders";
 
 export default function AdminTabs() {
   const [tab, setTab] = useState<TabKey>("create");
@@ -46,12 +48,36 @@ export default function AdminTabs() {
         >
           User Insights
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("promocodes")}
+          className={`rounded-xl px-4 py-2 text-sm transition ${
+            tab === "promocodes"
+              ? "bg-[#FF8B64] text-black"
+              : "border border-white/15 bg-white/5 text-white hover:bg-white/10"
+          }`}
+        >
+          Promo Codes
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("orders")}
+          className={`rounded-xl px-4 py-2 text-sm transition ${
+            tab === "orders"
+              ? "bg-[#FF8B64] text-black"
+              : "border border-white/15 bg-white/5 text-white hover:bg-white/10"
+          }`}
+        >
+          Orders
+        </button>
       </div>
 
       <div className="mt-5">
         {tab === "create" && <AdminProductForm />}
         {tab === "catalog" && <AdminProductsManager />}
         {tab === "insights" && <AdminInsights />}
+        {tab === "promocodes" && <AdminPromoCodes />}
+        {tab === "orders" && <AdminOrders />}
       </div>
     </section>
   );
