@@ -538,8 +538,9 @@ function AccountPanel() {
   return (
     <section className="mx-auto max-w-6xl space-y-5">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-        <h1 className="text-3xl font-semibold text-white">
-          Welcome, {accountGreetingName}
+        <h1 className="text-[1.65rem] sm:text-3xl font-semibold text-white leading-tight">
+          <span className="block">Welcome</span>
+          <span className="mt-1 block break-words">{accountGreetingName}</span>
         </h1>
         <p className="mt-2 text-white/70">
           Your personal dashboard for saved items, addresses, and account

@@ -41,6 +41,8 @@ type AddressFormState = {
 };
 
 type PromoRule = {
+  label?: string;
+  description?: string;
   type: "percent" | "fixed" | "free_shipping";
   value: number;
   minSubtotal?: number;
@@ -222,6 +224,8 @@ export default function CheckoutPage() {
               ? promo.type
               : "percent";
           next[code] = {
+            label: typeof promo.label === "string" ? promo.label : "",
+            description: typeof promo.description === "string" ? promo.description : "",
             type,
             value: typeof promo.value === "number" ? Math.max(0, promo.value) : 0,
             minSubtotal:
@@ -364,8 +368,24 @@ export default function CheckoutPage() {
       return;
     }
 
+    const rule = promoRules[result.normalized];
+    let context = `You saved ${formatMoney(result.discountUSD)}.`;
+    if (rule?.type === "free_shipping") {
+      const shippingSaved = subtotal > 0 ? 5 : 0;
+      context = `Free shipping applied. You saved ${formatMoney(shippingSaved)} on shipping.`;
+    } else if (rule?.type === "percent") {
+      context = `${rule.value}% off applied. You saved ${formatMoney(
+        result.discountUSD
+      )}.`;
+    } else if (rule?.type === "fixed") {
+      context = `${formatMoney(rule.value)} off applied. You saved ${formatMoney(
+        result.discountUSD
+      )}.`;
+    }
+
+    const extra = rule?.description ? ` ${rule.description}` : "";
     setAppliedPromoCode(result.normalized);
-    setPromoInfo(`Promo ${result.normalized} applied.`);
+    setPromoInfo(`Promo ${result.normalized} applied. ${context}${extra}`);
   }
 
   return (
