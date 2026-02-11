@@ -7,6 +7,7 @@ import Image from "next/image";
 import ShopCatalogClient from "./ShopCatalogClient";
 import LikeIconButton from "../components/LikeIconButton";
 import WishlistIconButton from "../components/WishlistIconButton";
+import CustomRequestModal from "../components/CustomRequestModal";
 
 /** Helpers */
 function getCardImage(p: any) {
@@ -128,12 +129,12 @@ export default async function Shop() {
           </div>
 
           <div className="flex gap-3 justify-center sm:justify-end">
-            <Link
-              href="/contact"
+            <CustomRequestModal
+              productName="Custom Order"
+              productUrl="https://creativedimensionslb.com/shop"
               className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-white/90 hover:bg-white/10 transition"
-            >
-              Custom Request
-            </Link>
+              buttonLabel="Custom Request"
+            />
 
             <Link
               href="#all"
@@ -253,9 +254,12 @@ export default async function Shop() {
 
         <div className="mt-10 text-center text-sm text-white/50">
           Want something specific? Hit{" "}
-          <Link href="/contact" className="text-white/80 hover:text-white transition">
-            Custom Request
-          </Link>
+          <CustomRequestModal
+            productName="Custom Order"
+            productUrl="https://creativedimensionslb.com/shop"
+            className="inline text-white/80 hover:text-white transition"
+            buttonLabel="Custom Request"
+          />
           .
         </div>
 

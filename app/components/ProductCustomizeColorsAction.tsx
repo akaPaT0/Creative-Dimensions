@@ -144,7 +144,13 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
   const [selectedFilamentIds, setSelectedFilamentIds] = useState<string[]>([]);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
 
-  if (!customizeConfig) return null;
+  if (!customizeConfig) {
+    return (
+      <button type="button" disabled className={className} aria-disabled="true">
+        Coming soon
+      </button>
+    );
+  }
 
   if (!CUSTOMIZE_COLORS_ENABLED) {
     return (

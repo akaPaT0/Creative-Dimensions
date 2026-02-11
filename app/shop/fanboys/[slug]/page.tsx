@@ -9,6 +9,7 @@ import { getProducts } from "../../../lib/products-db";
 import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
 import ShareButton from "../../../components/ShareButton";
+import CustomRequestModal from "../../../components/CustomRequestModal";
 import LikeWishlistRow from "../../../components/LikeWishlistRow";
 import AddToCartButton from "../../../components/AddToCartButton";
 import ProductCustomizeColorsAction from "../../../components/ProductCustomizeColorsAction";
@@ -234,32 +235,20 @@ export default async function FanboySlugPage({
                 productId={String(p.id)}
                 className="rounded-xl border border-white/15 bg-[#FF8B64] px-4 py-3 text-center font-medium text-black hover:opacity-90 transition"
               />
-              {p.customizeColors ? (
-                <ProductCustomizeColorsAction
-                  product={p}
-                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
-                />
-              ) : (
-                <a
-                  href={`https://wa.me/96170304007?text=${encodeURIComponent(waText)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
-                >
-                  Order / Ask
-                </a>
-              )}
+              <ProductCustomizeColorsAction
+                product={p}
+                className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
+              />
               <ShareButton
                 url={productUrl}
                 title={p.name}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
               />
-              <Link
-                href="/contact"
+              <CustomRequestModal
+                productName={p.name}
+                productUrl={productUrl}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
-              >
-                Request Custom
-              </Link>
+              />
               <Link
                 href="/shop/fanboys"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
@@ -299,21 +288,10 @@ export default async function FanboySlugPage({
                   productId={String(p.id)}
                   className="sm:col-span-2 rounded-xl border border-white/15 bg-[#FF8B64] px-4 py-3 text-center font-medium text-black hover:opacity-90 transition"
                 />
-                {p.customizeColors ? (
-                  <ProductCustomizeColorsAction
-                    product={p}
-                    className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
-                  />
-                ) : (
-                  <a
-                    href={`https://wa.me/96170304007?text=${encodeURIComponent(waText)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
-                  >
-                    Order / Ask
-                  </a>
-                )}
+                <ProductCustomizeColorsAction
+                  product={p}
+                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-white/90 hover:bg-white/15 transition"
+                />
 
                 <ShareButton
                   url={productUrl}
@@ -321,12 +299,11 @@ export default async function FanboySlugPage({
                   className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
                 />
 
-                <Link
-                  href="/contact"
+                <CustomRequestModal
+                  productName={p.name}
+                  productUrl={productUrl}
                   className="sm:col-span-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-white/80 hover:bg-white/10 transition"
-                >
-                  Request Custom
-                </Link>
+                />
 
                 <Link
                   href="/shop/fanboys"

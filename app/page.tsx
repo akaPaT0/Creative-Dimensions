@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
 import HeroIn from "./components/HeroIn";
+import CustomRequestModal from "./components/CustomRequestModal";
 
 export default function Home() {
   return (
@@ -57,13 +58,12 @@ export default function Home() {
                     </div>
 
                     <div className="mt-4 sm:mt-10 flex justify-center">
-                      <Link
-                        href="/contact"
+                      <CustomRequestModal
+                        productName="Custom Order"
+                        productUrl="https://creativedimensionslb.com"
                         className="w-full sm:w-auto px-7 py-4 sm:px-8 sm:py-4 rounded-2xl border border-white/20 bg-white/5 text-white
                           text-[20px] sm:text-2xl hover:bg-white/10 transition text-center"
-                      >
-                        Request Custom
-                      </Link>
+                      />
                     </div>
 
                     <div className="relative z-10 flex justify-center pt-10 pb-2">
@@ -114,13 +114,12 @@ export default function Home() {
                 </div>
 
                 <div className="mt-6 flex justify-center">
-                  <Link
-                    href="/contact"
+                  <CustomRequestModal
+                    productName="Custom Order"
+                    productUrl="https://creativedimensionslb.com"
                     className="w-[480px] px-7 py-3 rounded-xl border border-white/20 bg-white/5 text-white
                       lg:text-[30px] hover:bg-white/10 transition text-center"
-                  >
-                    Request Custom
-                  </Link>
+                  />
                 </div>
               </div>
 
@@ -205,11 +204,13 @@ export default function Home() {
                   ) : item.isModal ? (
                     <div className="relative group">
                       {/* Invisible trigger overlaying the card */}
-                      <Link
-                        href="/contact"
-                        className="absolute inset-0 z-20 opacity-0"
-                        aria-label="Open custom request"
-                      />
+                      <div className="absolute inset-0 z-20 opacity-0">
+                        <CustomRequestModal
+                          productName="Custom Order"
+                          productUrl="https://creativedimensionslb.com"
+                          className="w-full h-full cursor-pointer"
+                        />
+                      </div>
                       <div className="relative z-10 pointer-events-none">
                         {cardContent}
                       </div>

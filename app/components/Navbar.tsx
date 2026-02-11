@@ -12,6 +12,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 
+import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
 import AdminShortcutFab from "./AdminShortcutFab";
 
 const CART_STORAGE_KEY = "cd_cart_v1";
@@ -79,6 +80,12 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Hidden instance used by menu shortcuts */}
+      <CustomRequestModal
+        hideButton
+        productName="Custom Order"
+        productUrl="https://creativedimensionslb.com"
+      />
       {/* PC Nav */}
       <nav
         className={`fixed inset-x-0 top-0 z-20 hidden lg:block transition-all duration-200 ${
@@ -262,9 +269,19 @@ function MobileMenuContent({
             <button className={itemClass}>Sign in</button>
           </SignInButton>
 
-          <Link href="/contact" onClick={onClose} className={itemClass}>
+          <button
+            type="button"
+            onClick={() => {
+              onClose?.();
+              openCustomRequest({
+                productName: "Custom Order",
+                productUrl: "https://creativedimensionslb.com",
+              });
+            }}
+            className={itemClass}
+          >
             Request custom
-          </Link>
+          </button>
 
           <div className={dividerClass} />
 
@@ -299,9 +316,19 @@ function MobileMenuContent({
             Track orders
           </Link>
 
-          <Link href="/contact" onClick={onClose} className={itemClass}>
+          <button
+            type="button"
+            onClick={() => {
+              onClose?.();
+              openCustomRequest({
+                productName: "Custom Order",
+                productUrl: "https://creativedimensionslb.com",
+              });
+            }}
+            className={itemClass}
+          >
             Request custom
-          </Link>
+          </button>
 
           {isAdmin && (
             <Link href="/admin" onClick={onClose} className={itemClass}>
@@ -434,13 +461,19 @@ function AuthButtons({
                 Track orders
               </Link>
 
-              <Link
-                href="/contact"
-                onClick={close}
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  openCustomRequest({
+                    productName: "Custom Order",
+                    productUrl: "https://creativedimensionslb.com",
+                  });
+                }}
                 className="block w-full text-left px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
               >
                 Request custom
-              </Link>
+              </button>
 
               {isAdmin && (
                 <Link
