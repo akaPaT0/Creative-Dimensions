@@ -678,7 +678,10 @@ export default function CustomQuotePage() {
               </span>
             </div>
 
-            <p className="mt-3 text-xs text-white/55">Final price confirmed after review</p>
+            <p className="mt-3 text-xs text-white/55">
+              Disclaimer: pricing is an estimate, not final. Our team will review and confirm the
+              final price as soon as possible.
+            </p>
           </aside>
         </div>
 
@@ -944,7 +947,10 @@ export default function CustomQuotePage() {
               </span>
             </div>
 
-            <p className="mt-3 text-xs text-white/55">Final price confirmed after review</p>
+            <p className="mt-3 text-xs text-white/55">
+              Disclaimer: pricing is an estimate, not final. Our team will review and confirm the
+              final price as soon as possible.
+            </p>
           </aside>
         </div>
 
