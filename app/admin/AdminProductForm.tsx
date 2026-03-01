@@ -2,8 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const DEFAULT_CATEGORIES = ["new-arrivals", "keychains", "tools", "accessories", "fanboys"];
+const DEFAULT_CATEGORIES = [
+  "new-arrivals",
+  "keychains",
+  "tools",
+  "accessories",
+  "desk-add-ons",
+  "fanboys",
+];
 const DEFAULT_SUBCATEGORIES = ["cute", "minecraft", "cars", "anime", "tools", "other"];
+
+function mergeUnique(values: string[]) {
+  return Array.from(new Set(values.map((v) => v.trim()).filter(Boolean)));
+}
 
 function slugify(s: string) {
   return s
@@ -87,6 +98,38 @@ export default function AdminProductForm() {
     };
   }, [previewUrls]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOptions() {
+      try {
+        const res = await fetch("/api/admin/products", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await readJsonSafe(res);
+        if (cancelled) return;
+
+        const products = Array.isArray(data?.products) ? data.products : [];
+        const dbCategories = products
+          .map((p) => (typeof p?.category === "string" ? p.category : ""))
+          .filter(Boolean);
+        const dbSubCategories = products
+          .map((p) => (typeof p?.subCategory === "string" ? p.subCategory : ""))
+          .filter(Boolean);
+
+        setCategories((prev) => mergeUnique([...prev, ...dbCategories]));
+        setSubCategories((prev) => mergeUnique([...prev, ...dbSubCategories]));
+      } catch {
+        // keep defaults if the options fetch fails
+      }
+    }
+
+    loadOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function fetchNextId(cat: string, sub: string) {
     if (!cat || !sub) return;
     try {
@@ -116,7 +159,7 @@ export default function AdminProductForm() {
     const v = slugify(newCategory);
     if (!v) return;
 
-    setCategories((prev) => (prev.includes(v) ? prev : [...prev, v]));
+    setCategories((prev) => mergeUnique([...prev, v]));
     setCategory(v);
     setNewCategory("");
     setMsg(`Category added: ${v}`);
@@ -126,7 +169,7 @@ export default function AdminProductForm() {
     const v = slugify(newSubCategory);
     if (!v) return;
 
-    setSubCategories((prev) => (prev.includes(v) ? prev : [...prev, v]));
+    setSubCategories((prev) => mergeUnique([...prev, v]));
     setSubCategory(v);
     setNewSubCategory("");
     setMsg(`Sub-category added: ${v}`);

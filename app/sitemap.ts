@@ -2,7 +2,12 @@ import type { MetadataRoute } from "next";
 import { getProducts } from "@/app/lib/products-db";
 import { SITE_URL } from "@/app/lib/site";
 
-const PRODUCT_ROUTE_CATEGORIES = new Set(["keychains", "fanboys", "new-arrivals"]);
+const PRODUCT_ROUTE_CATEGORIES = new Set([
+  "keychains",
+  "fanboys",
+  "new-arrivals",
+  "desk-add-ons",
+]);
 const STATIC_ROUTES = [
   "/",
   "/about",
@@ -12,6 +17,7 @@ const STATIC_ROUTES = [
   "/shop/fanboys",
   "/shop/new-arrivals",
   "/shop/accessories",
+  "/shop/desk-add-ons",
   "/shop/tools",
 ];
 

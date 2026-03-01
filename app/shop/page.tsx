@@ -107,7 +107,8 @@ export default async function Shop() {
       keychains: 2,
       tools: 1,
       accessories: 1,
-      fanboys: 2,
+      "desk-add-ons": 1,
+      fanboys: 1,
     },
     6
   );
@@ -146,7 +147,7 @@ export default async function Shop() {
         </div>
 
         {/* Quick categories */}
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             {
               title: "New Arrivals",
@@ -167,6 +168,11 @@ export default async function Shop() {
               title: "Accessories",
               desc: "Upgrades, add-ons, extras.",
               href: "/shop/accessories",
+            },
+            {
+              title: "Desk Add-Ons",
+              desc: "Stands, trays, and desktop upgrades.",
+              href: "/shop/desk-add-ons",
             },
             {
               title: "Fanboys",

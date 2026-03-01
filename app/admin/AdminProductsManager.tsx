@@ -35,6 +35,10 @@ function safePathSegment(s: string) {
   return slugify(s) || "model";
 }
 
+function mergeUnique(values: string[]) {
+  return Array.from(new Set(values.map((v) => v.trim()).filter(Boolean)));
+}
+
 export default function AdminProductsManager() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -86,6 +90,15 @@ export default function AdminProductsManager() {
       categoriesCount: categories.size,
     };
   }, [products]);
+
+  const categoryOptions = useMemo(
+    () => mergeUnique(products.map((p) => p.category)),
+    [products]
+  );
+  const subCategoryOptions = useMemo(
+    () => mergeUnique(products.map((p) => p.subCategory || "")),
+    [products]
+  );
 
   return (
     <section
@@ -228,6 +241,8 @@ export default function AdminProductsManager() {
       {editing && (
         <EditModal
           product={editing}
+          categoryOptions={categoryOptions}
+          subCategoryOptions={subCategoryOptions}
           onClose={() => setEditing(null)}
           onSaved={async () => {
             setEditing(null);
@@ -266,10 +281,14 @@ function ModalShell({ children }: { children: React.ReactNode }) {
 
 function EditModal({
   product,
+  categoryOptions,
+  subCategoryOptions,
   onClose,
   onSaved,
 }: {
   product: Product;
+  categoryOptions: string[];
+  subCategoryOptions: string[];
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
@@ -284,6 +303,8 @@ function EditModal({
   const [subCategory, setSubCategory] = useState(product.subCategory || "");
   const [priceUSD, setPriceUSD] = useState(String(product.priceUSD));
   const [description, setDescription] = useState(product.description);
+  const categoryListId = `category-options-${product.id}`;
+  const subCategoryListId = `subcategory-options-${product.id}`;
 
   const [isNew, setIsNew] = useState(!!product.isNew);
   const [featured, setFeatured] = useState(!!product.featured);
@@ -421,18 +442,30 @@ function EditModal({
           <div>
             <label className="text-white/70 text-sm">Category</label>
             <input
+              list={categoryListId}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
             />
+            <datalist id={categoryListId}>
+              {mergeUnique([...categoryOptions, category]).map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
           </div>
           <div>
             <label className="text-white/70 text-sm">Sub-category</label>
             <input
+              list={subCategoryListId}
               value={subCategory}
               onChange={(e) => setSubCategory(e.target.value)}
               className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
             />
+            <datalist id={subCategoryListId}>
+              {mergeUnique([...subCategoryOptions, subCategory]).map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
           </div>
         </div>
 
