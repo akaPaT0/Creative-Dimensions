@@ -217,9 +217,9 @@ export default async function Shop() {
               <Link
                 key={getStableKey(p)}
                 href={getProductHref(p)}
-                className="group rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5 hover:bg-black/30 transition"
+                className="group flex h-full flex-col rounded-2xl border border-white/10 bg-black/20 p-4 sm:p-5 hover:bg-black/30 transition"
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
+                <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
                   <Image
                     src={getCardImage(p)}
                     alt={getTitle(p)}
@@ -234,9 +234,9 @@ export default async function Shop() {
                   <WishlistIconButton productId={String(p.id)} />
                 </div>
 
-                <div className="mt-4 flex items-start justify-between gap-3">
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                   <div className="min-w-0">
-                    <div className="text-white font-semibold truncate">
+                    <div className="text-white font-semibold leading-snug line-clamp-2">
                       {getTitle(p)}
                     </div>
                     <div className="mt-1 text-sm text-white/60 line-clamp-2">
@@ -244,7 +244,7 @@ export default async function Shop() {
                     </div>
                   </div>
 
-                  <div className="shrink-0 text-white/80 text-sm">
+                  <div className="shrink-0 text-white/80 text-sm sm:text-right">
                     {getPriceLabel(p)}
                   </div>
                 </div>
