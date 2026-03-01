@@ -80,6 +80,8 @@ export async function POST(req: Request) {
     const subCategory = slugifyFolder(subCategoryRaw);
     const priceUSDStr = String(form.get("priceUSD") || "").trim();
     const description = String(form.get("description") || "").trim();
+    const isNew = String(form.get("isNew") || "true") === "true";
+    const featured = String(form.get("featured") || "false") === "true";
     const files = form.getAll("images") as File[];
     const model = form.get("model");
     const modelFile = model instanceof File && model.size > 0 ? model : null;
@@ -137,8 +139,8 @@ export async function POST(req: Request) {
       priceUSD,
       description,
       images,
-      isNew: true,
-      featured: false,
+      isNew,
+      featured,
       ...(modelUrl
         ? {
             customizeColors: {

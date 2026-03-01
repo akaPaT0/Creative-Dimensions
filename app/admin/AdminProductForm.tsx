@@ -43,6 +43,11 @@ async function readJsonSafe(res: Response) {
   return text ? JSON.parse(text) : null;
 }
 
+type ProductOptionRow = {
+  category?: unknown;
+  subCategory?: unknown;
+};
+
 export default function AdminProductForm() {
   // options (editable in UI)
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -59,6 +64,8 @@ export default function AdminProductForm() {
 
   const [priceUSD, setPriceUSD] = useState<string>("2");
   const [description, setDescription] = useState("");
+  const [isNew, setIsNew] = useState(true);
+  const [featured, setFeatured] = useState(false);
 
   // MULTI images (order matters: first = cover => -1.webp)
   const [images, setImages] = useState<File[]>([]);
@@ -108,7 +115,9 @@ export default function AdminProductForm() {
         const data = await readJsonSafe(res);
         if (cancelled) return;
 
-        const products = Array.isArray(data?.products) ? data.products : [];
+        const products: ProductOptionRow[] = Array.isArray(data?.products)
+          ? data.products
+          : [];
         const dbCategories = products
           .map((p) => (typeof p?.category === "string" ? p.category : ""))
           .filter(Boolean);
@@ -250,6 +259,8 @@ export default function AdminProductForm() {
       fd.set("subCategory", subCategory);
       fd.set("priceUSD", priceUSD);
       fd.set("description", description);
+      fd.set("isNew", String(isNew));
+      fd.set("featured", String(featured));
 
       // Append multiple images in chosen order (first = cover)
       for (const file of images) fd.append("images", file);
@@ -269,6 +280,8 @@ export default function AdminProductForm() {
       setSlugTouched(false);
       setPriceUSD("2");
       setDescription("");
+      setIsNew(true);
+      setFeatured(false);
       setImages([]);
       setModelFile(null);
 
@@ -576,6 +589,25 @@ export default function AdminProductForm() {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Write the product description..."
         />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <label className="flex items-center gap-2 text-white/80 text-sm">
+          <input
+            type="checkbox"
+            checked={isNew}
+            onChange={(e) => setIsNew(e.target.checked)}
+          />
+          Mark as new
+        </label>
+        <label className="flex items-center gap-2 text-white/80 text-sm">
+          <input
+            type="checkbox"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+          />
+          Mark as featured
+        </label>
       </div>
 
       {/* Submit */}
