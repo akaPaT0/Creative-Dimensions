@@ -12,6 +12,7 @@
     "@clerk/nextjs": "^6.37.3",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@supabase/supabase-js": "^2.98.0",
     "@vercel/blob": "^2.0.1",
     "@vercel/kv": "^3.0.0",
     "lucide-react": "^0.561.0",
