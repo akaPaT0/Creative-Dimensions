@@ -389,7 +389,7 @@ export default function VanessaCatalogClient({
         <select
           value={category}
           onChange={(e) => {
-            const v = e.target.value as any;
+            const v = e.target.value;
             setCategory(v);
             setSubCategory("all");
           }}
@@ -404,7 +404,7 @@ export default function VanessaCatalogClient({
 
         <select
           value={subCategory}
-          onChange={(e) => setSubCategory(e.target.value as any)}
+          onChange={(e) => setSubCategory(e.target.value)}
           className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
         >
           {subCategoryOptions.map((s) => (
@@ -416,7 +416,12 @@ export default function VanessaCatalogClient({
 
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "default" || v === "price-asc" || v === "price-desc") {
+              setSort(v);
+            }
+          }}
           className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
         >
           <option value="default">Sort: default</option>
