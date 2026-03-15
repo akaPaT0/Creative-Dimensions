@@ -1,7 +1,7 @@
-import { list, put } from "@vercel/blob";
 import type { Product } from "@/app/data/products";
+import { supabase } from "@/app/lib/supabase/clients";
 
-const CATALOG_PATH = "catalog/products.json";
+const TABLE = "products";
 
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -9,6 +9,10 @@ function asText(value: unknown) {
 
 function asNumber(value: unknown, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
   return fallback;
 }
 
@@ -25,6 +29,7 @@ function asStringArray(value: unknown) {
 
 function normalizeProduct(input: unknown): Product | null {
   if (!input || typeof input !== "object") return null;
+
   const row = input as Record<string, unknown>;
   const id = asText(row.id);
   const name = asText(row.name);
@@ -32,6 +37,7 @@ function normalizeProduct(input: unknown): Product | null {
   const category = asText(row.category);
   const description = asText(row.description);
   const priceUSD = asNumber(row.priceUSD, 0);
+
   if (!id || !name || !slug || !category) return null;
 
   const image = asText(row.image);
@@ -42,6 +48,7 @@ function normalizeProduct(input: unknown): Product | null {
     row.customizeColors && typeof row.customizeColors === "object"
       ? (row.customizeColors as Record<string, unknown>)
       : null;
+
   const customizeColors =
     customizeColorsRaw && asText(customizeColorsRaw.modelUrl)
       ? {
@@ -78,23 +85,37 @@ function normalizeProduct(input: unknown): Product | null {
 
 function normalizeProducts(raw: unknown): Product[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map((x) => normalizeProduct(x)).filter((x): x is Product => Boolean(x));
+  return raw
+    .map((x) => normalizeProduct(x))
+    .filter((x): x is Product => Boolean(x));
+}
+
+function toDbRow(product: Product) {
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    category: product.category,
+    subCategory: product.subCategory ?? null,
+    priceUSD: product.priceUSD,
+    description: product.description,
+    isNew: product.isNew ?? false,
+    featured: product.featured ?? false,
+    image: product.image ?? null,
+    images: product.images ?? [],
+    customizeColors: product.customizeColors ?? null,
+  };
 }
 
 export async function getProductsFromDb() {
-  const rows = await list({ prefix: CATALOG_PATH, limit: 20 });
-  const matches = rows.blobs.filter((b) => b.pathname === CATALOG_PATH);
-  if (!matches.length) return [];
-  matches.sort((a, b) => {
-    const aTime = new Date(a.uploadedAt || 0).getTime();
-    const bTime = new Date(b.uploadedAt || 0).getTime();
-    return bTime - aTime;
-  });
-  const latest = matches[0];
-  const res = await fetch(latest.url, { cache: "no-store" });
-  if (!res.ok) return [];
-  const raw = (await res.json().catch(() => null)) as unknown;
-  return normalizeProducts(raw);
+  const { data, error } = await supabase.from(TABLE).select("*");
+
+  if (error) {
+    console.error("Failed to load products from Supabase:", error);
+    return [];
+  }
+
+  return normalizeProducts(data);
 }
 
 export async function getProducts() {
@@ -102,33 +123,59 @@ export async function getProducts() {
 }
 
 export async function saveProducts(products: Product[]) {
-  const payload = JSON.stringify(products, null, 2);
-  await put(CATALOG_PATH, payload, {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
+  const current = await getProducts();
+  const incomingIds = new Set(products.map((p) => p.id));
+  const idsToDelete = current
+    .map((p) => p.id)
+    .filter((id) => !incomingIds.has(id));
+
+  if (idsToDelete.length) {
+    const { error: deleteError } = await supabase
+      .from(TABLE)
+      .delete()
+      .in("id", idsToDelete);
+
+    if (deleteError) {
+      throw deleteError;
+    }
+  }
+
+  if (!products.length) return;
+
+  const rows = products.map(toDbRow);
+
+  const { error: upsertError } = await supabase
+    .from(TABLE)
+    .upsert(rows, { onConflict: "id" });
+
+  if (upsertError) {
+    throw upsertError;
+  }
 }
 
 export async function upsertProduct(product: Product) {
-  const all = await getProducts();
-  const idx = all.findIndex((p) => p.id === product.id);
-  if (idx === -1) {
-    await saveProducts([product, ...all]);
-    return product;
+  const row = toDbRow(product);
+
+  const { error } = await supabase
+    .from(TABLE)
+    .upsert(row, { onConflict: "id" });
+
+  if (error) {
+    throw error;
   }
-  const next = [...all];
-  next[idx] = product;
-  await saveProducts(next);
+
   return product;
 }
 
 export async function removeProduct(productId: string) {
   const all = await getProducts();
   const target = all.find((x) => x.id === productId) || null;
-  const next = all.filter((x) => x.id !== productId);
-  await saveProducts(next);
+
+  const { error } = await supabase.from(TABLE).delete().eq("id", productId);
+
+  if (error) {
+    throw error;
+  }
+
   return target;
 }
-
