@@ -15,15 +15,27 @@ export default function BackgroundMusic() {
       try {
         await audio.play();
       } catch {
-        // autoplay may be blocked until user interacts
+        // browser blocked autoplay before interaction
       }
     };
 
+    const handleFirstInteraction = () => {
+      playAudio();
+    };
+
+    window.addEventListener("click", handleFirstInteraction, { once: true });
+    window.addEventListener("touchstart", handleFirstInteraction, { once: true });
+
     playAudio();
+
+    return () => {
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("touchstart", handleFirstInteraction);
+    };
   }, []);
 
   return (
-    <audio ref={audioRef} loop>
+    <audio ref={audioRef} loop preload="auto">
       <source src="/music/bgMusic.mp3" type="audio/mpeg" />
     </audio>
   );
