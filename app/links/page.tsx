@@ -144,7 +144,7 @@ export default function LinksPage() {
                   title={link.title}
                   description={link.description}
                   url={link.url}
-                  image={link.image}
+                  category={link.category}
                 />
               </div>
             ))}

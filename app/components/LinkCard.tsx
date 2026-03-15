@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
 type LinkCardProps = {
   title: string;
   description: string;
   url: string;
   image?: string;
-};
-
-type PreviewData = {
-  title?: string | null;
-  description?: string | null;
-  image?: string | null;
+  category?: string;
 };
 
 function getHostname(url: string) {
@@ -32,38 +25,41 @@ function getFavicon(url: string) {
   }
 }
 
+function getInitials(title: string) {
+  const parts = title.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+function pickGradient(seed: string) {
+  const gradients = [
+    "from-cyan-500/25 via-sky-500/10 to-transparent",
+    "from-violet-500/25 via-fuchsia-500/10 to-transparent",
+    "from-emerald-500/25 via-teal-500/10 to-transparent",
+    "from-amber-500/25 via-orange-500/10 to-transparent",
+    "from-rose-500/25 via-pink-500/10 to-transparent",
+    "from-indigo-500/25 via-blue-500/10 to-transparent",
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return gradients[Math.abs(hash) % gradients.length];
+}
+
 export default function LinkCard({
   title,
   description,
   url,
-  image,
+  category,
 }: LinkCardProps) {
-  const [preview, setPreview] = useState<PreviewData | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPreview() {
-      try {
-        const res = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        if (!cancelled) setPreview(data);
-      } catch {}
-    }
-
-    loadPreview();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
-
-  const hostname = useMemo(() => getHostname(url), [url]);
-  const favicon = useMemo(() => getFavicon(url), [url]);
-
-  const coverImage = image || null;
+  const hostname = getHostname(url);
+  const favicon = getFavicon(url);
+  const initials = getInitials(title);
+  const gradient = pickGradient(`${title}-${category}-${hostname}`);
 
   return (
     <a
@@ -72,36 +68,55 @@ export default function LinkCard({
       rel="noopener noreferrer"
       className="group block w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition hover:border-white/20 hover:bg-white/10"
     >
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-white/10 via-white/[0.03] to-transparent">
-        {coverImage ? (
-          <img
-            src={coverImage}
-            alt={title}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="flex h-full w-full flex-col items-start justify-end p-5">
-            {favicon ? (
-              <img
-                src={favicon}
-                alt=""
-                className="mb-3 h-10 w-10 rounded-xl bg-white p-1 shadow"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-            ) : null}
+      <div
+        className={`relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br ${gradient}`}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_35%),linear-gradient(to_bottom,rgba(255,255,255,0.03),rgba(255,255,255,0.01))]" />
 
-            <p className="text-sm text-white/45">{hostname}</p>
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -right-6 -top-8 text-[110px] font-semibold tracking-tight text-white/10 transition duration-300 group-hover:scale-105">
+            {initials}
           </div>
-        )}
+        </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        <div className="relative flex h-full flex-col justify-between p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-white/70 backdrop-blur-sm">
+              {favicon ? (
+                <img
+                  src={favicon}
+                  alt=""
+                  className="h-4 w-4 rounded-sm"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : null}
+              <span className="truncate">{hostname}</span>
+            </div>
+
+            {category ? (
+              <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.15em] text-white/70">
+                {category}
+              </span>
+            ) : null}
+          </div>
+
+          <div>
+            <div className="mb-2 text-4xl font-semibold leading-none text-white/90">
+              {initials}
+            </div>
+            <h3 className="max-w-[85%] text-xl font-semibold text-white">
+              {title}
+            </h3>
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
       </div>
 
       <div className="p-4">
-        <h3 className="text-base font-semibold text-white">{title}</h3>
-        <p className="mt-1 text-sm text-white/65">{description}</p>
+        <p className="text-sm text-white/65">{description}</p>
         <p className="mt-3 truncate text-xs text-white/40">{url}</p>
       </div>
     </a>
