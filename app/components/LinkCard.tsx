@@ -22,9 +22,7 @@ export default function LinkCard({ title, description, url }: LinkCardProps) {
 
     async function loadPreview() {
       try {
-        const res = await fetch(
-          `/api/link-preview?url=${encodeURIComponent(url)}`
-        );
+        const res = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
         if (!res.ok) return;
 
         const data = await res.json();
@@ -44,7 +42,7 @@ export default function LinkCard({ title, description, url }: LinkCardProps) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block w-[280px] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition hover:border-white/20 hover:bg-white/8"
+      className="group block w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition hover:border-white/20 hover:bg-white/10"
     >
       <div className="aspect-[16/10] w-full overflow-hidden bg-white/5">
         {preview?.image ? (
