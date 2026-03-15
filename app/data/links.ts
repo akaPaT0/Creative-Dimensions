@@ -74,5 +74,42 @@ export const savedLinks: SavedLink[] = [
   tags: ["mycolorspace", "color", "palette", "gradient", "design", "branding"],
 },
 
+{
+  title: "Inkscape",
+  description: "Vector design",
+  url: "https://inkscape.org/",
+  category: "Design",
+  tags: ["inkscape", "vector", "svg", "design", "illustration", "graphics"],
+},
+{
+  title: "Illustrator",
+  description: "Vector design",
+  url: "https://www.adobe.com/products/illustrator.html",
+  category: "Design",
+  tags: ["illustrator", "adobe", "vector", "svg", "design", "graphics"],
+},
+{
+  title: "Clipchamp",
+  description: "Video editor",
+  url: "https://clipchamp.com/",
+  category: "Media",
+  tags: ["clipchamp", "video", "editing", "editor", "content", "media"],
+},
+{
+  title: "Blender",
+  description: "3D creation",
+  url: "https://www.blender.org/",
+  category: "3D",
+  tags: ["blender", "3d", "modeling", "animation", "rendering", "design"],
+},
+{
+  title: "Supabase",
+  description: "Backend platform",
+  url: "https://supabase.com/",
+  category: "Development",
+  tags: ["supabase", "database", "backend", "auth", "storage", "development"],
+},
+
+
 ];
 
