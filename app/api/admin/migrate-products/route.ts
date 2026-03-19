@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
-import { readFile } from "node:fs/promises";
+import { access } from "node:fs/promises";
 import path from "node:path";
-import { products as snapshotProducts, type Product } from "@/app/data/products";
-import { getProductsFromDb, saveProducts } from "@/app/lib/products-db";
+import { getProducts, saveProducts } from "@/app/lib/products-db";
+import { normalizeAssetReference, saveBytesToPublic } from "@/app/lib/local-assets";
+import type { Product } from "@/app/data/products";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -14,13 +14,64 @@ function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function guessContentType(filename: string) {
-  const lower = filename.toLowerCase();
-  if (lower.endsWith(".png")) return "image/png";
-  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-  if (lower.endsWith(".webp")) return "image/webp";
-  if (lower.endsWith(".glb")) return "model/gltf-binary";
-  return "application/octet-stream";
+function isBlobHttpUrl(value: string) {
+  if (!value.startsWith("http://") && !value.startsWith("https://")) return false;
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return host === "blob.vercel-storage.com" || host.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
+async function publicPathExists(urlPath: string) {
+  const relative = urlPath.replace(/^\/+/, "");
+  const absolute = path.join(process.cwd(), "public", ...relative.split("/"));
+  try {
+    await access(absolute);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function maybeDownloadBlobAsset(
+  value: string,
+  cache: Map<string, string>,
+  failures: string[]
+): Promise<string> {
+  const raw = asText(value);
+  if (!raw) return "";
+  if (!isBlobHttpUrl(raw)) return normalizeAssetReference(raw);
+  if (cache.has(raw)) return cache.get(raw) || normalizeAssetReference(raw);
+
+  const normalized = normalizeAssetReference(raw);
+  if (!normalized.startsWith("/")) return normalized;
+  if (await publicPathExists(normalized)) {
+    cache.set(raw, normalized);
+    return normalized;
+  }
+
+  try {
+    const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+    const attempts: Array<RequestInit | undefined> = [
+      token ? { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" } : undefined,
+      { cache: "no-store" },
+    ];
+    for (const init of attempts) {
+      const res = await fetch(raw, init);
+      if (!res.ok) continue;
+      const bytes = Buffer.from(await res.arrayBuffer());
+      const local = await saveBytesToPublic(normalized, bytes, { addRandomSuffix: false });
+      cache.set(raw, local);
+      return local;
+    }
+    throw new Error("download failed");
+  } catch {
+    failures.push(raw);
+    cache.set(raw, normalized);
+    return normalized;
+  }
 }
 
 async function requireAdmin() {
@@ -43,74 +94,36 @@ async function requireAdmin() {
   return { ok: true as const };
 }
 
-async function uploadPublicAsset(assetPath: string, cache: Map<string, string>) {
-  const clean = assetPath.replace(/^\//, "");
-  if (!clean || cache.has(clean)) return cache.get(clean) || assetPath;
-
-  const absolutePath = path.join(process.cwd(), "public", clean);
-  const content = await readFile(absolutePath);
-  const blob = await put(clean, content, {
-    access: "public",
-    addRandomSuffix: false,
-    contentType: guessContentType(clean),
-  });
-  cache.set(clean, blob.url);
-  return blob.url;
-}
-
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const admin = await requireAdmin();
     if (!admin.ok) return admin.res;
 
-    const { searchParams } = new URL(req.url);
-    const force = searchParams.get("force") === "1";
-    const existing = await getProductsFromDb();
-    if (existing.length > 0 && !force) {
-      return json({
-        ok: true,
-        migrated: false,
-        reason: "Products already exist in DB. Use ?force=1 to overwrite.",
-        count: existing.length,
-      });
-    }
-
+    const source = await getProducts();
     const cache = new Map<string, string>();
+    const failures: string[] = [];
+
     const migrated: Product[] = [];
-
-    for (const product of snapshotProducts) {
-      const images = (product.images || [])
-        .map((x) => asText(x))
-        .filter(Boolean);
+    for (const product of source) {
+      const currentImages = (product.images || []).map((x) => asText(x)).filter(Boolean);
       const migratedImages: string[] = [];
-      for (const imagePath of images) {
-        if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-          migratedImages.push(imagePath);
-          continue;
-        }
-        try {
-          migratedImages.push(await uploadPublicAsset(imagePath, cache));
-        } catch {
-          migratedImages.push(imagePath);
-        }
+      for (const imageRef of currentImages) {
+        migratedImages.push(await maybeDownloadBlobAsset(imageRef, cache, failures));
       }
 
-      let modelUrl = asText(product.customizeColors?.modelUrl);
-      if (modelUrl && !modelUrl.startsWith("http://") && !modelUrl.startsWith("https://")) {
-        try {
-          modelUrl = await uploadPublicAsset(modelUrl, cache);
-        } catch {
-          // keep old value if file missing
-        }
-      }
+      const modelRef = asText(product.customizeColors?.modelUrl);
+      const migratedModel = modelRef
+        ? await maybeDownloadBlobAsset(modelRef, cache, failures)
+        : modelRef;
 
       migrated.push({
         ...product,
+        image: product.image ? normalizeAssetReference(product.image) : product.image,
         images: migratedImages.length ? migratedImages : product.images,
         customizeColors: product.customizeColors
           ? {
               ...product.customizeColors,
-              modelUrl: modelUrl || product.customizeColors.modelUrl,
+              modelUrl: migratedModel || product.customizeColors.modelUrl,
             }
           : undefined,
       });
@@ -119,13 +132,13 @@ export async function POST(req: Request) {
     await saveProducts(migrated);
     return json({
       ok: true,
-      migrated: true,
-      count: migrated.length,
-      uploadedAssets: cache.size,
+      migrated: migrated.length,
+      blobUrlRewrites: cache.size,
+      failedDownloads: failures.length,
+      failures,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to migrate products";
     return json({ error: message }, 500);
   }
 }
-

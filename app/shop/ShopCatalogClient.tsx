@@ -57,9 +57,20 @@ function scoreMatch(query: string, target: string) {
   return -1;
 }
 
+function isSafeImageSrc(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  const src = value.trim();
+  if (!src) return false;
+  if (src.startsWith("/")) return true;
+  if (src.startsWith("http://") || src.startsWith("https://")) return true;
+  return false;
+}
+
 function getCardImage(p: Product) {
-  if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
-  if (typeof p.image === "string" && p.image) return p.image;
+  if (Array.isArray(p.images) && p.images.length > 0 && isSafeImageSrc(p.images[0])) {
+    return p.images[0];
+  }
+  if (isSafeImageSrc(p.image)) return p.image;
 
   // fallback for older data
   const cat = p?.category;

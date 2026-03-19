@@ -5,7 +5,7 @@ import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import type { Product } from "../../../data/products";
-import { getProducts } from "../../../lib/products-db";
+import { getShopProducts as getProducts } from "../../../lib/products-db";
 import ProductGallery from "../../../components/ProductGallery";
 import RecommendedRow from "../../../components/RecommendedRow";
 import ShareButton from "../../../components/ShareButton";

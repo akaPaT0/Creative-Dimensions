@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { del, put } from "@vercel/blob";
 import { getProducts, saveProducts } from "@/app/lib/products-db";
+import { deletePublicAsset, saveFileToPublic } from "@/app/lib/local-assets";
 import type { Product } from "@/app/data/products";
 
 function json(res: unknown, status = 200) {
@@ -58,7 +58,7 @@ function parseStringArray(raw: string) {
 async function safeDelete(url: string) {
   if (!url) return;
   try {
-    await del(url);
+    await deletePublicAsset(url);
   } catch {
     // ignore delete failures
   }
@@ -132,14 +132,9 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       for (let i = 0; i < imageFiles.length; i++) {
         const file = imageFiles[i];
         const ext = guessImageExt(file.name, file.type);
-        const blobPath = `products/${category}/${subCategory}/${slug}-${i + 1}.${ext}`;
-        const result = await put(blobPath, file, {
-          access: "public",
-          addRandomSuffix: false,
-          allowOverwrite: true,
-          contentType: file.type || undefined,
-        });
-        uploaded.push(result.url);
+        const assetPath = `products/${category}/${subCategory}/${slug}-${i + 1}.${ext}`;
+        const localUrl = await saveFileToPublic(assetPath, file, { addRandomSuffix: false });
+        uploaded.push(localUrl);
       }
       for (const oldUrl of prevImages) await safeDelete(oldUrl);
       nextImages = uploaded;
@@ -157,16 +152,11 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 
     let nextCustomizeColors = prev.customizeColors;
     if (modelFile) {
-      const blobPath = `models/${category}/${subCategory}/${modelBase}.glb`;
-      const uploaded = await put(blobPath, modelFile, {
-        access: "public",
-        addRandomSuffix: true,
-        allowOverwrite: true,
-        contentType: "model/gltf-binary",
-      });
-      if (prevModelUrl && prevModelUrl !== uploaded.url) await safeDelete(prevModelUrl);
+      const assetPath = `models/${category}/${subCategory}/${modelBase}.glb`;
+      const modelUrl = await saveFileToPublic(assetPath, modelFile, { addRandomSuffix: true });
+      if (prevModelUrl && prevModelUrl !== modelUrl) await safeDelete(prevModelUrl);
       nextCustomizeColors = {
-        modelUrl: uploaded.url,
+        modelUrl,
         defaultHexes:
           prev.customizeColors?.defaultHexes && prev.customizeColors.defaultHexes.length
             ? prev.customizeColors.defaultHexes

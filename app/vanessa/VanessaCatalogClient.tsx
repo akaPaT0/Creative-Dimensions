@@ -67,7 +67,7 @@ function getPriceLabel(p: Product) {
 }
 
 function getProductHref(p: Product) {
-  if (p?.slug) return `/vanessa/${p.slug}`;
+  if (p?.slug) return `/vanessa/${encodeURIComponent(p.slug)}`;
   return "/vanessa";
 }
 
@@ -382,7 +382,7 @@ export default function VanessaCatalogClient({
             setSubCategory(s);
           }}
           onPickProduct={(slug) => {
-            window.location.href = `/vanessa/${slug}`;
+            window.location.href = `/vanessa/${encodeURIComponent(slug)}`;
           }}
         />
 

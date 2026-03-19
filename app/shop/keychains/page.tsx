@@ -5,7 +5,7 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
 import type { Product } from "../../data/products";
-import { getProducts } from "../../lib/products-db";
+import { getShopProducts as getProducts } from "../../lib/products-db";
 import LikeIconButton from "../../components/LikeIconButton";
 import WishlistIconButton from "../../components/WishlistIconButton";
 
@@ -20,7 +20,9 @@ export default async function Page() {
   const products = await getProducts();
   const keychains = products.filter((p) => p.category === "keychains");
   const hasAnySubCats = keychains.some((p) => Boolean(p.subCategory));
-  const list = hasAnySubCats ? keychains.filter((p) => Boolean(p.subCategory)) : keychains;
+  const list = hasAnySubCats
+    ? keychains.filter((p) => Boolean(p.subCategory))
+    : keychains;
 
   return (
     <div className="relative min-h-screen">
@@ -79,6 +81,7 @@ export default async function Page() {
             </Link>
           ))}
         </div>
+
         <Footer />
       </main>
     </div>

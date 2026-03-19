@@ -3,24 +3,11 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
-import { getProducts } from "../lib/supabase/getProducts";
+import { getProducts, type VanessaProduct } from "../lib/supabase/getProducts";
 import VanessaCatalogClient from "./VanessaCatalogClient";
 
-type Product = {
-  SKU: string;
-  name: string;
-  slug: string;
-  category: string;
-  subCategory: string;
-  priceUSD: number;
-  description: string;
-  images: string[];
-  isNew: boolean;
-  featured: boolean;
-};
-
 export default async function Page() {
-  const products = (await getProducts()) as Product[];
+  const products: VanessaProduct[] = await getProducts();
 
   return (
     <div className="relative min-h-screen">

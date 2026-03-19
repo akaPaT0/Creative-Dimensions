@@ -1,8 +1,8 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
 import { kv } from "@vercel/kv";
 import { NextResponse } from "next/server";
 import { getProducts } from "@/app/lib/products-db";
+import { saveBytesToPublic } from "@/app/lib/local-assets";
 import { telegramNotify, telegramSendDocument, telegramSendPhoto } from "@/app/lib/telegram";
 import { generateInvoicePdf } from "@/app/lib/invoicePdf";
 import {
@@ -229,13 +229,7 @@ async function persistCustomPreviewImage(params: {
   if (!parsed) return "";
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const pathname = `order-previews/${params.orderNumber}-${params.itemIndex + 1}-${unique}.${parsed.ext}`;
-  const blob = await put(pathname, parsed.bytes, {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: false,
-    contentType: parsed.mime,
-  });
-  return blob.url;
+  return saveBytesToPublic(pathname, parsed.bytes, { addRandomSuffix: false });
 }
 
 async function notifyOrderTelegram(params: {

@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
-import { getProducts } from "../../lib/products-db";
+import { getShopProducts as getProducts } from "../../lib/products-db";
 
 // ✅ CHANGE THESE 3
 const CATEGORY = "tools"; // tools | accessories | new-arrivals | etc...

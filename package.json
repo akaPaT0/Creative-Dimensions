@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:product-images": "tsx app/scripts/sync-product-images.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.37.3",
@@ -15,6 +16,7 @@
     "@supabase/supabase-js": "^2.98.0",
     "@vercel/blob": "^2.0.1",
     "@vercel/kv": "^3.0.0",
+    "dotenv": "^17.3.1",
     "lucide-react": "^0.561.0",
     "next": "16.0.10",
     "react": "^19.2.3",
@@ -30,6 +32,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
