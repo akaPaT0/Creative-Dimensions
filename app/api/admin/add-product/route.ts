@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getProducts, saveProducts } from "@/app/lib/products-db";
-import { saveFileToPublic } from "@/app/lib/local-assets";
+import { uploadProductAsset } from "@/app/lib/product-assets";
+import { getProducts, upsertProduct } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 
 function json(res: unknown, status = 200) {
@@ -108,15 +108,18 @@ export async function POST(req: Request) {
       const file = files[i];
       const ext = guessImageExt(file.name, file.type);
       const assetPath = `products/${category}/${subCategory}/${slug}-${i + 1}.${ext}`;
-      const localUrl = await saveFileToPublic(assetPath, file, { addRandomSuffix: false });
-      images.push(localUrl);
+      const assetUrl = await uploadProductAsset(assetPath, file, { addRandomSuffix: false });
+      images.push(assetUrl);
     }
 
     let modelUrl: string | undefined;
     if (modelFile) {
       const modelBase = safeModelBaseName(slug, id);
       const modelPath = `models/${category}/${subCategory}/${modelBase}.glb`;
-      modelUrl = await saveFileToPublic(modelPath, modelFile, { addRandomSuffix: true });
+      modelUrl = await uploadProductAsset(modelPath, modelFile, {
+        addRandomSuffix: false,
+        contentType: modelFile.type || "model/gltf-binary",
+      });
     }
 
     const product: Product = {
@@ -140,7 +143,7 @@ export async function POST(req: Request) {
         : {}),
     };
 
-    await saveProducts([product, ...existing]);
+    await upsertProduct(product);
 
     return json({ ok: true, product });
   } catch (error) {

@@ -1,8 +1,9 @@
-import type { Product } from "@/app/data/products";
-import { supabase } from "@/app/lib/supabase/clients";
+import { products as fallbackProducts, type Product } from "@/app/data/products";
 import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
 const PRODUCTS_TABLE = "products";
+
+type ProductCustomizeColors = NonNullable<Product["customizeColors"]>;
 
 type SupabaseProductRow = {
   SKU: string;
@@ -12,7 +13,7 @@ type SupabaseProductRow = {
   subCategory: string;
   priceUSD: number;
   description: string;
-  images: string;
+  images: string | null;
   isNew: boolean | null;
   featured: boolean | null;
 };
@@ -37,7 +38,7 @@ function asBool(value: unknown) {
 function asStringArray(value: unknown) {
   if (!Array.isArray(value)) return [] as string[];
   return value
-    .map((x) => (typeof x === "string" ? x.trim() : ""))
+    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
     .filter(Boolean);
 }
 
@@ -52,7 +53,24 @@ function isValidImagePath(value: string) {
   return false;
 }
 
-function parseImagesField(value: unknown) {
+function normalizeCustomizeColors(value: unknown): ProductCustomizeColors | undefined {
+  if (!value || typeof value !== "object") return undefined;
+
+  const row = value as Record<string, unknown>;
+  const modelUrl = asText(row.modelUrl);
+  if (!modelUrl) return undefined;
+
+  const defaultHexes = asStringArray(row.defaultHexes);
+  const slotLabels = asStringArray(row.slotLabels);
+
+  return {
+    modelUrl,
+    defaultHexes: defaultHexes.length ? defaultHexes : ["#ffffff"],
+    ...(slotLabels.length ? { slotLabels } : {}),
+  };
+}
+
+function parseImageList(value: unknown) {
   const directArray = asStringArray(value).filter(isValidImagePath);
   if (directArray.length > 0) return directArray;
 
@@ -74,6 +92,77 @@ function parseImagesField(value: unknown) {
   return [];
 }
 
+function parseStoredAssetsObject(value: Record<string, unknown>) {
+  const image = asText(value.image || value.Image);
+  const imageList = parseImageList(value.images ?? value.Images);
+  const finalImages =
+    imageList.length > 0
+      ? imageList
+      : isValidImagePath(image)
+        ? [image]
+        : [];
+  const fallbackImage = isValidImagePath(image) ? image : finalImages[0] || "";
+
+  return {
+    image: fallbackImage || undefined,
+    images: finalImages.length ? finalImages : undefined,
+    customizeColors: normalizeCustomizeColors(value.customizeColors),
+  };
+}
+
+function parseStoredAssets(value: unknown) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return parseStoredAssetsObject(value as Record<string, unknown>);
+  }
+
+  if (typeof value === "string") {
+    const raw = value.trim();
+    if (raw.startsWith("{") && raw.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parseStoredAssetsObject(parsed as Record<string, unknown>);
+        }
+      } catch {
+        // fall through to the legacy string parser below
+      }
+    }
+  }
+
+  const images = parseImageList(value);
+  return {
+    image: images[0] || undefined,
+    images: images.length ? images : undefined,
+    customizeColors: undefined,
+  };
+}
+
+function serializeAssetsField(product: Product) {
+  const image = asText(product.image);
+  const images =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images.filter(isValidImagePath)
+      : isValidImagePath(image)
+        ? [image]
+        : [];
+  const customizeColors = normalizeCustomizeColors(product.customizeColors);
+
+  if (!images.length && !customizeColors) {
+    return "placeholder";
+  }
+
+  if (!customizeColors && !image) {
+    return JSON.stringify(images);
+  }
+
+  const payload: Record<string, unknown> = {};
+  if (images.length) payload.images = images;
+  if (isValidImagePath(image) && image !== images[0]) payload.image = image;
+  if (customizeColors) payload.customizeColors = customizeColors;
+
+  return JSON.stringify(payload);
+}
+
 function normalizeProduct(input: unknown): Product | null {
   if (!input || typeof input !== "object") return null;
 
@@ -90,23 +179,17 @@ function normalizeProduct(input: unknown): Product | null {
 
   if (!id || !name || !slug || !category) return null;
 
-  const image = asText(row.image || row.Image);
-  const images = parseImagesField(row.images);
+  const storedAssets = parseStoredAssets(row.images ?? row.Images);
+  const image = storedAssets.image || asText(row.image || row.Image);
+  const images = storedAssets.images || parseImageList(row.images ?? row.Images);
   const subCategory = asText(row.subCategory || row.subcategory || row.SubCategory);
-
-  const customizeColorsRaw =
-    row.customizeColors && typeof row.customizeColors === "object"
-      ? (row.customizeColors as Record<string, unknown>)
-      : null;
-
+  const fallbackProduct =
+    fallbackProducts.find((entry) => entry.id === id) ||
+    fallbackProducts.find((entry) => entry.category === category && entry.slug === slug);
   const customizeColors =
-    customizeColorsRaw && asText(customizeColorsRaw.modelUrl)
-      ? {
-          modelUrl: asText(customizeColorsRaw.modelUrl),
-          defaultHexes: asStringArray(customizeColorsRaw.defaultHexes),
-          slotLabels: asStringArray(customizeColorsRaw.slotLabels),
-        }
-      : undefined;
+    storedAssets.customizeColors ||
+    normalizeCustomizeColors(row.customizeColors) ||
+    fallbackProduct?.customizeColors;
 
   return {
     id,
@@ -118,36 +201,18 @@ function normalizeProduct(input: unknown): Product | null {
     description,
     isNew: asBool(row.isNew) || undefined,
     featured: asBool(row.featured) || undefined,
-    image: image || undefined,
+    image: isValidImagePath(image) ? image : images[0] || undefined,
     images: images.length ? images : undefined,
-    customizeColors:
-      customizeColors && customizeColors.defaultHexes.length
-        ? {
-            modelUrl: customizeColors.modelUrl,
-            defaultHexes: customizeColors.defaultHexes,
-            slotLabels: customizeColors.slotLabels?.length
-              ? customizeColors.slotLabels
-              : undefined,
-          }
-        : customizeColors,
+    customizeColors,
   };
 }
 
 function normalizeProducts(raw: unknown): Product[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map((x) => normalizeProduct(x)).filter((x): x is Product => Boolean(x));
+  return raw.map((entry) => normalizeProduct(entry)).filter((entry): entry is Product => Boolean(entry));
 }
 
 function toSupabaseRow(product: Product): SupabaseProductRow {
-  const imgArray =
-    Array.isArray(product.images) && product.images.length > 0
-      ? product.images
-      : product.image
-        ? [product.image]
-        : [];
-
-  const images = imgArray.length > 0 ? JSON.stringify(imgArray) : "placeholder";
-
   return {
     SKU: asText(product.id),
     Name: asText(product.name),
@@ -156,27 +221,29 @@ function toSupabaseRow(product: Product): SupabaseProductRow {
     subCategory: asText(product.subCategory),
     priceUSD: asNumber(product.priceUSD, 0),
     description: asText(product.description),
-    images,
+    images: serializeAssetsField(product),
     isNew: product.isNew === true ? true : null,
     featured: product.featured === true ? true : null,
   };
 }
 
-async function queryProducts(caller: string) {
-  const { data, error } = await supabase.from(PRODUCTS_TABLE).select("*");
-  console.log(`[products-db:${caller}] data:`, data);
-  console.log(`[products-db:${caller}] error:`, error);
+async function queryProducts() {
+  const { data, error } = await supabaseAdmin
+    .from(PRODUCTS_TABLE)
+    .select("*")
+    .order("category", { ascending: true })
+    .order("slug", { ascending: true });
 
-  if (error) return [];
+  if (error) throw new Error(error.message);
   return normalizeProducts(data);
 }
 
 async function getProductsFromSupabase() {
-  return queryProducts("getProductsFromSupabase");
+  return queryProducts();
 }
 
 export async function getShopProducts() {
-  return queryProducts("getShopProducts");
+  return queryProducts();
 }
 
 export async function getProductsFromDb() {
@@ -193,7 +260,7 @@ export async function saveProducts(products: Product[]) {
 
   const currentSkus = new Set(
     (currentRowsRes.data || [])
-      .map((r) => asText((r as Record<string, unknown>).SKU))
+      .map((row) => asText((row as Record<string, unknown>).SKU))
       .filter(Boolean)
   );
 
@@ -236,7 +303,7 @@ export async function upsertProduct(product: Product) {
 
 export async function removeProduct(productId: string) {
   const all = await getProducts();
-  const target = all.find((x) => x.id === productId) || null;
+  const target = all.find((entry) => entry.id === productId) || null;
 
   const del = await supabaseAdmin.from(PRODUCTS_TABLE).delete().eq("SKU", productId);
   if (del.error) throw new Error(del.error.message);
