@@ -1,140 +1,79 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Music4, Volume2, VolumeX } from "lucide-react";
-import { supabase } from "@/app/lib/supabase/clients";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, Pause, Play, SkipForward } from "lucide-react";
 
-type PlaylistRow = {
+type PlaylistTrack = {
   name: string;
-  spotifyUrl: string;
+  url: string;
 };
 
-type SpotifyIframeApi = {
-  createController: (
-    element: HTMLElement,
-    options: { width: number | string; height: number | string; uri: string },
-    callback: (controller: SpotifyEmbedController) => void
-  ) => void;
+type Playlist = {
+  name: string;
+  tracks: PlaylistTrack[];
 };
 
-type SpotifyEmbedController = {
-  loadUri: (uri: string) => void;
-  play: () => void;
-  pause: () => void;
-  resume?: () => void;
-  destroy?: () => void;
-};
+const ENABLED_STORAGE_KEY = "cd_music_enabled_v3";
+const PLAYLIST_STORAGE_KEY = "cd_music_playlist_v3";
+const DEFAULT_PLAYLIST_NAME = "Lofi chill";
 
-declare global {
-  interface Window {
-    __spotifyIframeApi?: SpotifyIframeApi;
-    onSpotifyIframeApiReady?: (api: SpotifyIframeApi) => void;
-  }
-}
-
-function toText(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function normalizePlaylists(rows: unknown): PlaylistRow[] {
-  if (!Array.isArray(rows)) return [];
-
-  return rows
-    .map((entry) => {
-      if (!entry || typeof entry !== "object") return null;
-      const row = entry as Record<string, unknown>;
-      const name = toText(row.name);
-      const spotifyUrl = toText(row.url || row.cover_url);
-      if (!name || !spotifyUrl) return null;
-      return { name, spotifyUrl };
-    })
-    .filter((entry): entry is PlaylistRow => Boolean(entry));
-}
-
-function toSpotifyUri(rawUrl: string) {
-  const trimmed = rawUrl.trim();
-  if (!trimmed) return "";
-
-  if (trimmed.startsWith("spotify:playlist:")) {
-    return trimmed;
-  }
-
-  try {
-    const url = new URL(trimmed);
-    const parts = url.pathname.split("/").filter(Boolean);
-    const playlistIndex = parts.findIndex((part) => part === "playlist");
-    const playlistId = playlistIndex >= 0 ? parts[playlistIndex + 1] || "" : "";
-    return playlistId ? `spotify:playlist:${playlistId}` : "";
-  } catch {
-    return "";
-  }
-}
-
-function loadSpotifyIframeApi() {
-  if (typeof window === "undefined") {
-    return Promise.resolve<SpotifyIframeApi | null>(null);
-  }
-
-  if (window.__spotifyIframeApi) {
-    return Promise.resolve(window.__spotifyIframeApi);
-  }
-
-  return new Promise<SpotifyIframeApi>((resolve) => {
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      'script[data-spotify-iframe-api="true"]'
-    );
-    const previousReadyHandler = window.onSpotifyIframeApiReady;
-
-    window.onSpotifyIframeApiReady = (api) => {
-      window.__spotifyIframeApi = api;
-      previousReadyHandler?.(api);
-      resolve(api);
-    };
-
-    if (existingScript) return;
-
-    const script = document.createElement("script");
-    script.src = "https://open.spotify.com/embed/iframe-api/v1";
-    script.async = true;
-    script.dataset.spotifyIframeApi = "true";
-    document.body.appendChild(script);
-  });
+function isPlaylistArray(value: unknown): value is Playlist[] {
+  return Array.isArray(value);
 }
 
 export default function BackgroundMusic() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playlistMenuRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
-  const [enabled, setEnabled] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [playlistMenuOpen, setPlaylistMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [playlists, setPlaylists] = useState<PlaylistRow[]>([]);
-  const [selectedUrl, setSelectedUrl] = useState("");
-  const playerHostRef = useRef<HTMLDivElement | null>(null);
-  const controllerRef = useRef<SpotifyEmbedController | null>(null);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [selectedPlaylistName, setSelectedPlaylistName] = useState("");
+  const [trackIndex, setTrackIndex] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const storedEnabled = window.localStorage.getItem(ENABLED_STORAGE_KEY);
+    if (storedEnabled === "false") {
+      setIsPlaying(false);
+    }
+
+    const storedPlaylist = window.localStorage.getItem(PLAYLIST_STORAGE_KEY);
+    if (storedPlaylist) {
+      setSelectedPlaylistName(storedPlaylist);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadPlaylists() {
-      const { data, error } = await supabase
-        .from("playlists")
-        .select("name, cover_url, is_active")
-        .eq("is_active", true)
-        .order("name", { ascending: true });
+      try {
+        const response = await fetch("/api/music/playlists", { cache: "no-store" });
+        const data = (await response.json().catch(() => ({}))) as {
+          playlists?: unknown;
+          error?: string;
+        };
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (error) {
+        if (!response.ok) {
+          throw new Error(data?.error || "Failed to load playlists");
+        }
+
+        const nextPlaylists = isPlaylistArray(data.playlists) ? data.playlists : [];
+        setPlaylists(nextPlaylists);
+        setLoadError(null);
+      } catch (error) {
+        if (cancelled) return;
         setPlaylists([]);
-        setLoadError(error.message);
-        setLoading(false);
-        return;
+        setLoadError(error instanceof Error ? error.message : "Failed to load playlists");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      const nextPlaylists = normalizePlaylists(data);
-      setLoadError(null);
-      setPlaylists(nextPlaylists);
-      setSelectedUrl((current) => current || nextPlaylists[0]?.spotifyUrl || "");
-      setLoading(false);
     }
 
     void loadPlaylists();
@@ -145,119 +84,205 @@ export default function BackgroundMusic() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function setupPlayer() {
-      const api = await loadSpotifyIframeApi();
-      if (cancelled || !api || !playerHostRef.current || controllerRef.current) return;
-
-      const initialUri = toSpotifyUri(selectedUrl || playlists[0]?.spotifyUrl || "");
-      if (!initialUri) return;
-
-      api.createController(
-        playerHostRef.current,
-        {
-          width: 320,
-          height: 152,
-          uri: initialUri,
-        },
-        (controller) => {
-          if (cancelled) return;
-          controllerRef.current = controller;
-          if (enabled) {
-            controller.play();
-            controller.resume?.();
-          }
-        }
-      );
-    }
-
-    void setupPlayer();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, playlists, selectedUrl]);
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(ENABLED_STORAGE_KEY, isPlaying ? "true" : "false");
+  }, [isPlaying]);
 
   useEffect(() => {
-    const controller = controllerRef.current;
-    if (!controller) return;
+    if (typeof window === "undefined" || !selectedPlaylistName) return;
+    window.localStorage.setItem(PLAYLIST_STORAGE_KEY, selectedPlaylistName);
+  }, [selectedPlaylistName]);
 
-    if (!enabled) {
-      controller.pause();
+  useEffect(() => {
+    if (!open) {
+      setPlaylistMenuOpen(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!playlistMenuOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node | null;
+      if (!playlistMenuRef.current?.contains(target)) {
+        setPlaylistMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setPlaylistMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [playlistMenuOpen]);
+
+  useEffect(() => {
+    if (playlists.length === 0) return;
+
+    const exists = playlists.some((playlist) => playlist.name === selectedPlaylistName);
+    if (!exists) {
+      const defaultPlaylist =
+        playlists.find(
+          (playlist) =>
+            playlist.name.trim().toLowerCase() === DEFAULT_PLAYLIST_NAME.toLowerCase()
+        ) || playlists[0];
+      setSelectedPlaylistName(defaultPlaylist?.name || "");
+      setTrackIndex(0);
+    }
+  }, [playlists, selectedPlaylistName]);
+
+  const selectedPlaylist = useMemo(
+    () => playlists.find((playlist) => playlist.name === selectedPlaylistName) || null,
+    [playlists, selectedPlaylistName]
+  );
+
+  useEffect(() => {
+    if (!selectedPlaylist) return;
+    if (trackIndex < selectedPlaylist.tracks.length) return;
+    setTrackIndex(0);
+  }, [selectedPlaylist, trackIndex]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.volume = 0.5;
+
+    const track = selectedPlaylist?.tracks[trackIndex];
+    if (!track) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
       return;
     }
 
-    controller.play();
-    controller.resume?.();
-  }, [enabled]);
+    if (audio.src !== track.url) {
+      audio.src = track.url;
+      audio.load();
+    }
 
-  function handlePlaylistChange(nextUrl: string) {
-    const nextUri = toSpotifyUri(nextUrl);
-    setEnabled(true);
-    setSelectedUrl(nextUrl);
-    setOpen(false);
+    if (!isPlaying) {
+      audio.pause();
+      return;
+    }
 
-    if (!nextUri) return;
+    void audio.play().catch(() => {
+      // Browser autoplay rules may still require a user interaction.
+    });
+  }, [isPlaying, selectedPlaylist, trackIndex]);
 
-    const controller = controllerRef.current;
-    if (!controller) return;
+  function handleTogglePlayback() {
+    setIsPlaying((current) => !current);
+  }
 
-    controller.loadUri(nextUri);
-    controller.play();
-    controller.resume?.();
+  function handlePlaylistChange(nextPlaylistName: string) {
+    setSelectedPlaylistName(nextPlaylistName);
+    setTrackIndex(0);
+    setIsPlaying(true);
+    setPlaylistMenuOpen(false);
+  }
+
+  function handleTrackEnd() {
+    setTrackIndex((current) => {
+      if (!selectedPlaylist || selectedPlaylist.tracks.length === 0) return 0;
+      return (current + 1) % selectedPlaylist.tracks.length;
+    });
+  }
+
+  function handleSkipTrack() {
+    if (!selectedPlaylist || selectedPlaylist.tracks.length === 0) return;
+    setTrackIndex((current) => (current + 1) % selectedPlaylist.tracks.length);
+    setIsPlaying(true);
   }
 
   return (
     <div className="fixed bottom-5 left-5 z-[70] flex flex-col items-start gap-3">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed left-[-9999px] top-[-9999px] h-[152px] w-[320px] overflow-hidden opacity-0"
-      >
-        <div ref={playerHostRef} className="h-[152px] w-[320px]" />
-      </div>
+      <audio ref={audioRef} onEnded={handleTrackEnd} preload="auto" hidden />
 
       {open && (
-        <div className="w-[min(86vw,320px)] overflow-hidden rounded-2xl border border-white/15 bg-[#0D0D0D]/78 p-3 text-white shadow-[0_14px_40px_rgba(0,0,0,0.38)] backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold text-white">Music</div>
-              <div className="text-xs text-white/55">
-                {loading
-                  ? "Loading playlists..."
-                  : loadError
-                    ? "Could not load playlists"
-                    : "Choose a playlist and it starts in the background"}
-              </div>
+        <div className="relative z-20 w-[min(86vw,320px)] rounded-[26px] border border-white/12 bg-[linear-gradient(180deg,rgba(20,20,20,0.94),rgba(8,8,8,0.94))] p-3 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,139,100,0.16),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(59,199,196,0.12),transparent_34%)]" />
+          <div className="relative space-y-3">
+            <div ref={playlistMenuRef} className="relative">
+              <button
+                type="button"
+                aria-label="Select playlist"
+                aria-expanded={playlistMenuOpen}
+                onClick={() => {
+                  if (loading || playlists.length === 0) return;
+                  setPlaylistMenuOpen((current) => !current);
+                }}
+                disabled={loading || playlists.length === 0}
+                className="flex w-full items-center justify-between rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-left text-sm font-medium text-white outline-none transition hover:bg-white/[0.09] focus:border-[#FF8B64] focus:bg-white/[0.09] disabled:opacity-50"
+              >
+                <span className="truncate">
+                  {loading
+                    ? "Loading playlists..."
+                    : loadError
+                      ? "Could not load playlists"
+                      : selectedPlaylistName || "No playlists"}
+                </span>
+                <span className="ml-3 shrink-0 text-white/65">
+                  {playlistMenuOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                </span>
+              </button>
+
+              {playlistMenuOpen && playlists.length > 0 && (
+                <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-20 overflow-hidden rounded-2xl border border-white/12 bg-[#0B0B0B]/96 shadow-[0_18px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl">
+                  <div className="max-h-[min(18rem,45vh)] overflow-y-auto overscroll-contain p-1.5">
+                    {playlists.map((playlist) => {
+                      const selected = playlist.name === selectedPlaylistName;
+
+                      return (
+                        <button
+                          key={playlist.name}
+                          type="button"
+                          onClick={() => handlePlaylistChange(playlist.name)}
+                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                            selected
+                              ? "bg-white/[0.10] text-white"
+                              : "text-white/78 hover:bg-white/[0.06] hover:text-white"
+                          }`}
+                        >
+                          <span className="truncate">{playlist.name}</span>
+                          {selected && <span className="ml-3 h-2 w-2 rounded-full bg-white/90" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setEnabled((value) => !value)}
-              aria-label={enabled ? "Turn music off" : "Turn music on"}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/10"
-            >
-              {enabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-            </button>
-          </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleTogglePlayback}
+                aria-label={isPlaying ? "Pause music" : "Play music"}
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-white transition hover:bg-white/[0.12] disabled:opacity-50"
+                disabled={Boolean(loadError) || !selectedPlaylist}
+              >
+                {isPlaying ? <Pause size={17} /> : <Play size={17} />}
+              </button>
 
-          <div className="mt-3">
-            <label htmlFor="playlist-select" className="mb-1 block text-xs text-white/60">
-              Playlist
-            </label>
-            <select
-              id="playlist-select"
-              value={selectedUrl || playlists[0]?.spotifyUrl || ""}
-              disabled={loading || playlists.length === 0}
-              onChange={(event) => handlePlaylistChange(event.target.value)}
-              className="w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none transition focus:border-[#FF8B64]"
-            >
-              {playlists.map((playlist) => (
-                <option key={playlist.spotifyUrl} value={playlist.spotifyUrl}>
-                  {playlist.name}
-                </option>
-              ))}
-            </select>
+              <button
+                type="button"
+                onClick={handleSkipTrack}
+                aria-label="Skip track"
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-white transition hover:bg-white/[0.12] disabled:opacity-50"
+                disabled={Boolean(loadError) || !selectedPlaylist}
+              >
+                <SkipForward size={17} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -267,13 +292,44 @@ export default function BackgroundMusic() {
         onClick={() => setOpen((value) => !value)}
         aria-label={open ? "Hide music menu" : "Show music menu"}
         aria-expanded={open}
-        className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-[#0D0D0D]/70 px-3 text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition hover:bg-white/10"
+        className="group relative z-10 inline-flex items-center gap-1 rounded-full border border-white/12 bg-[linear-gradient(180deg,rgba(18,18,18,0.92),rgba(7,7,7,0.92))] py-1 pl-1.5 pr-1.5 text-white shadow-[0_18px_45px_rgba(0,0,0,0.38)] backdrop-blur-2xl transition hover:border-white/20 hover:shadow-[0_22px_55px_rgba(0,0,0,0.48)]"
       >
-        <Music4 size={17} />
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/80">
-          Music
+        <span className="relative inline-flex h-6 w-8 items-center justify-center rounded-full">
+          <span
+            className={`absolute inset-0 rounded-full bg-white/10 blur-[8px] ${
+              isPlaying && !loading && !loadError
+                ? "animate-[spotify-pulse_1.6s_ease-in-out_infinite]"
+                : "opacity-70"
+            }`}
+          />
+          <span
+            aria-hidden="true"
+            className="relative flex h-4 w-8 items-center justify-center gap-[1.5px]"
+          >
+            {[
+              18, 32, 22, 42, 50, 34, 18, 30, 20,
+            ].map((height, index) => (
+              <span
+                key={`${height}-${index}`}
+                className={`w-[2.5px] rounded-full ${
+                  isPlaying && !loading && !loadError
+                    ? "animate-[music-wave_1.1s_ease-in-out_infinite]"
+                    : ""
+                }`}
+                style={{
+                  height: `${height * 0.22}px`,
+                  animationDelay: `${index * 0.06}s`,
+                  opacity: isPlaying && !loading && !loadError ? 1 : 0.72,
+                  background: "rgba(255,255,255,0.95)",
+                  boxShadow: "0 0 10px rgba(255,255,255,0.08)",
+                }}
+              />
+            ))}
+          </span>
         </span>
-        {open ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-white/78 transition group-hover:bg-white/[0.09] group-hover:text-white">
+          {open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+        </span>
       </button>
     </div>
   );
