@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { deleteProductAsset, uploadProductAsset } from "@/app/lib/product-assets";
+import { ensureProductTaxonomyValues } from "@/app/lib/product-taxonomy";
 import { getProducts, removeProduct, upsertProduct } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 
@@ -117,6 +118,11 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const category = slugifyFolder(categoryRaw);
     const subCategory = slugifyFolder(subCategoryRaw);
     const modelBase = safeModelBaseName(slug, id);
+
+    await ensureProductTaxonomyValues({
+      categories: [category],
+      subCategories: [subCategory],
+    });
 
     const products = await getProducts();
     const idx = products.findIndex((p) => p.id === id);

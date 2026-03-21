@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 const DEFAULT_CATEGORIES = [
-  "new-arrivals",
   "keychains",
-  "tools",
   "accessories",
   "desk-add-ons",
   "fanboys",
@@ -46,6 +44,14 @@ async function readJsonSafe(res: Response) {
 type ProductOptionRow = {
   category?: unknown;
   subCategory?: unknown;
+};
+
+type ProductOptionsResponse = {
+  products?: ProductOptionRow[];
+  options?: {
+    categories?: unknown;
+    subCategories?: unknown;
+  };
 };
 
 export default function AdminProductForm() {
@@ -112,11 +118,17 @@ export default function AdminProductForm() {
       try {
         const res = await fetch("/api/admin/products", { cache: "no-store" });
         if (!res.ok) return;
-        const data = await readJsonSafe(res);
+        const data = (await readJsonSafe(res)) as ProductOptionsResponse | null;
         if (cancelled) return;
 
         const products: ProductOptionRow[] = Array.isArray(data?.products)
           ? data.products
+          : [];
+        const optionCategories = Array.isArray(data?.options?.categories)
+          ? data.options.categories.filter((value): value is string => typeof value === "string")
+          : [];
+        const optionSubCategories = Array.isArray(data?.options?.subCategories)
+          ? data.options.subCategories.filter((value): value is string => typeof value === "string")
           : [];
         const dbCategories = products
           .map((p) => (typeof p?.category === "string" ? p.category : ""))
@@ -125,8 +137,12 @@ export default function AdminProductForm() {
           .map((p) => (typeof p?.subCategory === "string" ? p.subCategory : ""))
           .filter(Boolean);
 
-        setCategories((prev) => mergeUnique([...prev, ...dbCategories]));
-        setSubCategories((prev) => mergeUnique([...prev, ...dbSubCategories]));
+        setCategories((prev) =>
+          mergeUnique([...prev, ...optionCategories, ...dbCategories])
+        );
+        setSubCategories((prev) =>
+          mergeUnique([...prev, ...optionSubCategories, ...dbSubCategories])
+        );
       } catch {
         // keep defaults if the options fetch fails
       }
@@ -156,7 +172,6 @@ export default function AdminProductForm() {
   // Auto ID from category + subCategory
   useEffect(() => {
     fetchNextId(category, subCategory);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, subCategory]);
 
   async function regenerateId() {
@@ -164,24 +179,63 @@ export default function AdminProductForm() {
     await fetchNextId(category, subCategory);
   }
 
-  function addCategory() {
+  async function persistTaxonomy(input: {
+    categories?: string[];
+    subCategories?: string[];
+  }) {
+    const res = await fetch("/api/admin/product-taxonomy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const data = await readJsonSafe(res);
+    if (!res.ok) throw new Error(data?.error || "Failed to save taxonomy");
+
+    const nextCategories = Array.isArray(data?.options?.categories)
+      ? data.options.categories.filter((value: unknown): value is string => typeof value === "string")
+      : [];
+    const nextSubCategories = Array.isArray(data?.options?.subCategories)
+      ? data.options.subCategories.filter((value: unknown): value is string => typeof value === "string")
+      : [];
+
+    if (nextCategories.length > 0) {
+      setCategories((prev) => mergeUnique([...prev, ...nextCategories]));
+    }
+    if (nextSubCategories.length > 0) {
+      setSubCategories((prev) => mergeUnique([...prev, ...nextSubCategories]));
+    }
+  }
+
+  async function addCategory() {
     const v = slugify(newCategory);
     if (!v) return;
 
-    setCategories((prev) => mergeUnique([...prev, v]));
-    setCategory(v);
-    setNewCategory("");
-    setMsg(`Category added: ${v}`);
+    setMsg(null);
+    try {
+      await persistTaxonomy({ categories: [v] });
+      setCategories((prev) => mergeUnique([...prev, v]));
+      setCategory(v);
+      setNewCategory("");
+      setMsg(`Category added: ${v}`);
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Failed to add category");
+    }
   }
 
-  function addSubCategory() {
+  async function addSubCategory() {
     const v = slugify(newSubCategory);
     if (!v) return;
 
-    setSubCategories((prev) => mergeUnique([...prev, v]));
-    setSubCategory(v);
-    setNewSubCategory("");
-    setMsg(`Sub-category added: ${v}`);
+    setMsg(null);
+    try {
+      await persistTaxonomy({ subCategories: [v] });
+      setSubCategories((prev) => mergeUnique([...prev, v]));
+      setSubCategory(v);
+      setNewSubCategory("");
+      setMsg(`Sub-category added: ${v}`);
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Failed to add sub-category");
+    }
   }
 
   function removeImageAt(index: number) {
@@ -286,8 +340,8 @@ export default function AdminProductForm() {
       setModelFile(null);
 
       await regenerateId();
-    } catch (err: any) {
-      setMsg(err?.message || "Error");
+    } catch (err: unknown) {
+      setMsg(err instanceof Error ? err.message : "Error");
     } finally {
       setBusy(false);
     }

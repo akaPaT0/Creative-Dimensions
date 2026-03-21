@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { uploadProductAsset } from "@/app/lib/product-assets";
+import { ensureProductTaxonomyValues } from "@/app/lib/product-taxonomy";
 import { getProducts, upsertProduct } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 
@@ -102,6 +103,11 @@ export async function POST(req: Request) {
     if (existing.some((p) => p.id === id)) {
       return json({ error: `Product id already exists: ${id}` }, 409);
     }
+
+    await ensureProductTaxonomyValues({
+      categories: [category],
+      subCategories: [subCategory],
+    });
 
     const images: string[] = [];
     for (let i = 0; i < files.length; i++) {

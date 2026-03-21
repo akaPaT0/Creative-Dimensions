@@ -20,11 +20,7 @@ function getCardImage(p: Product) {
 
 export default async function Page() {
   const products = await getProducts();
-  const deskAddOns = products.filter((p) => p.category === "desk-add-ons");
-  const hasAnySubCats = deskAddOns.some((p) => Boolean(p.subCategory));
-  const list = hasAnySubCats
-    ? deskAddOns.filter((p) => Boolean(p.subCategory))
-    : deskAddOns;
+  const list = products.filter((p) => p.category === "desk-add-ons");
 
   return (
     <div className="relative min-h-screen">

@@ -4,8 +4,8 @@ import { SITE_URL } from "@/app/lib/site";
 
 const PRODUCT_ROUTE_CATEGORIES = new Set([
   "keychains",
+  "accessories",
   "fanboys",
-  "new-arrivals",
   "desk-add-ons",
 ]);
 const STATIC_ROUTES = [
@@ -18,7 +18,6 @@ const STATIC_ROUTES = [
   "/shop/new-arrivals",
   "/shop/accessories",
   "/shop/desk-add-ons",
-  "/shop/tools",
 ];
 
 export const revalidate = 3600;

@@ -80,8 +80,7 @@ export default async function Shop() {
     products,
     {
       keychains: 2,
-      tools: 1,
-      accessories: 1,
+      accessories: 2,
       "desk-add-ons": 1,
       fanboys: 1,
     },
@@ -132,12 +131,6 @@ export default async function Shop() {
               title: "Keychains",
               desc: "Clean, custom, gift-ready.",
               href: "/shop/keychains",
-              featured: false,
-            },
-            {
-              title: "Tools",
-              desc: "Maker essentials and workshop gear.",
-              href: "/shop/tools",
               featured: false,
             },
             {
