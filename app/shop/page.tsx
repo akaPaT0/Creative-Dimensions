@@ -173,7 +173,6 @@ export default async function Shop() {
                   </div>
                   <div className="mt-1 text-sm text-white/65">{c.desc}</div>
                 </div>
-                <span className="text-white/40 group-hover:text-white/70 transition">-&gt;</span>
               </div>
             </Link>
           ))}
