@@ -6,6 +6,8 @@ import Footer from "../../components/Footer";
 import Background from "../../components/Background";
 import { getShopProducts as getProducts } from "../../lib/products-db";
 
+export const revalidate = 300;
+
 // ✅ CHANGE THESE 3
 const CATEGORY = "tools"; // tools | accessories | new-arrivals | etc...
 const TITLE = "Tools";

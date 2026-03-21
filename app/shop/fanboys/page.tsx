@@ -9,6 +9,8 @@ import { getShopProducts as getProducts } from "../../lib/products-db";
 import LikeIconButton from "../../components/LikeIconButton";
 import WishlistIconButton from "../../components/WishlistIconButton";
 
+export const revalidate = 300;
+
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
   if (typeof p.image === "string" && p.image) return p.image;
