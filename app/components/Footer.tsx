@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Instagram, MessageCircle, Phone } from "lucide-react";
+import { Instagram, Mail, MessageCircle, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -47,6 +46,15 @@ export default function Footer() {
             >
               <Phone size={18} />
               <span className="hidden sm:inline">Call</span>
+            </a>
+
+            <a
+              href="mailto:info@creativedimensionslb.com"
+              aria-label="Email"
+              className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl border border-white/15 bg-transparent text-white/85 text-sm hover:bg-white/10 transition"
+            >
+              <Mail size={18} />
+              <span className="hidden sm:inline">Email</span>
             </a>
           </div>
         </div>
