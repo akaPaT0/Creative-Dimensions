@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { getProductTaxonomyOptions } from "@/app/lib/product-taxonomy";
 import { getProducts } from "@/app/lib/products-db";
 
 function json(res: unknown, status = 200) {
@@ -32,7 +33,8 @@ export async function GET() {
     if (!admin.ok) return admin.res;
 
     const products = await getProducts();
-    return json({ ok: true, products });
+    const options = await getProductTaxonomyOptions(products);
+    return json({ ok: true, products, options });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load products";
     return json({ error: message }, 500);

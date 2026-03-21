@@ -42,6 +42,8 @@ function mergeUnique(values: string[]) {
 export default function AdminProductsManager() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState<string[]>([]);
   const [q, setQ] = useState("");
 
   const [editing, setEditing] = useState<Product | null>(null);
@@ -57,8 +59,23 @@ export default function AdminProductsManager() {
       const data = await r.json();
       if (!r.ok) throw new Error(data?.error || "Failed to load");
       setProducts(data.products || []);
-    } catch (e: any) {
-      setMsg(e?.message || "Error");
+      const productCategories = (data.products || [])
+        .map((product: Product) => product.category || "")
+        .filter(Boolean);
+      const productSubCategories = (data.products || [])
+        .map((product: Product) => product.subCategory || "")
+        .filter(Boolean);
+      const nextCategories = Array.isArray(data?.options?.categories)
+        ? data.options.categories.filter((value: unknown): value is string => typeof value === "string")
+        : [];
+      const nextSubCategories = Array.isArray(data?.options?.subCategories)
+        ? data.options.subCategories.filter((value: unknown): value is string => typeof value === "string")
+        : [];
+
+      setCategoryOptions(mergeUnique([...productCategories, ...nextCategories]));
+      setSubCategoryOptions(mergeUnique([...productSubCategories, ...nextSubCategories]));
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Error");
     } finally {
       setLoading(false);
     }
@@ -90,15 +107,6 @@ export default function AdminProductsManager() {
       categoriesCount: categories.size,
     };
   }, [products]);
-
-  const categoryOptions = useMemo(
-    () => mergeUnique(products.map((p) => p.category)),
-    [products]
-  );
-  const subCategoryOptions = useMemo(
-    () => mergeUnique(products.map((p) => p.subCategory || "")),
-    [products]
-  );
 
   return (
     <section
@@ -310,16 +318,22 @@ function EditModal({
   const [featured, setFeatured] = useState(!!product.featured);
 
   // ✅ Existing images you can reorder/remove
-  const initialExistingImages =
-    (product.images && product.images.length
-      ? product.images
-      : product.image
-        ? [product.image]
-        : []) as string[];
+  const initialExistingImages = useMemo(
+    () =>
+      (product.images && product.images.length
+        ? product.images
+        : product.image
+          ? [product.image]
+          : []) as string[],
+    [product.image, product.images]
+  );
   const [existingImages, setExistingImages] = useState<string[]>(initialExistingImages);
 
   // ✅ FIX: only send imagesOrder if user actually changed it
-  const initialImagesOrderStr = useMemo(() => JSON.stringify(initialExistingImages), []);
+  const initialImagesOrderStr = useMemo(
+    () => JSON.stringify(initialExistingImages),
+    [initialExistingImages]
+  );
 
   // Optional: uploading new files replaces old images (backend handles deletion)
   const [images, setImages] = useState<File[]>([]);
@@ -382,8 +396,8 @@ function EditModal({
       if (!r.ok) throw new Error(data?.error || "Failed to save");
 
       await onSaved();
-    } catch (e: any) {
-      setMsg(e?.message || "Error");
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Error");
     } finally {
       setBusy(false);
     }
@@ -539,7 +553,7 @@ function EditModal({
             Current model: {product.customizeColors?.modelUrl || "none"}
           </p>
           <p className="text-white/40 text-xs mt-1">
-            Local path: <code>{targetModelPath.replace(/^\/+/, "")}</code>
+            Storage path: <code>{`product_images/${targetModelPath.replace(/^\/+/, "")}`}</code>
           </p>
           {modelFile && (
             <p className="text-white/60 text-xs mt-1">New model: {modelFile.name}</p>
@@ -604,8 +618,8 @@ function ConfirmDelete({
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data?.error || "Failed to delete");
       await onDeleted();
-    } catch (e: any) {
-      setMsg(e?.message || "Error");
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Error");
     } finally {
       setBusy(false);
     }
@@ -632,7 +646,7 @@ function ConfirmDelete({
           Are you sure you want to delete <span className="font-semibold">{product.name}</span>?
         </p>
         <p className="text-white/50 text-sm">
-          This removes it from the product DB and deletes related local files.
+          This removes it from the product DB and deletes related product assets.
         </p>
         {msg && <p className="text-red-200/80 text-sm">{msg}</p>}
       </div>

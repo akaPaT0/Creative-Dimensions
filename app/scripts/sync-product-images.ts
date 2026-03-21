@@ -30,6 +30,7 @@ type ProductRow = {
   slug?: string;
   category?: string;
   subCategory?: string;
+  images?: string | null;
 };
 
 function asText(value: unknown) {
@@ -52,10 +53,59 @@ function normalizeForMatch(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, "-");
 }
 
+function parseStoredImages(value: unknown) {
+  if (typeof value !== "string") {
+    return { image: "", images: [] as string[], customizeColors: undefined as unknown };
+  }
+
+  const raw = value.trim();
+  if (!raw) {
+    return { image: "", images: [] as string[], customizeColors: undefined as unknown };
+  }
+
+  if (raw.startsWith("{") && raw.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const images = Array.isArray(parsed.images)
+        ? parsed.images.filter(
+            (entry): entry is string => typeof entry === "string" && entry.trim().length > 0
+          )
+        : [];
+      const image = typeof parsed.image === "string" ? parsed.image.trim() : "";
+      return {
+        image,
+        images,
+        customizeColors: parsed.customizeColors,
+      };
+    } catch {
+      return { image: "", images: [] as string[], customizeColors: undefined as unknown };
+    }
+  }
+
+  return { image: "", images: [] as string[], customizeColors: undefined as unknown };
+}
+
+function serializeStoredImages(
+  imageUrls: string[],
+  existing: { image: string; customizeColors: unknown }
+) {
+  if (!existing.image && typeof existing.customizeColors === "undefined") {
+    return JSON.stringify(imageUrls);
+  }
+
+  return JSON.stringify({
+    images: imageUrls,
+    ...(existing.image ? { image: existing.image } : {}),
+    ...(typeof existing.customizeColors !== "undefined"
+      ? { customizeColors: existing.customizeColors }
+      : {}),
+  });
+}
+
 async function main() {
   const { data: products, error } = await supabaseAdmin
     .from(PRODUCTS_TABLE)
-    .select("SKU, slug, category, subCategory");
+    .select("SKU, slug, category, subCategory, images");
 
   if (error) {
     throw new Error(`Failed to load products: ${error.message}`);
@@ -75,6 +125,7 @@ async function main() {
     const slug = normalizeForMatch(slugRaw);
     const category = asText(raw.category).toLowerCase();
     const subCategory = asText(raw.subCategory).toLowerCase();
+    const existingImages = parseStoredImages(raw.images);
 
     if (!sku || !slug || !category || !subCategory) {
       console.log(`Skipping missing fields: SKU=${sku}, slug=${slugRaw}`);
@@ -123,7 +174,10 @@ async function main() {
     const { error: updateError } = await supabaseAdmin
       .from(PRODUCTS_TABLE)
       .update({
-        images: JSON.stringify(imageUrls),
+        images: serializeStoredImages(imageUrls, {
+          image: existingImages.image,
+          customizeColors: existingImages.customizeColors,
+        }),
       })
       .eq("SKU", sku);
 

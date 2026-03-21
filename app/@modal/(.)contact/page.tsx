@@ -69,6 +69,17 @@ export default function ContactModalRoute() {
               </div>
             </a>
 
+            {/* Email */}
+            <a
+              className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"
+              href="mailto:info@creativedimensionslb.com"
+            >
+              Email: <span className="text-white/80">info@creativedimensionslb.com</span>
+              <div className="mt-1 text-white/60 text-sm">
+                Tap to open your email app.
+              </div>
+            </a>
+
             {/* Instagram */}
             <a
               className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"

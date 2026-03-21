@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getProducts, saveProducts } from "@/app/lib/products-db";
-import { deletePublicAsset, saveFileToPublic } from "@/app/lib/local-assets";
+import { deleteProductAsset, uploadProductAsset } from "@/app/lib/product-assets";
+import { ensureProductTaxonomyValues } from "@/app/lib/product-taxonomy";
+import { getProducts, removeProduct, upsertProduct } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 
 function json(res: unknown, status = 200) {
@@ -58,7 +59,7 @@ function parseStringArray(raw: string) {
 async function safeDelete(url: string) {
   if (!url) return;
   try {
-    await deletePublicAsset(url);
+    await deleteProductAsset(url);
   } catch {
     // ignore delete failures
   }
@@ -118,12 +119,22 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const subCategory = slugifyFolder(subCategoryRaw);
     const modelBase = safeModelBaseName(slug, id);
 
+    await ensureProductTaxonomyValues({
+      categories: [category],
+      subCategories: [subCategory],
+    });
+
     const products = await getProducts();
     const idx = products.findIndex((p) => p.id === id);
     if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
 
     const prev = products[idx];
-    const prevImages = Array.isArray(prev.images) ? prev.images : [];
+    const prevImages =
+      Array.isArray(prev.images) && prev.images.length > 0
+        ? prev.images
+        : prev.image
+          ? [prev.image]
+          : [];
     const prevModelUrl = prev.customizeColors?.modelUrl || "";
 
     let nextImages = prevImages;
@@ -133,10 +144,13 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
         const file = imageFiles[i];
         const ext = guessImageExt(file.name, file.type);
         const assetPath = `products/${category}/${subCategory}/${slug}-${i + 1}.${ext}`;
-        const localUrl = await saveFileToPublic(assetPath, file, { addRandomSuffix: false });
-        uploaded.push(localUrl);
+        const assetUrl = await uploadProductAsset(assetPath, file, { addRandomSuffix: false });
+        uploaded.push(assetUrl);
       }
-      for (const oldUrl of prevImages) await safeDelete(oldUrl);
+      const uploadedSet = new Set(uploaded);
+      for (const oldUrl of prevImages) {
+        if (!uploadedSet.has(oldUrl)) await safeDelete(oldUrl);
+      }
       nextImages = uploaded;
     } else if (imagesOrderRaw) {
       const ordered = parseStringArray(imagesOrderRaw);
@@ -153,7 +167,10 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     let nextCustomizeColors = prev.customizeColors;
     if (modelFile) {
       const assetPath = `models/${category}/${subCategory}/${modelBase}.glb`;
-      const modelUrl = await saveFileToPublic(assetPath, modelFile, { addRandomSuffix: true });
+      const modelUrl = await uploadProductAsset(assetPath, modelFile, {
+        addRandomSuffix: false,
+        contentType: modelFile.type || "model/gltf-binary",
+      });
       if (prevModelUrl && prevModelUrl !== modelUrl) await safeDelete(prevModelUrl);
       nextCustomizeColors = {
         modelUrl,
@@ -180,9 +197,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       ...(nextCustomizeColors ? { customizeColors: nextCustomizeColors } : {}),
     };
 
-    const next = [...products];
-    next[idx] = updated;
-    await saveProducts(next);
+    await upsertProduct(updated);
 
     return json({ ok: true, product: updated });
   } catch (error) {
@@ -197,16 +212,16 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     if (!admin.ok) return admin.res;
     const { id } = await ctx.params;
 
-    const products = await getProducts();
-    const idx = products.findIndex((p) => p.id === id);
-    if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
+    const target = await removeProduct(id);
+    if (!target) return json({ error: `Product not found: ${id}` }, 404);
 
-    const target = products[idx];
-    const next = [...products];
-    next.splice(idx, 1);
-    await saveProducts(next);
-
-    for (const url of target.images || []) await safeDelete(url);
+    const imageUrls =
+      Array.isArray(target.images) && target.images.length > 0
+        ? target.images
+        : target.image
+          ? [target.image]
+          : [];
+    for (const url of imageUrls) await safeDelete(url);
     if (target.customizeColors?.modelUrl) await safeDelete(target.customizeColors.modelUrl);
 
     return json({ ok: true });

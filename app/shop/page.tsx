@@ -10,6 +10,8 @@ import CustomRequestModal from "../components/CustomRequestModal";
 import { getShopProducts as getProducts } from "../lib/products-db";
 import ShopCatalogClient from "./ShopCatalogClient";
 
+export const dynamic = "force-dynamic";
+
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
   if (typeof p.image === "string" && p.image) return p.image;
@@ -78,8 +80,7 @@ export default async function Shop() {
     products,
     {
       keychains: 2,
-      tools: 1,
-      accessories: 1,
+      accessories: 2,
       "desk-add-ons": 1,
       fanboys: 1,
     },
@@ -130,12 +131,6 @@ export default async function Shop() {
               title: "Keychains",
               desc: "Clean, custom, gift-ready.",
               href: "/shop/keychains",
-              featured: false,
-            },
-            {
-              title: "Tools",
-              desc: "Maker essentials and workshop gear.",
-              href: "/shop/tools",
               featured: false,
             },
             {

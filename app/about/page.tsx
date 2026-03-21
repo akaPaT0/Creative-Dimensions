@@ -167,6 +167,15 @@ export default function AboutPage() {
                 @creativedimensions.lb
               </a>
             </p>
+            <p className="mt-1">
+              Email:{" "}
+              <a
+                href="mailto:info@creativedimensionslb.com"
+                className="text-white/80 hover:text-white transition"
+              >
+                info@creativedimensionslb.com
+              </a>
+            </p>
             <p className="mt-1">WhatsApp / Call: +961 70 304 007</p>
           </div>
         </div>
