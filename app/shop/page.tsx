@@ -10,7 +10,7 @@ import CustomRequestModal from "../components/CustomRequestModal";
 import { getShopProducts as getProducts } from "../lib/products-db";
 import ShopCatalogClient from "./ShopCatalogClient";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
