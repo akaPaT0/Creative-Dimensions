@@ -159,6 +159,7 @@ export default async function KeychainSlugPage({
     slug: x.slug,
     name: x.name,
     image: getCardImage(x),
+    href: `/shop/${encodeURIComponent(x.category)}/${encodeURIComponent(x.slug)}`,
   }));
 
   const productUrl = `${SITE_URL}/shop/keychains/${encodeURIComponent(p.slug)}`;

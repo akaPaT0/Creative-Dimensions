@@ -9,6 +9,7 @@ type Item = {
   slug: string;
   name: string;
   image: string;
+  href?: string;
 };
 
 export default function RecommendedRow({ items }: { items: Item[] }) {
@@ -61,7 +62,7 @@ export default function RecommendedRow({ items }: { items: Item[] }) {
           {items.map((x) => (
             <Link
               key={x.id ?? x.slug}
-              href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
+              href={x.href || `/shop/keychains/${encodeURIComponent(x.slug)}`}
               className="
                 group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2
                 shrink-0 snap-start

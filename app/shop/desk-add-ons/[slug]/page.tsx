@@ -164,6 +164,7 @@ export default async function DeskAddOnsSlugPage({
     slug: x.slug,
     name: x.name,
     image: getCardImage(x),
+    href: `/shop/${encodeURIComponent(x.category)}/${encodeURIComponent(x.slug)}`,
   }));
 
   const productUrl = `${SITE_URL}/shop/desk-add-ons/${encodeURIComponent(p.slug)}`;
