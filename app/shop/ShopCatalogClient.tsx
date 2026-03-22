@@ -507,7 +507,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           <Link
             key={getStableKey(p)}
             href={getProductHref(p)}
-            className="group rounded-2xl border border-white/10 bg-black/20 p-5 hover:bg-black/30 transition"
+            className="group rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5 hover:bg-black/30 transition"
           >
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
               <Image
@@ -526,16 +526,16 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
                 </div>
               </div>
 
-              <div className="shrink-0 text-white/80 text-sm sm:text-right">
+              <div className="hidden shrink-0 text-white/80 text-sm sm:block sm:text-right">
                 {getPriceLabel(p)}
               </div>
             </div>
 
-            <div className="mt-2 text-sm text-white/60 line-clamp-2">
+            <div className="mt-2 hidden text-sm text-white/60 line-clamp-2 sm:block">
               {getDesc(p)}
             </div>
 
-            <div className="mt-2 text-xs text-white/45">
+            <div className="mt-2 hidden text-xs text-white/45 sm:block">
               {p.category}
               {p.subCategory ? ` / ${p.subCategory}` : ""}
             </div>
