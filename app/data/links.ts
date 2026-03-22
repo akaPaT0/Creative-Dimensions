@@ -109,6 +109,13 @@ export const savedLinks: SavedLink[] = [
   category: "Development",
   tags: ["supabase", "database", "backend", "auth", "storage", "development"],
 },
+{
+  title: "SpotiDown",
+  description: "Spotify downloader",
+  url: "https://spotidown.co/",
+  category: "Media",
+  tags: ["spotidown", "spotify", "music", "download", "audio", "media"],
+},
 
 
 ];
