@@ -116,6 +116,13 @@ export const savedLinks: SavedLink[] = [
   category: "Media",
   tags: ["spotidown", "spotify", "music", "download", "audio", "media"],
 },
+{
+  title: "OpenArt Kling 2.6",
+  description: "AI video animation",
+  url: "https://openart.ai/suite/animate-video/kling2-6",
+  category: "AI",
+  tags: ["openart", "kling", "kling 2.6", "ai", "video", "animation", "generate"],
+},
 
 
 ];
