@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SITE_URL } from "@/app/lib/site";
 import BackgroundMusic from "@/app/components/BackgroundMusic";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,6 +77,7 @@ export default function RootLayout({
           />
           {children}
           {modal}
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
