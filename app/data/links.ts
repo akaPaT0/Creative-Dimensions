@@ -109,6 +109,13 @@ export const savedLinks: SavedLink[] = [
   category: "Development",
   tags: ["supabase", "database", "backend", "auth", "storage", "development"],
 },
+{
+  title: "LS Graphics",
+  description: "Free iPhone mockup",
+  url: "https://www.ls.graphics/mockups/free-iphone-mockup?page=1",
+  category: "Assets",
+  tags: ["ls graphics", "iphone", "mockup", "device", "ui", "presentation", "assets"],
+},
 
 
 ];
