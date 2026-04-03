@@ -31,8 +31,8 @@ function normalizeProduct(input: unknown): Product | null {
   if (!input || typeof input !== "object") return null;
 
   const row = input as Record<string, unknown>;
-  const id = asText(row.id);
-  const name = asText(row.name);
+  const id = asText(row.id) || asText(row.SKU);
+  const name = asText(row.name) || asText(row.Name);
   const slug = asText(row.slug);
   const category = asText(row.category);
   const description = asText(row.description);
@@ -92,8 +92,8 @@ function normalizeProducts(raw: unknown): Product[] {
 
 function toDbRow(product: Product) {
   return {
-    id: product.id,
-    name: product.name,
+    SKU: product.id,
+    Name: product.name,
     slug: product.slug,
     category: product.category,
     subCategory: product.subCategory ?? null,
@@ -133,7 +133,7 @@ export async function saveProducts(products: Product[]) {
     const { error: deleteError } = await supabase
       .from(TABLE)
       .delete()
-      .in("id", idsToDelete);
+      .in("SKU", idsToDelete);
 
     if (deleteError) {
       throw deleteError;
@@ -146,7 +146,7 @@ export async function saveProducts(products: Product[]) {
 
   const { error: upsertError } = await supabase
     .from(TABLE)
-    .upsert(rows, { onConflict: "id" });
+    .upsert(rows, { onConflict: "SKU" });
 
   if (upsertError) {
     throw upsertError;
@@ -158,7 +158,7 @@ export async function upsertProduct(product: Product) {
 
   const { error } = await supabase
     .from(TABLE)
-    .upsert(row, { onConflict: "id" });
+    .upsert(row, { onConflict: "SKU" });
 
   if (error) {
     throw error;
@@ -171,7 +171,7 @@ export async function removeProduct(productId: string) {
   const all = await getProducts();
   const target = all.find((x) => x.id === productId) || null;
 
-  const { error } = await supabase.from(TABLE).delete().eq("id", productId);
+  const { error } = await supabase.from(TABLE).delete().eq("SKU", productId);
 
   if (error) {
     throw error;
