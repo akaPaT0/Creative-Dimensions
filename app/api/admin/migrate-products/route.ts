@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { products as snapshotProducts, type Product } from "@/app/data/products";
 import { getProductsFromDb, saveProducts } from "@/app/lib/products-db";
+import { uploadPublicAsset as uploadToStorage } from "@/app/lib/supabase/storage";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -49,13 +49,13 @@ async function uploadPublicAsset(assetPath: string, cache: Map<string, string>) 
 
   const absolutePath = path.join(process.cwd(), "public", clean);
   const content = await readFile(absolutePath);
-  const blob = await put(clean, content, {
-    access: "public",
-    addRandomSuffix: false,
+  const uploaded = await uploadToStorage({
+    path: clean,
+    bytes: content,
     contentType: guessContentType(clean),
   });
-  cache.set(clean, blob.url);
-  return blob.url;
+  cache.set(clean, uploaded);
+  return uploaded;
 }
 
 export async function POST(req: Request) {

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { del, put } from "@vercel/blob";
 import { getProducts, saveProducts } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
+import { deletePublicAssetByUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -58,7 +58,7 @@ function parseStringArray(raw: string) {
 async function safeDelete(url: string) {
   if (!url) return;
   try {
-    await del(url);
+    await deletePublicAssetByUrl(url);
   } catch {
     // ignore delete failures
   }
@@ -132,14 +132,13 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       for (let i = 0; i < imageFiles.length; i++) {
         const file = imageFiles[i];
         const ext = guessImageExt(file.name, file.type);
-        const blobPath = `products/${category}/${subCategory}/${slug}-${i + 1}.${ext}`;
-        const result = await put(blobPath, file, {
-          access: "public",
-          addRandomSuffix: false,
-          allowOverwrite: true,
+        const assetPath = `${category}/${subCategory}/${slug}-${String(i + 1).padStart(3, "0")}.${ext}`;
+        const result = await uploadPublicAsset({
+          path: assetPath,
+          file,
           contentType: file.type || undefined,
         });
-        uploaded.push(result.url);
+        uploaded.push(result);
       }
       for (const oldUrl of prevImages) await safeDelete(oldUrl);
       nextImages = uploaded;
@@ -157,16 +156,15 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 
     let nextCustomizeColors = prev.customizeColors;
     if (modelFile) {
-      const blobPath = `models/${category}/${subCategory}/${modelBase}.glb`;
-      const uploaded = await put(blobPath, modelFile, {
-        access: "public",
-        addRandomSuffix: true,
-        allowOverwrite: true,
+      const modelPath = `models/${category}/${subCategory}/${modelBase}.glb`;
+      const uploaded = await uploadPublicAsset({
+        path: modelPath,
+        file: modelFile,
         contentType: "model/gltf-binary",
       });
-      if (prevModelUrl && prevModelUrl !== uploaded.url) await safeDelete(prevModelUrl);
+      if (prevModelUrl && prevModelUrl !== uploaded) await safeDelete(prevModelUrl);
       nextCustomizeColors = {
-        modelUrl: uploaded.url,
+        modelUrl: uploaded,
         defaultHexes:
           prev.customizeColors?.defaultHexes && prev.customizeColors.defaultHexes.length
             ? prev.customizeColors.defaultHexes

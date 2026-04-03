@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
 import { getProducts, saveProducts } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
+import { uploadPublicAsset } from "@/app/lib/supabase/storage";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -107,27 +107,25 @@ export async function POST(req: Request) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const ext = guessImageExt(file.name, file.type);
-      const blobPath = `products/${category}/${subCategory}/${slug}-${i + 1}.${ext}`;
-      const uploaded = await put(blobPath, file, {
-        access: "public",
-        addRandomSuffix: false,
-        allowOverwrite: true,
+      const assetPath = `${category}/${subCategory}/${slug}-${String(i + 1).padStart(3, "0")}.${ext}`;
+      const uploaded = await uploadPublicAsset({
+        path: assetPath,
+        file,
         contentType: file.type || undefined,
       });
-      images.push(uploaded.url);
+      images.push(uploaded);
     }
 
     let modelUrl: string | undefined;
     if (modelFile) {
       const modelBase = safeModelBaseName(slug, id);
       const modelPath = `models/${category}/${subCategory}/${modelBase}.glb`;
-      const uploaded = await put(modelPath, modelFile, {
-        access: "public",
-        addRandomSuffix: true,
-        allowOverwrite: true,
+      const uploaded = await uploadPublicAsset({
+        path: modelPath,
+        file: modelFile,
         contentType: "model/gltf-binary",
       });
-      modelUrl = uploaded.url;
+      modelUrl = uploaded;
     }
 
     const product: Product = {

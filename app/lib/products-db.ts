@@ -7,6 +7,14 @@ function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function parseJsonSafe(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 function asNumber(value: unknown, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -17,10 +25,24 @@ function asNumber(value: unknown, fallback = 0) {
 }
 
 function asBool(value: unknown) {
-  return value === true;
+  return value === true || value === "true" || value === 1 || value === "1";
 }
 
 function asStringArray(value: unknown) {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [] as string[];
+
+    const parsed = parseJsonSafe(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((x) => (typeof x === "string" ? x.trim() : ""))
+        .filter(Boolean);
+    }
+
+    return [trimmed];
+  }
+
   if (!Array.isArray(value)) return [] as string[];
   return value
     .map((x) => (typeof x === "string" ? x.trim() : ""))
@@ -101,9 +123,7 @@ function toDbRow(product: Product) {
     description: product.description,
     isNew: product.isNew ?? false,
     featured: product.featured ?? false,
-    image: product.image ?? null,
-    images: product.images ?? [],
-    customizeColors: product.customizeColors ?? null,
+    images: JSON.stringify(product.images ?? []),
   };
 }
 

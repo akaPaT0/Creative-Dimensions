@@ -539,7 +539,7 @@ function EditModal({
             Current model: {product.customizeColors?.modelUrl || "none"}
           </p>
           <p className="text-white/40 text-xs mt-1">
-            Blob path: <code>{targetModelPath.replace(/^\/+/, "")}</code>
+            Storage path: <code>{targetModelPath.replace(/^\/+/, "")}</code>
           </p>
           {modelFile && (
             <p className="text-white/60 text-xs mt-1">New model: {modelFile.name}</p>
@@ -632,7 +632,7 @@ function ConfirmDelete({
           Are you sure you want to delete <span className="font-semibold">{product.name}</span>?
         </p>
         <p className="text-white/50 text-sm">
-          This removes it from the product DB and deletes related blob files.
+          This removes it from the product DB and deletes related storage files.
         </p>
         {msg && <p className="text-red-200/80 text-sm">{msg}</p>}
       </div>
