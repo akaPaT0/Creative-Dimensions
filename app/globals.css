@@ -50,3 +50,43 @@ body {
   animation: fadeUp 650ms ease-out both;
 }
 
+@keyframes featuredFlow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.flowing-products {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.flowing-products-track {
+  display: flex;
+  width: max-content;
+  gap: 1rem;
+  animation: featuredFlow 42s linear infinite;
+  will-change: transform;
+}
+
+.flowing-products:hover .flowing-products-track {
+  animation-play-state: paused;
+}
+
+@media (max-width: 1023px) {
+  .flowing-products-mobile {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowing-products-track {
+    animation: none;
+  }
+}
+
