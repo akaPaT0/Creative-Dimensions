@@ -4,8 +4,6 @@ import Footer from "../components/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { getProducts } from "../lib/products-db";
-import LikeIconButton from "../components/LikeIconButton";
-import WishlistIconButton from "../components/WishlistIconButton";
 import ShopCatalogClient from "../shop/ShopCatalogClient";
 import type { Product } from "../shop/ShopCatalogClient";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
@@ -95,15 +93,6 @@ export default async function TempHomePage() {
                           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                           sizes="(max-width: 1024px) 52vw, 200px"
                         />
-                        {!isClone && (
-                          <>
-                            <LikeIconButton
-                              productId={String(p.id)}
-                              positionClass="bottom-1 right-8"
-                            />
-                            <WishlistIconButton productId={String(p.id)} />
-                          </>
-                        )}
                       </div>
 
                       <div className="mt-2 grid min-h-[2.75rem] grid-cols-[1fr_auto] items-start gap-2">
@@ -143,15 +132,6 @@ export default async function TempHomePage() {
                           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                           sizes="340px"
                         />
-                        {!isClone && (
-                          <>
-                            <LikeIconButton
-                              productId={String(p.id)}
-                              positionClass="bottom-2 right-10"
-                            />
-                            <WishlistIconButton productId={String(p.id)} />
-                          </>
-                        )}
                       </div>
 
                       <div className="mt-4 grid min-h-[3rem] grid-cols-[1fr_auto] items-start gap-3">
