@@ -7,27 +7,8 @@ import { getProducts } from "../lib/products-db";
 import LikeIconButton from "../components/LikeIconButton";
 import WishlistIconButton from "../components/WishlistIconButton";
 import ShopCatalogClient from "../shop/ShopCatalogClient";
+import type { Product } from "../shop/ShopCatalogClient";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
-
-type Product = {
-  id?: string | number;
-  slug?: string;
-  category?: string;
-  subCategory?: string;
-  featured?: boolean;
-  name?: string;
-  title?: string;
-  label?: string;
-  priceUSD?: number;
-  price?: number | string;
-  currency?: string;
-  description?: string;
-  shortDesc?: string;
-  shortDescription?: string;
-  desc?: string;
-  image?: string;
-  images?: string[];
-};
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -71,7 +52,7 @@ function getStableKey(p: Product) {
 
 export default async function TempHomePage() {
   const products = await getProducts();
-  const featured = (products as Product[]).filter((p) => p.featured === true);
+  const featured = products.filter((p) => p.featured === true);
   const flowingFeatured = [...featured, ...featured];
 
   return (
@@ -189,7 +170,7 @@ export default async function TempHomePage() {
           </section>
         )}
 
-        <ShopCatalogClient products={products as Product[]} />
+        <ShopCatalogClient products={products} />
 
         <section className="mt-12 rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6 text-center">
           <p className="text-white/70 text-sm sm:text-base">

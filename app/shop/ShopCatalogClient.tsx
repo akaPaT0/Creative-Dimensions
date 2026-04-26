@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-type Product = {
+export type Product = {
   id?: string;
   name?: string;
   title?: string;
@@ -12,6 +12,7 @@ type Product = {
   slug: string;
   category: string;
   subCategory?: string;
+  featured?: boolean;
   priceUSD?: number;
   price?: number | string;
   currency?: string;
