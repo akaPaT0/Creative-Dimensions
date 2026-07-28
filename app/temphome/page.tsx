@@ -33,7 +33,7 @@ function getPriceLabel(p: Product) {
   const price = p.price ?? p.priceUSD;
   const currency = p.currency || "USD";
 
-  if (typeof price === "number") return `${price} ${currency}`;
+  if (typeof price === "number") return `$${price}`;
   if (typeof price === "string" && price.trim()) return price;
   return "DM for price";
 }
@@ -51,149 +51,106 @@ function getStableKey(p: Product) {
 export default async function TempHomePage() {
   const products = await getProducts();
   const featured = products.filter((p) => p.featured === true);
-  const flowingFeatured = [...featured, ...featured];
 
   return (
-    <main className="min-h-screen relative">
+    <main className="min-h-screen relative text-white">
       <Background />
       <Navbar />
 
-      <section className="relative z-10 mx-auto w-full max-w-[96rem] px-3 sm:px-4 lg:px-6 pt-20 sm:pt-24 lg:pt-28 pb-16">
+      <section className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20">
 
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="py-10 sm:py-14 text-center">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-[#FF8B64]/70 mb-3">
-            Creative Dimensions
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
-            Custom 3D Prints
-            <br className="sm:hidden" /> Made Different
+        {/* ── HERO (Matching Photoshop Design) ─────────────────────────── */}
+        <section className="text-center max-w-3xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+            Custom 3D Prints Made Different
           </h1>
-          <p className="mt-3 text-white/55 text-sm sm:text-base max-w-xs mx-auto">
-            Unique keychains, figurines &amp; accessories — printed on demand in Lebanon.
+
+          <p className="mt-4 text-white/60 text-sm sm:text-base lg:text-lg max-w-md mx-auto leading-relaxed">
+            Unique keychains, figurines &amp; accessories -
+            <br className="hidden sm:inline" /> printed on demand in Lebanon.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <a
               href="#all"
-              className="rounded-xl bg-[#FF8B64] px-6 py-3 text-sm font-semibold text-black hover:opacity-90 transition"
+              className="rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg"
             >
               Shop All
             </a>
+
             <TemphomeCustomRequestCta
-              className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
+              className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-[#232326] px-8 py-3.5 text-sm sm:text-base font-semibold text-[#FF8B64] hover:bg-[#2c2c30] transition"
               buttonLabel="Custom Request"
             />
           </div>
         </section>
 
+        {/* ── FEATURED CONTAINER (Matching Photoshop Design) ───────────── */}
         {featured.length > 0 && (
           <section
             id="featured"
-            className="rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-6"
+            className="mt-16 rounded-[28px] border border-white/10 bg-[#161618]/85 backdrop-blur-md p-6 sm:p-8"
           >
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
-              <h2 className="text-lg sm:text-xl font-semibold text-white">
-                Featured Products
-              </h2>
+            {/* Pill Badge */}
+            <div className="mb-6">
+              <span className="inline-flex items-center rounded-full bg-[#27272A] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#FF8B64] border border-white/5">
+                Featured
+              </span>
             </div>
 
-            <div className="flowing-products flowing-products-mobile mt-3 sm:mt-6 lg:hidden">
-              <div
-                className="flowing-products-track"
-                style={{ animationDuration: "34s" }}
-              >
-                {flowingFeatured.map((p: Product, index: number) => {
-                  const isClone = index >= featured.length;
-                  return (
-                    <Link
-                      key={`m-${getStableKey(p)}-${index}`}
-                      href={getProductHref(p)}
-                      aria-hidden={isClone}
-                      tabIndex={isClone ? -1 : 0}
-                      className="group shrink-0 w-[52vw] max-w-[200px] flex h-full flex-col rounded-xl border border-white/10 bg-black/20 p-2.5 hover:bg-black/30 transition"
-                    >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-white/5 border border-white/10">
-                        <Image
-                          src={getCardImage(p)}
-                          alt={getTitle(p)}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                          sizes="(max-width: 1024px) 52vw, 200px"
-                        />
-                      </div>
+            {/* Featured Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              {featured.slice(0, 5).map((p: Product) => (
+                <Link
+                  key={`f-${getStableKey(p)}`}
+                  href={getProductHref(p)}
+                  className="group flex flex-col rounded-2xl border border-white/5 bg-[#242427] p-3 hover:bg-[#2d2d31] hover:border-white/15 transition duration-200"
+                >
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#1A1A1C]">
+                    <Image
+                      src={getCardImage(p)}
+                      alt={getTitle(p)}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    />
+                  </div>
 
-                      <div className="mt-2 grid min-h-[2.75rem] grid-cols-[1fr_auto] items-start gap-2">
-                        <div className="min-w-0 min-h-[2.25rem] text-white text-xs sm:text-sm font-semibold leading-4 sm:leading-5 line-clamp-2">
-                          {getTitle(p)}
-                        </div>
-                        <div className="shrink-0 whitespace-nowrap pt-0.5 text-white/80 text-[11px] sm:text-xs">
-                          {getPriceLabel(p)}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flowing-products mt-4 hidden lg:block">
-              <div
-                className="flowing-products-track"
-                style={{ animationDuration: "42s" }}
-              >
-                {flowingFeatured.map((p: Product, index: number) => {
-                  const isClone = index >= featured.length;
-                  return (
-                    <Link
-                      key={`d-${getStableKey(p)}-${index}`}
-                      href={getProductHref(p)}
-                      aria-hidden={isClone}
-                      tabIndex={isClone ? -1 : 0}
-                      className="group shrink-0 w-[340px] flex h-full flex-col rounded-2xl border border-white/10 bg-black/20 p-4 hover:bg-black/30 transition"
-                    >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
-                        <Image
-                          src={getCardImage(p)}
-                          alt={getTitle(p)}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                          sizes="340px"
-                        />
-                      </div>
-
-                      <div className="mt-4 grid min-h-[3rem] grid-cols-[1fr_auto] items-start gap-3">
-                        <div className="min-w-0 min-h-[3rem] text-white font-semibold leading-6 line-clamp-2">
-                          {getTitle(p)}
-                        </div>
-                        <div className="shrink-0 whitespace-nowrap pt-1 text-white/80 text-sm">
-                          {getPriceLabel(p)}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+                  <div className="mt-3 flex flex-col justify-between flex-1">
+                    <div className="text-white text-xs font-semibold line-clamp-2 leading-snug group-hover:text-[#FF8B64] transition">
+                      {getTitle(p)}
+                    </div>
+                    <div className="mt-2 text-[#FF8B64] font-semibold text-xs">
+                      {getPriceLabel(p)}
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </section>
         )}
 
+        {/* ── ALL PRODUCTS CATALOG ───────────────────────────────────── */}
         <ShopCatalogClient products={products} />
 
-        <section className="mt-12 rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6 text-center">
-          <p className="text-white/70 text-sm sm:text-base">
-            Need a custom design or special print?
+        {/* ── CUSTOM REQUEST BANNER ───────────────────────────────────── */}
+        <section className="mt-16 rounded-[24px] border border-white/10 bg-[#161618]/85 p-8 text-center backdrop-blur-md">
+          <p className="text-white/80 text-base sm:text-lg font-medium">
+            Need a custom design or special 3D print?
           </p>
           <div className="mt-4">
             <TemphomeCustomRequestCta
-              className="inline-flex items-center justify-center rounded-xl bg-[#FF8B64] px-6 py-3 text-sm sm:text-base font-semibold text-black hover:opacity-90 transition"
+              className="inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-8 py-3 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
               buttonLabel="Custom request"
             />
           </div>
         </section>
 
-        <div className="mt-12">
+        {/* ── FOOTER ─────────────────────────────────────────────────── */}
+        <div className="mt-16">
           <Footer />
         </div>
+
       </section>
     </main>
   );
