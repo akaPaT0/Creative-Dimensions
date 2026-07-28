@@ -35,7 +35,7 @@ function getPriceLabel(p: Product) {
 
   if (typeof price === "number") return `$${price}`;
   if (typeof price === "string" && price.trim()) return price;
-  return "DM for price";
+  return "DM";
 }
 
 function getProductHref(p: Product) {
@@ -59,7 +59,7 @@ export default async function TempHomePage() {
 
       <section className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20">
 
-        {/* ── HERO (Matching Photoshop Design) ─────────────────────────── */}
+        {/* ── HERO ──────────────────────────────────────────────────────── */}
         <section className="text-center max-w-3xl mx-auto">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
             Custom 3D Prints Made Different
@@ -85,44 +85,42 @@ export default async function TempHomePage() {
           </div>
         </section>
 
-        {/* ── FEATURED CONTAINER (Matching Photoshop Design) ───────────── */}
+        {/* ── FEATURED CONTAINER (Matching Exact Photoshop Mockup) ─────── */}
         {featured.length > 0 && (
           <section
             id="featured"
-            className="mt-16 rounded-[28px] border border-white/10 bg-[#161618]/85 backdrop-blur-md p-6 sm:p-8"
+            className="mt-16 rounded-[28px] border border-white/10 bg-[#161618]/85 backdrop-blur-md p-5 sm:p-7"
           >
-            {/* Pill Badge */}
-            <div className="mb-6">
-              <span className="inline-flex items-center rounded-full bg-[#27272A] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#FF8B64] border border-white/5">
-                Featured
-              </span>
+            {/* Featured Pill Badge with Arrow */}
+            <div className="mb-5">
+              <a
+                href="#all"
+                className="inline-flex items-center gap-1 rounded-full bg-[#242427] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#FF8B64] border border-white/10 hover:border-white/20 transition"
+              >
+                <span>Featured</span>
+                <span>→</span>
+              </a>
             </div>
 
-            {/* Featured Cards Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {/* 1:1 Square Cards Grid (Image + Bottom-Right Price Overlay) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
               {featured.slice(0, 5).map((p: Product) => (
                 <Link
                   key={`f-${getStableKey(p)}`}
                   href={getProductHref(p)}
-                  className="group flex flex-col rounded-2xl border border-white/5 bg-[#242427] p-3 hover:bg-[#2d2d31] hover:border-white/15 transition duration-200"
+                  className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-[#242427] border border-white/5 hover:border-white/20 transition duration-200"
                 >
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#1A1A1C]">
-                    <Image
-                      src={getCardImage(p)}
-                      alt={getTitle(p)}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                    />
-                  </div>
+                  <Image
+                    src={getCardImage(p)}
+                    alt={getTitle(p)}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                  />
 
-                  <div className="mt-3 flex flex-col justify-between flex-1">
-                    <div className="text-white text-xs font-semibold line-clamp-2 leading-snug group-hover:text-[#FF8B64] transition">
-                      {getTitle(p)}
-                    </div>
-                    <div className="mt-2 text-[#FF8B64] font-semibold text-xs">
-                      {getPriceLabel(p)}
-                    </div>
+                  {/* Price Pill Overlay (Bottom Right Corner) */}
+                  <div className="absolute bottom-2.5 right-2.5 rounded-full bg-[#1c1c1e]/85 backdrop-blur-md px-3 py-1 text-[#FF8B64] font-bold text-xs sm:text-sm border border-white/10 shadow-md">
+                    {getPriceLabel(p)}
                   </div>
                 </Link>
               ))}
