@@ -533,86 +533,98 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
     <section
       id="all"
-      className="mt-10 isolate rounded-2xl border border-white/10 bg-white/5 p-6"
+      className="mt-12 isolate rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 lg:p-10 backdrop-blur-xl shadow-2xl"
     >
-      <div className="flex items-start justify-between gap-3 text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left border-b border-white/10 pb-6">
         <div>
-          <h2 className="text-xl font-semibold text-white">All products</h2>
-          <p className="text-sm text-white/60 max-sm:hidden">
-            Filter by category, subcategory, or search by keyword.
+          <div className="text-xs uppercase tracking-widest text-[#FF8B64] font-semibold mb-1">
+            Studio Inventory
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">Full Product Catalog</h2>
+          <p className="text-xs sm:text-sm text-white/60 mt-1 max-sm:hidden">
+            Filter by category, subcategory, or search keywords to find your print.
           </p>
         </div>
 
         <button
           type="button"
           onClick={resetAll}
-          className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white transition hover:bg-white/10 sm:inline-flex"
+          className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10 sm:inline-flex items-center gap-1.5"
         >
-          Reset
+          Reset Filters
         </button>
       </div>
 
       {/* Controls — desktop only */}
-      <div className="mt-5 hidden gap-3 sm:grid lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
+      <div className="mt-6 hidden gap-3 sm:grid lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
         {renderControls()}
       </div>
 
       {/* Results */}
-      <div className="mt-6 flex items-center justify-between text-sm text-white/60">
-        <div>{filtered.length} results</div>
-        <div className="hidden sm:block">
-          Tip: type <span className="text-white/80">key</span> to see suggestions
+      <div className="mt-6 flex items-center justify-between text-xs sm:text-sm text-white/60">
+        <div className="font-medium text-white/80">Showing {filtered.length} products</div>
+        <div className="hidden sm:block text-white/40">
+          Tip: type <span className="text-[#FF8B64]">key</span>, <span className="text-[#FF8B64]">car</span> or <span className="text-[#FF8B64]">anime</span>
         </div>
       </div>
 
       {/* Cards */}
       <div
-        className="mt-4 grid gap-4"
+        className="mt-6 grid gap-5"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {filtered.map((p) => (
           <Link
             key={getStableKey(p)}
             href={getProductHref(p)}
-            className="group rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5 hover:bg-black/30 transition"
+            className="group rounded-2xl border border-white/10 bg-black/40 p-4 hover:border-[#FF8B64]/50 hover:bg-black/60 hover:shadow-[0_0_25px_rgba(255,139,100,0.15)] transition-all duration-300 flex flex-col justify-between"
           >
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
-              <Image
-                src={getCardImage(p)}
-                alt={getTitle(p)}
-                fill
-                className="object-cover group-hover:scale-[1.02] transition"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-            </div>
+            <div>
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
+                <Image
+                  src={getCardImage(p)}
+                  alt={getTitle(p)}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+                <span className="absolute top-2.5 left-2.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold text-white/80 border border-white/10 uppercase tracking-wider">
+                  {p.category}
+                </span>
+              </div>
 
-            <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-              <div className="min-w-0">
-                <div className="text-white font-semibold text-[15px] leading-snug line-clamp-2">
+              <div className="mt-4">
+                <h3 className="text-white font-bold text-base leading-snug line-clamp-2 group-hover:text-[#FF8B64] transition-colors">
                   {getTitle(p)}
-                </div>
+                </h3>
+                <p className="mt-1.5 text-xs text-white/50 line-clamp-2 leading-relaxed hidden sm:block">
+                  {getDesc(p)}
+                </p>
               </div>
+            </div>
 
-              <div className="shrink-0 text-white/80 text-sm sm:text-right">
+            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+              <span className="text-[11px] text-white/45 truncate max-w-[120px]">
+                {p.subCategory || "Custom Print"}
+              </span>
+              <span className="text-xs font-bold text-[#FF8B64] bg-[#FF8B64]/10 px-2.5 py-1 rounded-lg border border-[#FF8B64]/20">
                 {getPriceLabel(p)}
-              </div>
-            </div>
-
-            <div className="mt-1 hidden sm:block text-sm text-white/60 line-clamp-2">
-              {getDesc(p)}
-            </div>
-
-            <div className="mt-2 text-xs text-white/45">
-              {p.category}
-              {p.subCategory ? ` / ${p.subCategory}` : ""}
+              </span>
             </div>
           </Link>
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <div className="mt-10 text-center text-white/60">
-          No matches. Try a different keyword or reset filters.
+        <div className="mt-12 text-center py-12 border border-dashed border-white/10 rounded-2xl">
+          <p className="text-white/60 text-sm">No products found matching your search criteria.</p>
+          <button
+            type="button"
+            onClick={resetAll}
+            className="mt-4 rounded-xl bg-[#FF8B64] px-5 py-2.5 text-xs font-bold text-black"
+          >
+            Reset Filters
+          </button>
         </div>
       )}
 

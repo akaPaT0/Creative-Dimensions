@@ -165,7 +165,7 @@ export async function saveProducts(products: Product[]) {
   }
 
   if (!products.length) {
-    revalidateTag("products");
+    (revalidateTag as Function)("products");
     return;
   }
 
@@ -178,7 +178,7 @@ export async function saveProducts(products: Product[]) {
   if (upsertError) {
     throw upsertError;
   }
-  revalidateTag("products");
+  (revalidateTag as Function)("products");
 }
 
 export async function upsertProduct(product: Product) {
@@ -191,7 +191,7 @@ export async function upsertProduct(product: Product) {
   if (error) {
     throw error;
   }
-  revalidateTag("products");
+  (revalidateTag as Function)("products");
   return product;
 }
 
@@ -204,6 +204,6 @@ export async function removeProduct(productId: string) {
   if (error) {
     throw error;
   }
-  revalidateTag("products");
+  (revalidateTag as Function)("products");
   return target;
 }
