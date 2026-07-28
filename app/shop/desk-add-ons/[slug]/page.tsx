@@ -46,6 +46,13 @@ async function getProduct(slug: string) {
   );
 }
 
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products
+    .filter((x) => x.category === "desk-add-ons" && x.slug)
+    .map((x) => ({ slug: String(x.slug) }));
+}
+
 export async function generateMetadata({
   params,
 }: {

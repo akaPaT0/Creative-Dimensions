@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import { SITE_URL } from "@/app/lib/site";
 import BackgroundMusic from "@/app/components/BackgroundMusic";
+import { SupabaseAuthProvider } from "@/app/lib/supabase/auth-client";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,9 +66,9 @@ export default function RootLayout({
   };
 
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <SupabaseAuthProvider>
           <BackgroundMusic />
           <script
             type="application/ld+json"
@@ -76,8 +76,8 @@ export default function RootLayout({
           />
           {children}
           {modal}
-        </body>
-      </html>
-    </ClerkProvider>
+        </SupabaseAuthProvider>
+      </body>
+    </html>
   );
 }

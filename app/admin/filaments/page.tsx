@@ -1,22 +1,14 @@
 import Link from "next/link";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Background from "@/app/components/Background";
 import FilamentsManager from "./FilamentsManager";
+import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
 
 export default async function AdminFilamentsPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const user = await currentUser();
-  if (!user) redirect("/sign-in");
-
+  const auth = await getSupabaseUserFromCookies();
+  if ("response" in auth) redirect("/sign-in");
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const primaryEmail =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-    user.emailAddresses[0]?.emailAddress ||
-    "";
-  const userEmail = primaryEmail.trim().toLowerCase();
+  const userEmail = auth.email;
 
   if (!adminEmail || userEmail !== adminEmail) redirect("/admin");
 
@@ -55,4 +47,3 @@ export default async function AdminFilamentsPage() {
     </div>
   );
 }
-

@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import type { Product } from "@/app/data/products";
-import CustomizeColorsModal from "./CustomizeColorsModal";
+
+const CustomizeColorsModal = dynamic(() => import("./CustomizeColorsModal"), {
+  ssr: false,
+});
 
 type Props = {
   product: Product;
@@ -144,41 +148,33 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
   const [selectedFilamentIds, setSelectedFilamentIds] = useState<string[]>([]);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
 
-  if (!customizeConfig) {
-    return (
-      <button type="button" disabled className={className} aria-disabled="true">
-        Coming soon
-      </button>
-    );
-  }
+  function syncSelectedFilaments(nextSlots: SlotInfo[], options: FilamentOption[]) {
+    if (!customizeConfig || !CUSTOMIZE_COLORS_ENABLED) return;
+    if (!nextSlots.length) return;
+    if (!options.length) return;
 
-  if (!CUSTOMIZE_COLORS_ENABLED) {
-    return (
-      <button type="button" disabled className={className} aria-disabled="true">
-        Coming soon
-      </button>
-    );
-  }
-
-  useEffect(() => {
-    if (!open) return;
-    if (!slots.length) return;
-    if (!filamentOptions.length) return;
     setSelectedFilamentIds((prev) => {
-      const fallback = filamentOptions[0]?.id || "";
-      const next = slots.map((slot, index) => {
+      const fallback = options[0]?.id || "";
+      const next = nextSlots.map((slot, index) => {
         if (prev[index]) return prev[index];
         const slotName = slot.materialName || `slot ${index + 1}`;
-        const guessed = pickBestFilamentId(slotName, filamentOptions);
+        const guessed = pickBestFilamentId(slotName, options);
         return guessed || fallback;
       });
       const same =
         prev.length === next.length && prev.every((value, index) => value === next[index]);
       return same ? prev : next;
     });
-  }, [open, slots, filamentOptions]);
+  }
+
+  function handleSlotsChange(nextSlots: SlotInfo[]) {
+    setSlots(nextSlots);
+    syncSelectedFilaments(nextSlots, filamentOptions);
+  }
 
   async function handleOpen() {
+    if (!customizeConfig || !CUSTOMIZE_COLORS_ENABLED) return;
+
     try {
       const res = await fetch("/api/filaments", { cache: "no-store" });
       const data = (await res.json().catch(() => ({}))) as {
@@ -287,24 +283,34 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
     setOpen(false);
   }
 
+  if (!customizeConfig || !CUSTOMIZE_COLORS_ENABLED) {
+    return (
+      <button type="button" disabled className={className} aria-disabled="true">
+        Coming soon
+      </button>
+    );
+  }
+
   return (
     <>
       <button type="button" onClick={handleOpen} className={className}>
         Customize Colors
       </button>
 
-      <CustomizeColorsModal
-        open={open}
-        onClose={() => setOpen(false)}
-        productName={product.name}
-        config={customizeConfig}
-        selectedFilamentIds={selectedFilamentIds}
-        onChangeFilamentIds={setSelectedFilamentIds}
-        filamentOptions={filamentOptions}
-        onSlotsChange={setSlots}
-        onReset={handleReset}
-        onAddToCart={handleAddToCart}
-      />
+      {open && (
+        <CustomizeColorsModal
+          open={open}
+          onClose={() => setOpen(false)}
+          productName={product.name}
+          config={customizeConfig}
+          selectedFilamentIds={selectedFilamentIds}
+          onChangeFilamentIds={setSelectedFilamentIds}
+          filamentOptions={filamentOptions}
+          onSlotsChange={handleSlotsChange}
+          onReset={handleReset}
+          onAddToCart={handleAddToCart}
+        />
+      )}
     </>
   );
 }

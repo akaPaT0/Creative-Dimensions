@@ -71,7 +71,7 @@ export default function AdminInsights() {
         <div>
           <h2 className="text-white text-xl font-semibold">User Insights</h2>
           <p className="mt-1 text-sm text-white/60">
-            Login/session activity and recent user information from Clerk.
+            Login/session activity and recent user information.
           </p>
         </div>
         <button

@@ -4,16 +4,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Menu, ShoppingCart, X } from "lucide-react";
 import { Ubuntu } from "next/font/google";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  useClerk,
-  useUser,
-} from "@clerk/nextjs";
 
 import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
 import AdminShortcutFab from "./AdminShortcutFab";
+import AuthModal from "./AuthModal";
+import { useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 const CART_STORAGE_KEY = "cd_cart_v1";
 const CART_UPDATED_EVENT = "cd-cart-updated";
@@ -51,6 +46,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -86,6 +82,7 @@ export default function Navbar() {
         productName="Custom Order"
         productUrl="https://creativedimensionslb.com"
       />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       {/* PC Nav */}
       <nav
         className={`fixed inset-x-0 top-0 z-20 hidden lg:block transition-all duration-200 ${
@@ -136,6 +133,7 @@ export default function Navbar() {
 
             <AuthButtons
               cartCount={cartCount}
+              onSignIn={() => setAuthOpen(true)}
             />
           </div>
         </div>
@@ -195,6 +193,7 @@ export default function Navbar() {
             <MobileMenuContent
               cartCount={cartCount}
               onClose={() => setOpen(false)}
+              onSignIn={() => setAuthOpen(true)}
             />
           </div>
         </div>
@@ -208,20 +207,23 @@ export default function Navbar() {
 function MobileMenuContent({
   cartCount,
   onClose,
+  onSignIn,
 }: {
   cartCount: number;
   onClose?: () => void;
+  onSignIn: () => void;
 }) {
-  const { signOut } = useClerk();
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn, signOut } = useSupabaseAuth();
 
   const name =
-    user?.firstName ||
-    user?.username ||
-    user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
+    (typeof user?.user_metadata?.first_name === "string" && user.user_metadata.first_name) ||
+    (typeof user?.user_metadata?.name === "string" && user.user_metadata.name) ||
+    user?.email?.split("@")[0] ||
     "Account";
 
-  const isAdmin = user?.publicMetadata?.role === "admin";
+  const isAdmin =
+    user?.email?.trim().toLowerCase() ===
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
 
   // Slightly thinner than full width, centered
   const groupWrapClass = "mx-auto w-full max-w-[320px]";
@@ -238,10 +240,10 @@ function MobileMenuContent({
       {/* Avatar + name row */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-full border border-white/15 bg-white/5 overflow-hidden flex items-center justify-center">
-          {isLoaded && user?.imageUrl ? (
+          {isLoaded && typeof user?.user_metadata?.avatar_url === "string" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={user.imageUrl}
+              src={user.user_metadata.avatar_url}
               alt="Account"
               className="h-full w-full object-cover"
             />
@@ -252,113 +254,122 @@ function MobileMenuContent({
 
         <div className="flex flex-col">
           <span className="text-white text-sm font-medium leading-tight">
-            <SignedIn>{name}</SignedIn>
-            <SignedOut>Guest</SignedOut>
+            {isSignedIn ? name : "Guest"}
           </span>
           <span className="text-white/60 text-xs leading-tight">
-            <SignedIn>Signed in</SignedIn>
-            <SignedOut>Sign in to access your account</SignedOut>
+            {isSignedIn ? "Signed in" : "Sign in to access your account"}
           </span>
         </div>
       </div>
 
       {/* Everything same gap + same shape */}
       <div className="mt-3 flex flex-col gap-2">
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className={itemClass}>Sign in</button>
-          </SignInButton>
+        {!isSignedIn && (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                onClose?.();
+                onSignIn();
+              }}
+              className={itemClass}
+            >
+              Sign in
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              onClose?.();
-              openCustomRequest({
-                productName: "Custom Order",
-                productUrl: "https://creativedimensionslb.com",
-              });
-            }}
-            className={itemClass}
-          >
-            Request custom
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose?.();
+                openCustomRequest({
+                  productName: "Custom Order",
+                  productUrl: "https://creativedimensionslb.com",
+                });
+              }}
+              className={itemClass}
+            >
+              Request custom
+            </button>
 
-          <div className={dividerClass} />
+            <div className={dividerClass} />
 
-          <Link href="/about" onClick={onClose} className={itemClass}>
-            About
-          </Link>
-          <Link href="/shop" onClick={onClose} className={itemClass}>
-            Shop
-          </Link>
-          <Link href="/contact" onClick={onClose} className={itemClass}>
-            Contact
-          </Link>
-        </SignedOut>
-
-        <SignedIn>
-          <Link href="/user" onClick={onClose} className={itemClass}>
-            My account
-          </Link>
-          <Link
-            href="/cart"
-            onClick={onClose}
-            className={`${itemClass} relative`}
-          >
-            <span className="inline-block w-full text-center">Cart</span>
-            {cartCount > 0 && (
-              <span className="absolute right-3 top-1/2 inline-flex min-w-[20px] -translate-y-1/2 items-center justify-center rounded-full bg-[#FF8B64] px-1.5 text-xs font-semibold text-black">
-                {cartCount > 99 ? "99+" : cartCount}
-              </span>
-            )}
-          </Link>
-          <Link href="/orders" onClick={onClose} className={itemClass}>
-            Track orders
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => {
-              onClose?.();
-              openCustomRequest({
-                productName: "Custom Order",
-                productUrl: "https://creativedimensionslb.com",
-              });
-            }}
-            className={itemClass}
-          >
-            Request custom
-          </button>
-
-          {isAdmin && (
-            <Link href="/admin" onClick={onClose} className={itemClass}>
-              Admin
+            <Link href="/about" onClick={onClose} className={itemClass}>
+              About
             </Link>
-          )}
+            <Link href="/shop" onClick={onClose} className={itemClass}>
+              Shop
+            </Link>
+            <Link href="/contact" onClick={onClose} className={itemClass}>
+              Contact
+            </Link>
+          </>
+        )}
 
-          <div className={dividerClass} />
+        {isSignedIn && (
+            <>
+              <Link href="/user" onClick={onClose} className={itemClass}>
+                My account
+              </Link>
+              <Link
+                href="/cart"
+                onClick={onClose}
+                className={`${itemClass} relative`}
+              >
+                <span className="inline-block w-full text-center">Cart</span>
+                {cartCount > 0 && (
+                  <span className="absolute right-3 top-1/2 inline-flex min-w-[20px] -translate-y-1/2 items-center justify-center rounded-full bg-[#FF8B64] px-1.5 text-xs font-semibold text-black">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
+              </Link>
+              <Link href="/orders" onClick={onClose} className={itemClass}>
+                Track orders
+              </Link>
 
-          <Link href="/about" onClick={onClose} className={itemClass}>
-            About
-          </Link>
-          <Link href="/shop" onClick={onClose} className={itemClass}>
-            Shop
-          </Link>
-          <Link href="/contact" onClick={onClose} className={itemClass}>
-            Contact
-          </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose?.();
+                  openCustomRequest({
+                    productName: "Custom Order",
+                    productUrl: "https://creativedimensionslb.com",
+                  });
+                }}
+                className={itemClass}
+              >
+                Request custom
+              </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              onClose?.();
-              signOut({ redirectUrl: "/" });
-            }}
-            className={itemClass}
-          >
-            Sign out
-          </button>
-        </SignedIn>
+              {isAdmin && (
+                <Link href="/admin" onClick={onClose} className={itemClass}>
+                  Admin
+                </Link>
+              )}
+
+              <div className={dividerClass} />
+
+              <Link href="/about" onClick={onClose} className={itemClass}>
+                About
+              </Link>
+              <Link href="/shop" onClick={onClose} className={itemClass}>
+                Shop
+              </Link>
+              <Link href="/contact" onClick={onClose} className={itemClass}>
+                Contact
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onClose?.();
+                  void signOut();
+                }}
+                className={itemClass}
+              >
+                Sign out
+              </button>
+            </>
+        )}
       </div>
     </div>
   );
@@ -366,13 +377,16 @@ function MobileMenuContent({
 
 function AuthButtons({
   cartCount,
+  onSignIn,
 }: {
   cartCount: number;
+  onSignIn: () => void;
 }) {
-  const { signOut } = useClerk();
-  const { user, isLoaded } = useUser();
+  const { signOut, user, isLoaded, isSignedIn } = useSupabaseAuth();
 
-  const isAdmin = user?.publicMetadata?.role === "admin";
+  const isAdmin =
+    user?.email?.trim().toLowerCase() ===
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -402,15 +416,17 @@ function AuthButtons({
 
   return (
     <div className="flex items-center gap-3">
-      <SignedOut>
-        <SignInButton mode="modal">
-          <button className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition">
-            Sign in
-          </button>
-        </SignInButton>
-      </SignedOut>
+      {!isSignedIn && (
+        <button
+          type="button"
+          onClick={onSignIn}
+          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
+        >
+          Sign in
+        </button>
+      )}
 
-      <SignedIn>
+      {isSignedIn && (
         <div ref={wrapRef} className="relative">
           <button
             type="button"
@@ -419,10 +435,10 @@ function AuthButtons({
             aria-label="Account menu"
             className="h-10 w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition overflow-hidden flex items-center justify-center"
           >
-            {isLoaded && user?.imageUrl ? (
+            {isLoaded && typeof user?.user_metadata?.avatar_url === "string" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={user.imageUrl}
+                src={user.user_metadata.avatar_url}
                 alt="Account"
                 className="h-full w-full object-cover"
               />
@@ -491,7 +507,7 @@ function AuthButtons({
                 type="button"
                 onClick={() => {
                   close();
-                  signOut({ redirectUrl: "/" });
+                  void signOut();
                 }}
                 className="w-full text-left px-4 py-3 text-sm text-white/80 hover:bg-white/5 transition"
               >
@@ -500,7 +516,7 @@ function AuthButtons({
             </div>
           )}
         </div>
-      </SignedIn>
+      )}
     </div>
   );
 }

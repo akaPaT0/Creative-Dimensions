@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { products as snapshotProducts, type Product } from "@/app/data/products";
 import { getProductsFromDb, saveProducts } from "@/app/lib/products-db";
 import { uploadPublicAsset as uploadToStorage } from "@/app/lib/supabase/storage";
+import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -23,23 +23,9 @@ function guessContentType(filename: string) {
   return "application/octet-stream";
 }
 
-async function requireAdmin() {
-  const { userId } = await auth();
-  if (!userId) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const user = await currentUser();
-  if (!user) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const primaryEmail =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-    user.emailAddresses[0]?.emailAddress ||
-    "";
-  const userEmail = primaryEmail.trim().toLowerCase();
-
-  if (!adminEmail || userEmail !== adminEmail) {
-    return { ok: false as const, res: json({ error: "Forbidden" }, 403) };
-  }
+async function requireAdmin(req: Request) {
+  const admin = await requireSupabaseAdmin(req);
+  if ("response" in admin) return { ok: false as const, res: admin.response };
   return { ok: true as const };
 }
 
@@ -60,7 +46,7 @@ async function uploadPublicAsset(assetPath: string, cache: Map<string, string>) 
 
 export async function POST(req: Request) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireAdmin(req);
     if (!admin.ok) return admin.res;
 
     const { searchParams } = new URL(req.url);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { kv } from "@vercel/kv";
+import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
 import {
   PROMO_CODES_KEY,
   PromoCodeRecord,
@@ -37,23 +37,9 @@ function validateType(value: unknown): PromoCodeRecord["type"] {
   return value === "fixed" || value === "free_shipping" ? value : "percent";
 }
 
-async function requireAdmin() {
-  const { userId } = await auth();
-  if (!userId) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const user = await currentUser();
-  if (!user) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const primaryEmail =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-    user.emailAddresses[0]?.emailAddress ||
-    "";
-  const userEmail = primaryEmail.trim().toLowerCase();
-
-  if (!adminEmail || userEmail !== adminEmail) {
-    return { ok: false as const, res: json({ error: "Forbidden" }, 403) };
-  }
+async function requireAdmin(req: Request) {
+  const admin = await requireSupabaseAdmin(req);
+  if ("response" in admin) return { ok: false as const, res: admin.response };
   return { ok: true as const };
 }
 
@@ -66,15 +52,15 @@ function sortPromos(promos: PromoCodeRecord[]) {
   return [...promos].sort((a, b) => a.code.localeCompare(b.code));
 }
 
-export async function GET() {
-  const admin = await requireAdmin();
+export async function GET(req: Request) {
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.res;
   const promos = await loadPromos();
   return json({ promos: sortPromos(promos) });
 }
 
 export async function POST(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.res;
 
   const body = (await req.json().catch(() => null)) as PromoInput | null;
@@ -106,7 +92,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.res;
 
   const body = (await req.json().catch(() => null)) as PromoInput | null;
@@ -137,7 +123,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.res;
 
   const body = (await req.json().catch(() => null)) as PromoInput | null;

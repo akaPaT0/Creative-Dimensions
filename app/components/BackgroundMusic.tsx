@@ -77,11 +77,12 @@ export default function BackgroundMusic() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playlistMenuRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [playlistMenuOpen, setPlaylistMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [playlistsRequested, setPlaylistsRequested] = useState(false);
   const [selectedPlaylistName, setSelectedPlaylistName] = useState("");
   const [trackOrder, setTrackOrder] = useState<number[]>([]);
   const [trackPosition, setTrackPosition] = useState(0);
@@ -90,8 +91,8 @@ export default function BackgroundMusic() {
     if (typeof window === "undefined") return;
 
     const storedEnabled = window.localStorage.getItem(ENABLED_STORAGE_KEY);
-    if (storedEnabled === "false") {
-      setIsPlaying(false);
+    if (storedEnabled === "true") {
+      setIsPlaying(true);
     }
 
     const storedPlaylist = window.localStorage.getItem(PLAYLIST_STORAGE_KEY);
@@ -101,7 +102,11 @@ export default function BackgroundMusic() {
   }, []);
 
   useEffect(() => {
+    if ((!open && !isPlaying) || playlistsRequested) return;
+
     let cancelled = false;
+    setPlaylistsRequested(true);
+    setLoading(true);
     const cachedPlaylists = readCachedPlaylists();
     const hasCachedPlaylists = cachedPlaylists.length > 0;
 
@@ -145,7 +150,7 @@ export default function BackgroundMusic() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isPlaying, open, playlistsRequested]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

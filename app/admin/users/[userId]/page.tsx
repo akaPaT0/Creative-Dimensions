@@ -1,11 +1,11 @@
-import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
-import { kv } from "@vercel/kv";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Background from "@/app/components/Background";
 import type { Product } from "@/app/data/products";
 import { getProducts } from "@/app/lib/products-db";
+import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
 function formatDate(value: unknown) {
   if (!value) return "N/A";
@@ -23,16 +23,6 @@ function formatDate(value: unknown) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
-}
-
-function getPrimaryEmail(user: {
-  emailAddresses: Array<{ id: string; emailAddress: string }>;
-  primaryEmailAddressId: string | null;
-}) {
-  return (
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)
-      ?.emailAddress || user.emailAddresses[0]?.emailAddress || ""
-  );
 }
 
 type OrderItem = {
@@ -122,34 +112,34 @@ function normalizeOrders(input: unknown): OrderItem[] {
             ? order.state
             : "Unknown";
 
+      // Support both camelCase (old KV) and snake_case (Supabase) field names
+      const subtotalRaw = order.subtotalUSD ?? order.subtotal_usd ?? order.subtotal ?? null;
+      const shippingRaw = order.shippingUSD ?? order.shipping_usd ?? order.shipping ?? null;
+      const discountRaw = order.discountUSD ?? order.discount_usd ?? order.discount ?? null;
       const totalRaw =
-        typeof order.total === "number" || typeof order.total === "string"
-          ? order.total
-          : typeof order.totalUSD === "number" || typeof order.totalUSD === "string"
-            ? order.totalUSD
-          : typeof order.amount === "number" || typeof order.amount === "string"
-            ? order.amount
-            : null;
+        order.totalUSD ?? order.total_usd ?? order.total ?? order.amount ?? null;
+      const promoCodeRaw =
+        typeof order.promoCode === "string"
+          ? order.promoCode
+          : typeof order.promo_code === "string"
+            ? order.promo_code
+            : "";
+      const orderNumberRaw =
+        typeof order.orderNumber === "string"
+          ? order.orderNumber
+          : typeof order.order_number === "string"
+            ? order.order_number
+            : id;
 
       return {
         id,
-        orderNumber:
-          typeof order.orderNumber === "string" ? order.orderNumber : id,
+        orderNumber: orderNumberRaw,
         status,
-        subtotal:
-          typeof order.subtotalUSD === "number" || typeof order.subtotalUSD === "string"
-            ? String(order.subtotalUSD)
-            : "N/A",
-        shipping:
-          typeof order.shippingUSD === "number" || typeof order.shippingUSD === "string"
-            ? String(order.shippingUSD)
-            : "N/A",
-        discount:
-          typeof order.discountUSD === "number" || typeof order.discountUSD === "string"
-            ? String(order.discountUSD)
-            : "0",
+        subtotal: subtotalRaw === null ? "N/A" : String(subtotalRaw),
+        shipping: shippingRaw === null ? "N/A" : String(shippingRaw),
+        discount: discountRaw === null ? "0" : String(discountRaw),
         total: totalRaw === null ? "N/A" : String(totalRaw),
-        promoCode: typeof order.promoCode === "string" ? order.promoCode : "",
+        promoCode: promoCodeRaw,
         itemsCount: Array.isArray(order.items)
           ? order.items.reduce((sum, item) => {
               if (!item || typeof item !== "object") return sum;
@@ -195,16 +185,12 @@ function formatPrice(p: Product) {
 }
 
 async function requireAdmin() {
-  const { userId } = await auth();
-  if (!userId) return { ok: false as const, reason: "unauthorized" as const };
-
-  const user = await currentUser();
-  if (!user) return { ok: false as const, reason: "unauthorized" as const };
+  const auth = await getSupabaseUserFromCookies();
+  if ("response" in auth) return { ok: false as const, reason: "unauthorized" as const };
 
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const userEmail = getPrimaryEmail(user).trim().toLowerCase();
 
-  if (!adminEmail || userEmail !== adminEmail) {
+  if (!adminEmail || auth.email !== adminEmail) {
     return { ok: false as const, reason: "forbidden" as const };
   }
 
@@ -225,27 +211,51 @@ export default async function AdminUserDetailsPage({
   const { userId } = await params;
   const decodedUserId = decodeURIComponent(userId);
 
-  const client = await clerkClient();
+  const { data: userResult, error: userError } =
+    await supabaseAdmin.auth.admin.getUserById(decodedUserId);
+  if (userError || !userResult.user) notFound();
+  const userData = userResult.user;
 
-  let userData: Awaited<ReturnType<typeof client.users.getUser>>;
-  try {
-    userData = await client.users.getUser(decodedUserId);
-  } catch {
-    notFound();
-  }
+  const { data: likesRows } = await supabaseAdmin
+    .from("user_likes")
+    .select("product_id")
+    .eq("user_id", decodedUserId);
+  const likesIds = (likesRows ?? []).map((row) => String(row.product_id));
 
-  const likesIds = ((await kv.smembers<string[]>(`user:${decodedUserId}:likes`)) ??
-    []) as string[];
+  const { data: wishlistRows } = await supabaseAdmin
+    .from("user_wishlist")
+    .select("product_id")
+    .eq("user_id", decodedUserId);
+  const wishlistIds = new Set<string>((wishlistRows ?? []).map((row) => String(row.product_id)));
 
-  const wishlistIds = new Set<string>([
-    ...((((await kv.smembers<string[]>(`user:${decodedUserId}:wishlist`)) ?? []) as string[])),
-    ...((((await kv.smembers<string[]>(`user:${decodedUserId}:whishlist`)) ?? []) as string[])),
-  ]);
-
-  const orderBlob = await kv.get<unknown>(`user:${decodedUserId}:orders`);
-  const orders = normalizeOrders(orderBlob);
-  const addressBlob = await kv.get<unknown>(`user:${decodedUserId}:addresses`);
-  const addresses = normalizeAddresses(addressBlob);
+  const { data: orderRows } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .eq("user_id", decodedUserId)
+    .order("created_at", { ascending: false });
+  const orders = normalizeOrders(orderRows ?? []);
+  const { data: addressRows } = await supabaseAdmin
+    .from("user_addresses")
+    .select("*")
+    .eq("user_id", decodedUserId)
+    .order("is_default", { ascending: false });
+  const addresses = normalizeAddresses(
+    (addressRows ?? []).map((row) => ({
+      id: row.id,
+      label: row.label,
+      fullName: row.full_name,
+      phone: row.phone,
+      line1: row.line1,
+      line2: row.line2,
+      city: row.city,
+      state: row.state,
+      postalCode: row.postal_code,
+      country: row.country,
+      isDefault: row.is_default,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }))
+  );
   const products = await getProducts();
 
   const productById = new Map<string, Product>();
@@ -259,7 +269,16 @@ export default async function AdminUserDetailsPage({
     .map((id) => productById.get(id))
     .filter(Boolean) as Product[];
 
-  const primaryEmail = getPrimaryEmail(userData);
+  const primaryEmail = userData.email || "";
+  const fullName =
+    [userData.user_metadata?.first_name, userData.user_metadata?.last_name]
+      .filter((x) => typeof x === "string" && x.trim())
+      .join(" ") ||
+    (typeof userData.user_metadata?.name === "string" ? userData.user_metadata.name : "") ||
+    userData.email?.split("@")[0] ||
+    "Unnamed user";
+  const username =
+    typeof userData.user_metadata?.username === "string" ? userData.user_metadata.username : "";
 
   return (
     <div className="relative min-h-screen">
@@ -274,7 +293,7 @@ export default async function AdminUserDetailsPage({
                   Admin User View
                 </p>
                 <h1 className="mt-2 text-white text-3xl sm:text-4xl font-semibold">
-                  {userData.fullName || userData.username || "Unnamed user"}
+                  {fullName}
                 </h1>
                 <p className="mt-2 text-white/70">{primaryEmail || "No email"}</p>
                 <div className="mt-3 text-sm text-white/55 font-mono">{userData.id}</div>
@@ -297,15 +316,15 @@ export default async function AdminUserDetailsPage({
               <div className="mt-4 space-y-2 text-sm text-white/80">
                 <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
                   <span className="text-white/60">Username:</span>{" "}
-                  <span>{userData.username || "N/A"}</span>
+                  <span>{username || "N/A"}</span>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
                   <span className="text-white/60">Created:</span>{" "}
-                  <span>{formatDate(userData.createdAt)}</span>
+                  <span>{formatDate(userData.created_at)}</span>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
                   <span className="text-white/60">Last sign in:</span>{" "}
-                  <span>{formatDate(userData.lastSignInAt)}</span>
+                  <span>{formatDate(userData.last_sign_in_at)}</span>
                 </div>
               </div>
             </div>
@@ -399,7 +418,7 @@ export default async function AdminUserDetailsPage({
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <h2 className="text-white text-xl font-semibold">Saved Addresses</h2>
             <p className="mt-1 text-sm text-white/60">
-              Loaded from KV key <code>user:{decodedUserId}:addresses</code>
+              Loaded from Supabase user_addresses table.
             </p>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -445,7 +464,7 @@ export default async function AdminUserDetailsPage({
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <h2 className="text-white text-xl font-semibold">Orders</h2>
             <p className="mt-1 text-sm text-white/60">
-              Loaded from KV key <code>user:{decodedUserId}:orders</code>
+              Loaded from KV store.
             </p>
 
             <div className="mt-4 space-y-3">

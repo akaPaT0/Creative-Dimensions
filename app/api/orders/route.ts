@@ -1,4 +1,3 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import { kv } from "@vercel/kv";
 import { NextResponse } from "next/server";
 import { getProducts } from "@/app/lib/products-db";
@@ -12,6 +11,8 @@ import {
   normalizePromoRecords,
   withPromoDefaults,
 } from "@/app/lib/promocodes";
+import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
 type OrderRequestItem = {
   productId: string;
@@ -85,13 +86,51 @@ type OrderRecord = {
   }>;
 };
 
-function ordersKey(userId: string) {
-  return `user:${userId}:orders`;
+// ─── Supabase row ↔ OrderRecord helpers ────────────────────────────────────
+
+function rowToOrder(row: Record<string, unknown>): OrderRecord {
+  return {
+    id: String(row.id ?? ""),
+    orderNumber: String(row.order_number ?? ""),
+    userId: String(row.user_id ?? ""),
+    status: String(row.status ?? "pending"),
+    createdAt: String(row.created_at ?? ""),
+    shippingUSD: Number(row.shipping_usd ?? 0),
+    subtotalUSD: Number(row.subtotal_usd ?? 0),
+    discountUSD: Number(row.discount_usd ?? 0),
+    totalUSD: Number(row.total_usd ?? 0),
+    promoCode: row.promo_code ? String(row.promo_code) : undefined,
+    invoice: (row.invoice as OrderRecord["invoice"]) ?? {
+      invoiceNumber: "",
+      issuedAt: "",
+      paymentStatus: "pending",
+    },
+    trackingHistory: Array.isArray(row.tracking_history) ? row.tracking_history : [],
+    address: (row.address as Address) ?? ({} as Address),
+    items: Array.isArray(row.items) ? row.items : [],
+  };
 }
 
-function addressesKey(userId: string) {
-  return `user:${userId}:addresses`;
+function orderToRow(order: OrderRecord, userId: string) {
+  return {
+    id: order.id,
+    order_number: order.orderNumber,
+    user_id: userId,
+    status: order.status,
+    created_at: order.createdAt,
+    shipping_usd: order.shippingUSD,
+    subtotal_usd: order.subtotalUSD,
+    discount_usd: order.discountUSD,
+    total_usd: order.totalUSD,
+    promo_code: order.promoCode ?? null,
+    invoice: order.invoice,
+    tracking_history: order.trackingHistory,
+    address: order.address,
+    items: order.items,
+  };
 }
+
+// ─── KV counter helpers (with local-dev fallback) ──────────────────────────
 
 function orderCounterKey() {
   return "orders:counter";
@@ -100,6 +139,41 @@ function orderCounterKey() {
 function invoiceCounterKey() {
   return "invoices:counter";
 }
+
+/** Race a promise against a hard timeout so a dead KV doesn't stall the API */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`KV timeout after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
+async function generateOrderNumber() {
+  try {
+    const next = await withTimeout(kv.incr(orderCounterKey()), 2500);
+    const padded = String(next).padStart(7, "0");
+    return `CD-${padded}`;
+  } catch {
+    // KV unavailable or timed out — fall back to base-36 timestamp
+    const ts = Date.now().toString(36).toUpperCase().slice(-7).padStart(7, "0");
+    return `CD-${ts}`;
+  }
+}
+
+async function generateInvoiceNumber() {
+  try {
+    const next = await withTimeout(kv.incr(invoiceCounterKey()), 2500);
+    const padded = String(next).padStart(7, "0");
+    return `INV-${padded}`;
+  } catch {
+    const ts = (Date.now() + 1).toString(36).toUpperCase().slice(-7).padStart(7, "0");
+    return `INV-${ts}`;
+  }
+}
+
+// ─── Misc helpers ───────────────────────────────────────────────────────────
 
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -173,13 +247,6 @@ function normalizeAddresses(raw: unknown): Address[] {
     .filter((x) => x.id && x.fullName && x.line1 && x.city);
 }
 
-function normalizeOrders(raw: unknown): OrderRecord[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter((x): x is OrderRecord => !!x && typeof x === "object")
-    .map((x) => x);
-}
-
 function fmtMoney(value: number) {
   return `$${value.toFixed(2)}`;
 }
@@ -239,26 +306,11 @@ async function persistCustomPreviewImage(params: {
 
 async function notifyOrderTelegram(params: {
   userId: string;
+  customerEmail: string;
   order: OrderRecord;
 }) {
-  const { userId, order } = params;
-  let customerName = order.address.fullName || "Customer";
-  let customerEmail = "";
-  try {
-    const client = await clerkClient();
-    const user = await client.users.getUser(userId);
-    const primaryEmail =
-      user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-      user.emailAddresses[0]?.emailAddress ||
-      "";
-    customerEmail = primaryEmail;
-    customerName =
-      `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
-      user.username ||
-      customerName;
-  } catch {
-    // keep address-derived fallback
-  }
+  const { userId, customerEmail, order } = params;
+  const customerName = order.address.fullName || "Customer";
 
   const lines = [
     `New order placed: ${order.orderNumber}`,
@@ -345,32 +397,30 @@ async function notifyOrderTelegram(params: {
   });
 }
 
-async function generateOrderNumber() {
-  const next = await kv.incr(orderCounterKey());
-  const padded = String(next).padStart(7, "0");
-  return `CD-${padded}`;
-}
+// ─── Route handlers ─────────────────────────────────────────────────────────
 
-async function generateInvoiceNumber() {
-  const next = await kv.incr(invoiceCounterKey());
-  const padded = String(next).padStart(7, "0");
-  return `INV-${padded}`;
-}
+export async function GET(req: Request) {
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .eq("user_id", auth.userId)
+    .order("created_at", { ascending: false });
 
-  const raw = await kv.get<unknown>(ordersKey(userId));
-  const orders = normalizeOrders(raw).sort((a, b) =>
-    String(a.createdAt).localeCompare(String(b.createdAt)) * -1
-  );
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const orders = (data ?? []).map((row) => rowToOrder(row as Record<string, unknown>));
   return NextResponse.json({ orders });
 }
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
+  const { userId } = auth;
 
   const body = (await req.json().catch(() => null)) as
     | { items?: unknown; addressId?: string; promoCode?: string }
@@ -384,8 +434,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
-  const rawAddresses = await kv.get<unknown>(addressesKey(userId));
-  const addresses = normalizeAddresses(rawAddresses);
+  const { data: addressRows, error: addressError } = await supabaseAdmin
+    .from("user_addresses")
+    .select("*")
+    .eq("user_id", userId);
+
+  if (addressError) {
+    return NextResponse.json({ error: addressError.message }, { status: 500 });
+  }
+
+  const addresses = normalizeAddresses(
+    (addressRows ?? []).map((row) => ({
+      id: row.id,
+      label: row.label,
+      fullName: row.full_name,
+      phone: row.phone,
+      line1: row.line1,
+      line2: row.line2,
+      city: row.city,
+      state: row.state,
+      postalCode: row.postal_code,
+      country: row.country,
+      isDefault: row.is_default,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }))
+  );
   if (addresses.length === 0) {
     return NextResponse.json({ error: "No shipping address found" }, { status: 400 });
   }
@@ -422,7 +496,7 @@ export async function POST(req: Request) {
   const subtotalUSD = resolvedItems.reduce((sum, x) => sum + x.lineTotalUSD, 0);
   const baseShippingUSD = subtotalUSD > 0 ? 5 : 0;
 
-  const promoRaw = await kv.get<unknown>(PROMO_CODES_KEY);
+  const promoRaw = await kv.get<unknown>(PROMO_CODES_KEY).catch(() => null);
   const promoRecords = withPromoDefaults(normalizePromoRecords(promoRaw));
 
   let discountUSD = 0;
@@ -451,6 +525,7 @@ export async function POST(req: Request) {
   const orderNumber = await generateOrderNumber();
   const invoiceNumber = await generateInvoiceNumber();
   const createdAt = new Date().toISOString();
+
   const finalizedItems = await Promise.all(
     resolvedItems.map(async (item, index) => {
       if (!item.customizationSummary) return item;
@@ -493,16 +568,22 @@ export async function POST(req: Request) {
     items: finalizedItems,
   };
 
-  const existingRaw = await kv.get<unknown>(ordersKey(userId));
-  const existing = normalizeOrders(existingRaw);
-  await kv.set(ordersKey(userId), [order, ...existing]);
+  // Persist order to Supabase
+  const { error: insertError } = await supabaseAdmin
+    .from("orders")
+    .insert(orderToRow(order, userId));
 
-  try {
-    await notifyOrderTelegram({ userId, order });
-  } catch (error) {
-    console.error("Order placed but Telegram notification failed:", error);
-    // Do not block order placement if Telegram notification fails.
+  if (insertError) {
+    console.error("Failed to save order to Supabase:", insertError);
+    return NextResponse.json({ error: "Failed to save order. Please try again." }, { status: 500 });
   }
+
+  // Fire Telegram notification in the background — do NOT await it so the
+  // user gets their success response immediately (PDF generation + uploads
+  // can take several seconds).
+  void notifyOrderTelegram({ userId, customerEmail: auth.email, order }).catch((error) => {
+    console.error("Order placed but Telegram notification failed:", error);
+  });
 
   return NextResponse.json({ ok: true, order });
 }

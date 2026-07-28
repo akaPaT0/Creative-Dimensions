@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Printer } from "lucide-react";
-import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
 import type { Product } from "../data/products";
 import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
+import AuthModal from "../components/AuthModal";
+import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 type StoredCartItem = {
   productId: string;
@@ -219,8 +220,9 @@ function computePromoDiscount(
 }
 
 export default function CheckoutPage() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSupabaseAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const [cart, setCart] = useState<StoredCartItem[]>(() => readCart());
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -246,7 +248,7 @@ export default function CheckoutPage() {
   const [promoRules, setPromoRules] = useState<Record<string, PromoRule>>({});
 
   async function loadAddresses() {
-    const res = await fetch("/api/addresses");
+    const res = await authFetch("/api/addresses");
     const data = (await res.json().catch(() => ({}))) as { addresses?: Address[] };
     if (res.ok && Array.isArray(data.addresses)) {
       setAddresses(data.addresses);
@@ -413,7 +415,7 @@ export default function CheckoutPage() {
 
     setPlacing(true);
     try {
-      const res = await fetch("/api/orders", {
+      const res = await authFetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -457,7 +459,7 @@ export default function CheckoutPage() {
 
     setAddingAddress(true);
     try {
-      const res = await fetch("/api/addresses", {
+      const res = await authFetch("/api/addresses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(addressForm),
@@ -524,23 +526,26 @@ export default function CheckoutPage() {
     <div className="relative min-h-screen">
       <Background />
       <Navbar />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
 
       <main className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
-        <SignedOut>
+        {!isSignedIn ? (
           <section className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-10 text-center">
             <h1 className="text-3xl font-semibold text-white">Checkout</h1>
             <p className="mt-2 text-white/70">Sign in to continue your checkout.</p>
             <div className="mt-6 flex justify-center">
-              <SignInButton mode="modal">
-                <button className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition">
-                  Sign in
-                </button>
-              </SignInButton>
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
+              >
+                Sign in
+              </button>
             </div>
           </section>
-        </SignedOut>
+        ) : (
 
-        <SignedIn>
+        <>
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
             <h1 className="text-3xl font-semibold text-white">Checkout</h1>
             <p className="mt-2 text-white/70">Confirm address and place your order.</p>
@@ -814,7 +819,8 @@ export default function CheckoutPage() {
               </Link>
             </aside>
           </section>
-        </SignedIn>
+        </>
+        )}
 
         <Footer />
       </main>

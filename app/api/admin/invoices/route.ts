@@ -1,39 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
-import { kv } from "@vercel/kv";
-
-type InvoiceOrder = {
-  id?: string;
-  orderNumber?: string;
-  status?: string;
-  createdAt?: string;
-  subtotalUSD?: number;
-  shippingUSD?: number;
-  discountUSD?: number;
-  totalUSD?: number;
-  items?: Array<{
-    productId?: string;
-    name?: string;
-    quantity?: number;
-    unitPriceUSD?: number;
-    lineTotalUSD?: number;
-    customizationSummary?: string;
-  }>;
-  address?: {
-    fullName?: string;
-    line1?: string;
-    line2?: string;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-    country?: string;
-  };
-  invoice?: {
-    invoiceNumber?: string;
-    issuedAt?: string;
-    paymentStatus?: string;
-  };
-};
+import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -43,37 +10,18 @@ function asNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function normalizeOrders(raw: unknown): InvoiceOrder[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.filter((x): x is InvoiceOrder => !!x && typeof x === "object");
-}
-
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
 }
 
-async function requireAdmin() {
-  const { userId } = await auth();
-  if (!userId) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const user = await currentUser();
-  if (!user) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const primaryEmail =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-    user.emailAddresses[0]?.emailAddress ||
-    "";
-  const userEmail = primaryEmail.trim().toLowerCase();
-
-  if (!adminEmail || userEmail !== adminEmail) {
-    return { ok: false as const, res: json({ error: "Forbidden" }, 403) };
-  }
+async function requireAdmin(req: Request) {
+  const admin = await requireSupabaseAdmin(req);
+  if ("response" in admin) return { ok: false as const, res: admin.response };
   return { ok: true as const };
 }
 
 export async function GET(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.res;
 
   const { searchParams } = new URL(req.url);
@@ -83,60 +31,70 @@ export async function GET(req: Request) {
     return json({ error: "userId and orderId are required" }, 400);
   }
 
-  const client = await clerkClient();
-  const user = await client.users.getUser(userId).catch(() => null);
-  if (!user) return json({ error: "User not found" }, 404);
+  // Fetch user metadata
+  const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+  const user = userData.user;
+  if (userError || !user) return json({ error: "User not found" }, 404);
 
-  const primaryEmail =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-    user.emailAddresses[0]?.emailAddress ||
-    "";
+  const primaryEmail = user.email || "";
   const fullName =
-    `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "Customer";
+    [user.user_metadata?.first_name, user.user_metadata?.last_name]
+      .filter((x) => typeof x === "string" && x.trim())
+      .join(" ") ||
+    (typeof user.user_metadata?.name === "string" ? user.user_metadata.name : "") ||
+    user.email?.split("@")[0] ||
+    "Customer";
 
-  const raw = await kv.get<unknown>(`user:${userId}:orders`);
-  const orders = normalizeOrders(raw);
-  const order = orders.find((x) => asText(x.id) === orderId);
-  if (!order) return json({ error: "Order not found" }, 404);
+  // Fetch the specific order from Supabase (admin can query any user's order)
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .eq("user_id", userId)
+    .single();
+
+  if (orderError || !order) return json({ error: "Order not found" }, 404);
+
+  const address = (order.address ?? {}) as Record<string, unknown>;
+  const invoice = (order.invoice ?? {}) as Record<string, unknown>;
+  const items = Array.isArray(order.items) ? order.items as Record<string, unknown>[] : [];
 
   return json({
     ok: true,
     invoice: {
       orderId: asText(order.id),
-      orderNumber: asText(order.orderNumber) || asText(order.id),
+      orderNumber: asText(order.order_number) || asText(order.id),
       status: asText(order.status) || "pending",
-      createdAt: asText(order.createdAt),
-      subtotalUSD: asNumber(order.subtotalUSD),
-      shippingUSD: asNumber(order.shippingUSD),
-      discountUSD: asNumber(order.discountUSD),
-      totalUSD: asNumber(order.totalUSD),
+      createdAt: asText(order.created_at),
+      subtotalUSD: asNumber(order.subtotal_usd),
+      shippingUSD: asNumber(order.shipping_usd),
+      discountUSD: asNumber(order.discount_usd),
+      totalUSD: asNumber(order.total_usd),
       customer: {
         fullName,
         email: primaryEmail,
       },
       address: {
-        fullName: asText(order.address?.fullName),
-        line1: asText(order.address?.line1),
-        line2: asText(order.address?.line2),
-        city: asText(order.address?.city),
-        state: asText(order.address?.state),
-        postalCode: asText(order.address?.postalCode),
-        country: asText(order.address?.country),
+        fullName: asText(address.fullName),
+        line1: asText(address.line1),
+        line2: asText(address.line2),
+        city: asText(address.city),
+        state: asText(address.state),
+        postalCode: asText(address.postalCode),
+        country: asText(address.country),
       },
-      items: Array.isArray(order.items)
-        ? order.items.map((item) => ({
-            productId: asText(item.productId),
-            name: asText(item.name),
-            quantity: asNumber(item.quantity),
-            unitPriceUSD: asNumber(item.unitPriceUSD),
-            lineTotalUSD: asNumber(item.lineTotalUSD),
-            customizationSummary: asText(item.customizationSummary),
-          }))
-        : [],
+      items: items.map((item) => ({
+        productId: asText(item.productId),
+        name: asText(item.name),
+        quantity: asNumber(item.quantity),
+        unitPriceUSD: asNumber(item.unitPriceUSD),
+        lineTotalUSD: asNumber(item.lineTotalUSD),
+        customizationSummary: asText(item.customizationSummary),
+      })),
       invoiceMeta: {
-        invoiceNumber: asText(order.invoice?.invoiceNumber) || "Pending",
-        issuedAt: asText(order.invoice?.issuedAt) || asText(order.createdAt),
-        paymentStatus: asText(order.invoice?.paymentStatus) || "pending",
+        invoiceNumber: asText(invoice.invoiceNumber) || "Pending",
+        issuedAt: asText(invoice.issuedAt) || asText(order.created_at),
+        paymentStatus: asText(invoice.paymentStatus) || "pending",
       },
     },
   });

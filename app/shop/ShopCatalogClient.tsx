@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Filter } from "lucide-react";
 
 export type Product = {
   id?: string;
@@ -91,12 +92,16 @@ function getDesc(p: Product) {
 }
 
 function getPriceLabel(p: Product) {
-  const price = (p as any).price ?? p.priceUSD;
-  const currency = (p as any).currency || "USD";
+  const price = p.price ?? p.priceUSD;
+  const currency = p.currency || "USD";
 
   if (typeof price === "number") return `${price} ${currency}`;
   if (typeof price === "string" && price.trim()) return price;
   return "DM for price";
+}
+
+function getNumericPrice(p: Product) {
+  return Number(p.priceUSD ?? p.price ?? 0) || 0;
 }
 
 function getProductHref(p: Product) {
@@ -284,7 +289,7 @@ function ShopSearchBar({
           {suggestions.map((s, i) => (
             <button
               key={`${s.type}:${
-                "slug" in s ? `${(s as any).category}/${(s as any).slug}` : s.value
+                s.type === "product" ? `${s.category}/${s.slug}` : s.value
               }:${i}`}
               type="button"
               onMouseEnter={() => setActive(i)}
@@ -314,6 +319,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
   const [sort, setSort] = useState<"default" | "price-asc" | "price-desc">(
     "default"
   );
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // ✅ default load as 2 columns
   const [columns, setColumns] = useState<1 | 2 | 3 | 4>(2);
@@ -340,6 +346,81 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     setSort("default");
   }
 
+  function renderControls() {
+    return (
+      <>
+        <ShopSearchBar
+          products={products}
+          value={search}
+          onValueChange={setSearch}
+          onPickCategory={(c) => {
+            setCategory(c);
+            setSubCategory("all");
+          }}
+          onPickSubCategory={(s) => {
+            setSubCategory(s);
+          }}
+          onPickProduct={(cat, slug) => {
+            window.location.href = `/shop/${cat}/${slug}`;
+          }}
+        />
+
+        <select
+          value={category}
+          onChange={(e) => {
+            const v = e.target.value;
+            setCategory(v);
+            setSubCategory("all");
+          }}
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+        >
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c === "all" ? "All categories" : c}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={subCategory}
+          onChange={(e) => setSubCategory(e.target.value)}
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+        >
+          {subCategoryOptions.map((s) => (
+            <option key={s} value={s}>
+              {s === "all" ? "All subcategories" : s}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={sort}
+          onChange={(e) =>
+            setSort(e.target.value as "default" | "price-asc" | "price-desc")
+          }
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+        >
+          <option value="default">Sort: default</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
+        </select>
+
+        <select
+          value={columns}
+          onChange={(e) =>
+            setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)
+          }
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+        >
+          <option value={1}>Columns: 1</option>
+          <option value={2}>Columns: 2</option>
+          <option value={3}>Columns: 3</option>
+          <option value={4}>Columns: 4</option>
+        </select>
+      </>
+    );
+  }
+
   useEffect(() => {
     const handle = () => {
       if (typeof window === "undefined") return;
@@ -348,7 +429,6 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     handle();
     window.addEventListener("hashchange", handle);
     return () => window.removeEventListener("hashchange", handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() => {
@@ -370,114 +450,111 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     }
 
     if (sort === "price-asc") {
-      list.sort(
-        (a, b) =>
-          (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0) -
-          (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0)
-      );
+      list.sort((a, b) => getNumericPrice(a) - getNumericPrice(b));
     } else if (sort === "price-desc") {
-      list.sort(
-        (a, b) =>
-          (Number((b as any).priceUSD ?? (b as any).price ?? 0) || 0) -
-          (Number((a as any).priceUSD ?? (a as any).price ?? 0) || 0)
-      );
+      list.sort((a, b) => getNumericPrice(b) - getNumericPrice(a));
     }
 
     return list;
   }, [products, search, category, subCategory, sort]);
 
-  return (
-    <section
-      id="all"
-      className="mt-10 isolate rounded-2xl border border-white/10 bg-white/5 p-6"
-    >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
-        <div>
-          <h2 className="text-xl font-semibold text-white">All products</h2>
-          <p className="text-sm text-white/60">
-            Filter by category, subcategory, or search by keyword.
-          </p>
-        </div>
+  // Count active filters for the FAB badge
+  const activeFilterCount = [
+    category !== "all",
+    subCategory !== "all",
+    search.trim().length > 0,
+  ].filter(Boolean).length;
 
-        <div className="flex items-center justify-center sm:justify-end gap-2">
+  return (
+    <>
+      {/* ── Mobile filter bottom sheet ─────────────────────────────────── */}
+      {/* Backdrop */}
+      {mobileFiltersOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 sm:hidden"
+          onClick={() => setMobileFiltersOpen(false)}
+        />
+      )}
+
+      {/* Sheet — slides up from the bottom */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-50 sm:hidden transition-transform duration-300 ease-in-out ${
+          mobileFiltersOpen ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="rounded-t-3xl border-t border-white/10 bg-[#141210] px-5 pb-10 pt-5">
+          {/* Drag handle */}
+          <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/20" />
+
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold text-white">Filter &amp; Search</p>
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={resetAll}
+                className="text-xs text-[#FF8B64] hover:opacity-80 transition"
+              >
+                Reset all
+              </button>
+            )}
+          </div>
+
+          <div className="grid gap-3">
+            {renderControls()}
+          </div>
+
           <button
             type="button"
-            onClick={resetAll}
-            className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
+            onClick={() => setMobileFiltersOpen(false)}
+            className="mt-4 w-full rounded-xl bg-[#FF8B64] py-3 text-sm font-semibold text-black transition hover:opacity-90"
           >
-            Reset
+            Show {filtered.length} result{filtered.length !== 1 ? "s" : ""}
           </button>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="mt-5 grid gap-3 lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
-        <ShopSearchBar
-          products={products}
-          value={search}
-          onValueChange={setSearch}
-          onPickCategory={(c) => {
-            setCategory(c);
-            setSubCategory("all");
-          }}
-          onPickSubCategory={(s) => {
-            setSubCategory(s);
-          }}
-          onPickProduct={(cat, slug) => {
-            window.location.href = `/shop/${cat}/${slug}`;
-          }}
-        />
-
-        <select
-          value={category}
-          onChange={(e) => {
-            const v = e.target.value as any;
-            setCategory(v);
-            setSubCategory("all");
-          }}
-          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+      {/* FAB — fixed, always visible on mobile */}
+      <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 sm:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileFiltersOpen((o) => !o)}
+          aria-label="Toggle filters"
+          className="flex items-center gap-2 rounded-2xl border border-white/20 bg-[#1a1918]/90 backdrop-blur-md px-5 py-3 text-sm font-medium text-white shadow-xl transition active:scale-95"
         >
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c === "all" ? "All categories" : c}
-            </option>
-          ))}
-        </select>
+          <Filter className="size-4" aria-hidden="true" />
+          Filter
+          {activeFilterCount > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF8B64] text-[10px] font-bold text-black">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-        <select
-          value={subCategory}
-          onChange={(e) => setSubCategory(e.target.value as any)}
-          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
-        >
-          {subCategoryOptions.map((s) => (
-            <option key={s} value={s}>
-              {s === "all" ? "All subcategories" : s}
-            </option>
-          ))}
-        </select>
+    <section
+      id="all"
+      className="mt-10 isolate rounded-2xl border border-white/10 bg-white/5 p-6"
+    >
+      <div className="flex items-start justify-between gap-3 text-left">
+        <div>
+          <h2 className="text-xl font-semibold text-white">All products</h2>
+          <p className="text-sm text-white/60 max-sm:hidden">
+            Filter by category, subcategory, or search by keyword.
+          </p>
+        </div>
 
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
-          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
+        <button
+          type="button"
+          onClick={resetAll}
+          className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white transition hover:bg-white/10 sm:inline-flex"
         >
-          <option value="default">Sort: default</option>
-          <option value="price-asc">Price: low to high</option>
-          <option value="price-desc">Price: high to low</option>
-        </select>
+          Reset
+        </button>
+      </div>
 
-        <select
-          value={columns}
-          onChange={(e) =>
-            setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)
-          }
-          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
-        >
-          <option value={1}>Columns: 1</option>
-          <option value={2}>Columns: 2</option>
-          <option value={3}>Columns: 3</option>
-          <option value={4}>Columns: 4</option>
-        </select>
+      {/* Controls — desktop only */}
+      <div className="mt-5 hidden gap-3 sm:grid lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
+        {renderControls()}
       </div>
 
       {/* Results */}
@@ -497,7 +574,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           <Link
             key={getStableKey(p)}
             href={getProductHref(p)}
-            className="group rounded-2xl border border-white/10 bg-black/20 p-5 hover:bg-black/30 transition"
+            className="group rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5 hover:bg-black/30 transition"
           >
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
               <Image
@@ -509,7 +586,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               />
             </div>
 
-            <div className="mt-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+            <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
               <div className="min-w-0">
                 <div className="text-white font-semibold text-[15px] leading-snug line-clamp-2">
                   {getTitle(p)}
@@ -521,7 +598,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               </div>
             </div>
 
-            <div className="mt-2 text-sm text-white/60 line-clamp-2">
+            <div className="mt-1 hidden sm:block text-sm text-white/60 line-clamp-2">
               {getDesc(p)}
             </div>
 
@@ -538,6 +615,10 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           No matches. Try a different keyword or reset filters.
         </div>
       )}
+
+      {/* Bottom padding so FAB doesn't overlap last card */}
+      <div className="h-16 sm:hidden" />
     </section>
+    </>
   );
 }

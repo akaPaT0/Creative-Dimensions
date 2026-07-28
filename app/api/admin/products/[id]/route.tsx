@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { getProducts, saveProducts } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 import { deletePublicAssetByUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
+import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -64,30 +64,10 @@ async function safeDelete(url: string) {
   }
 }
 
-async function requireAdmin() {
-  const { userId } = await auth();
-  if (!userId) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const user = await currentUser();
-  if (!user) return { ok: false as const, res: json({ error: "Unauthorized" }, 401) };
-
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const primaryEmail =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-    user.emailAddresses[0]?.emailAddress ||
-    "";
-  const userEmail = primaryEmail.trim().toLowerCase();
-
-  if (!adminEmail || userEmail !== adminEmail) {
-    return { ok: false as const, res: json({ error: "Forbidden" }, 403) };
-  }
-  return { ok: true as const };
-}
-
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const admin = await requireAdmin();
-    if (!admin.ok) return admin.res;
+    const admin = await requireSupabaseAdmin(req);
+    if ("response" in admin) return admin.response;
 
     const { id } = await ctx.params;
     const form = await req.formData();
@@ -201,8 +181,8 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 
 export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const admin = await requireAdmin();
-    if (!admin.ok) return admin.res;
+    const admin = await requireSupabaseAdmin(_req);
+    if ("response" in admin) return admin.response;
     const { id } = await ctx.params;
 
     const products = await getProducts();

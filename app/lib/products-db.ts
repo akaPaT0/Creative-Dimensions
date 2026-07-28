@@ -1,4 +1,5 @@
 import type { Product } from "@/app/data/products";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { supabase } from "@/app/lib/supabase/clients";
 
 const TABLE = "products";
@@ -138,12 +139,15 @@ export async function getProductsFromDb() {
   return normalizeProducts(data);
 }
 
-export async function getProducts() {
-  return getProductsFromDb();
-}
+// Cache product list for 60 s; invalidated whenever a product is mutated
+export const getProducts = unstable_cache(
+  async () => getProductsFromDb(),
+  ["products-list"],
+  { revalidate: 60, tags: ["products"] }
+);
 
 export async function saveProducts(products: Product[]) {
-  const current = await getProducts();
+  const current = await getProductsFromDb(); // bypass cache for accurate diff
   const incomingIds = new Set(products.map((p) => p.id));
   const idsToDelete = current
     .map((p) => p.id)
@@ -160,7 +164,10 @@ export async function saveProducts(products: Product[]) {
     }
   }
 
-  if (!products.length) return;
+  if (!products.length) {
+    revalidateTag("products");
+    return;
+  }
 
   const rows = products.map(toDbRow);
 
@@ -171,6 +178,7 @@ export async function saveProducts(products: Product[]) {
   if (upsertError) {
     throw upsertError;
   }
+  revalidateTag("products");
 }
 
 export async function upsertProduct(product: Product) {
@@ -183,12 +191,12 @@ export async function upsertProduct(product: Product) {
   if (error) {
     throw error;
   }
-
+  revalidateTag("products");
   return product;
 }
 
 export async function removeProduct(productId: string) {
-  const all = await getProducts();
+  const all = await getProductsFromDb(); // bypass cache for accurate lookup
   const target = all.find((x) => x.id === productId) || null;
 
   const { error } = await supabase.from(TABLE).delete().eq("SKU", productId);
@@ -196,6 +204,6 @@ export async function removeProduct(productId: string) {
   if (error) {
     throw error;
   }
-
+  revalidateTag("products");
   return target;
 }

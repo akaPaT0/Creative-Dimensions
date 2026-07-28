@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { useUser, SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import AuthModal from "@/app/components/AuthModal";
+import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 type InvoicePayload = {
   orderId: string;
@@ -59,7 +60,7 @@ function formatDate(value: string) {
 }
 
 export default function InvoicePage() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSupabaseAuth();
   const params = useParams<{ orderId: string }>();
   const searchParams = useSearchParams();
   const orderId = params?.orderId ?? "";
@@ -68,6 +69,7 @@ export default function InvoicePage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [authOpen, setAuthOpen] = useState(false);
   const [invoice, setInvoice] = useState<InvoicePayload | null>(null);
 
   const endpoint = useMemo(() => {
@@ -87,7 +89,7 @@ export default function InvoicePage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(endpoint, { cache: "no-store" });
+        const res = await authFetch(endpoint, { cache: "no-store" });
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
           invoice?: InvoicePayload;
@@ -140,21 +142,24 @@ export default function InvoicePage() {
           }
         `}</style>
 
-        <SignedOut>
+        <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+        {!isSignedIn ? (
           <section className="mx-auto max-w-xl rounded-xl border border-black/20 bg-white p-8 text-center shadow-sm">
             <h1 className="text-3xl font-semibold text-black">Invoice</h1>
             <p className="mt-2 text-black/70">Sign in to view invoice details.</p>
             <div className="mt-6 flex justify-center">
-              <SignInButton mode="modal">
-                <button className="rounded-lg border border-black px-5 py-2.5 font-medium text-black hover:bg-black hover:text-white transition">
-                  Sign in
-                </button>
-              </SignInButton>
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="rounded-lg border border-black px-5 py-2.5 font-medium text-black hover:bg-black hover:text-white transition"
+              >
+                Sign in
+              </button>
             </div>
           </section>
-        </SignedOut>
+        ) : (
 
-        <SignedIn>
+        <>
           <section className="invoice-sheet rounded-xl border border-black/20 bg-white p-5 shadow-sm sm:p-6">
             <div className="no-print mb-4 flex items-center justify-end">
               <button
@@ -272,7 +277,8 @@ export default function InvoicePage() {
               </>
             ) : null}
           </section>
-        </SignedIn>
+        </>
+        )}
       </main>
     </div>
   );

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LayoutGrid, X } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 export default function AdminShortcutFab() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSupabaseAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -18,7 +18,7 @@ export default function AdminShortcutFab() {
         if (alive) setIsAdmin(false);
         return;
       }
-      const res = await fetch("/api/admin/me", { cache: "no-store" });
+      const res = await authFetch("/api/admin/me", { cache: "no-store" });
       if (!alive) return;
       setIsAdmin(res.ok);
     }

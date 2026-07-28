@@ -46,6 +46,13 @@ async function getProduct(slug: string) {
   );
 }
 
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products
+    .filter((x) => x.category === "fanboys" && x.slug)
+    .map((x) => ({ slug: String(x.slug) }));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -162,7 +169,6 @@ export default async function FanboySlugPage({
   }));
 
   const productUrl = `${SITE_URL}/shop/fanboys/${encodeURIComponent(p.slug)}`;
-  const waText = `Hey! I'm interested in: ${p.name} - ${productUrl}`;
   const productImages = imgs.map((img) =>
     String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`
   );

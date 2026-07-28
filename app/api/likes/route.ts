@@ -1,40 +1,45 @@
-import { kv } from "@vercel/kv";
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
+import {
+  addProductToCollection,
+  getProductCollection,
+  removeProductFromCollection,
+} from "@/app/lib/supabase/user-data";
 
-function key(userId: string) {
-  return `user:${userId}:likes`;
+const TABLE = "user_likes";
+
+function getProductId(body: unknown) {
+  if (!body || typeof body !== "object") return "";
+  const productId = (body as { productId?: unknown }).productId;
+  return typeof productId === "string" ? productId.trim() : "";
 }
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: Request) {
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-  const ids = ((await kv.smembers<string[]>(key(userId))) ?? []) as string[];
-
+  const ids = await getProductCollection(auth.userId, TABLE);
   return NextResponse.json({ ids });
 }
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-  const body = (await req.json().catch(() => null)) as { productId?: string } | null;
-  const productId = body?.productId?.trim();
+  const productId = getProductId(await req.json().catch(() => null));
   if (!productId) return NextResponse.json({ error: "Missing productId" }, { status: 400 });
 
-  await kv.sadd(key(userId), productId);
+  await addProductToCollection(auth.userId, TABLE, productId);
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-  const body = (await req.json().catch(() => null)) as { productId?: string } | null;
-  const productId = body?.productId?.trim();
+  const productId = getProductId(await req.json().catch(() => null));
   if (!productId) return NextResponse.json({ error: "Missing productId" }, { status: 400 });
 
-  await kv.srem(key(userId), productId);
+  await removeProductFromCollection(auth.userId, TABLE, productId);
   return NextResponse.json({ ok: true });
 }

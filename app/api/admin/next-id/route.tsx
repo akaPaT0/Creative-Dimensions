@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { getProducts } from "@/app/lib/products-db";
+import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
 
 function pad3(n: number) {
   return String(n).padStart(3, "0");
@@ -15,23 +15,8 @@ function prefixFrom(category: string, subCategory: string) {
 }
 
 export async function GET(req: Request) {
-  // auth
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await currentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const primaryEmail =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
-    user.emailAddresses[0]?.emailAddress ||
-    "";
-  const userEmail = primaryEmail.trim().toLowerCase();
-
-  if (!adminEmail || userEmail !== adminEmail) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const admin = await requireSupabaseAdmin(req);
+  if ("response" in admin) return admin.response;
 
   const url = new URL(req.url);
   const category = url.searchParams.get("category") || "";

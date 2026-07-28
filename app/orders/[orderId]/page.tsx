@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Background from "../../components/Background";
+import AuthModal from "../../components/AuthModal";
+import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 type OrderRecord = {
   id: string;
@@ -68,16 +69,17 @@ function formatDate(value?: string) {
 export default function OrderDetailsPage() {
   const params = useParams<{ orderId: string }>();
   const orderId = params?.orderId ?? "";
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useSupabaseAuth();
   const [order, setOrder] = useState<OrderRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !orderId) return;
     let alive = true;
     async function load() {
       setLoading(true);
-      const res = await fetch("/api/orders", { cache: "no-store" });
+      const res = await authFetch("/api/orders", { cache: "no-store" });
       const data = (await res.json().catch(() => ({}))) as { orders?: OrderRecord[] };
       if (!alive) return;
       const all = Array.isArray(data.orders) ? data.orders : [];
@@ -99,23 +101,26 @@ export default function OrderDetailsPage() {
     <div className="relative min-h-screen">
       <Background />
       <Navbar />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
 
       <main className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
-        <SignedOut>
+        {!isSignedIn ? (
           <section className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-10 text-center">
             <h1 className="text-3xl font-semibold text-white">Order Tracking</h1>
             <p className="mt-2 text-white/70">Sign in to view your invoice and tracking details.</p>
             <div className="mt-6 flex justify-center">
-              <SignInButton mode="modal">
-                <button className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition">
-                  Sign in
-                </button>
-              </SignInButton>
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
+              >
+                Sign in
+              </button>
             </div>
           </section>
-        </SignedOut>
+        ) : (
 
-        <SignedIn>
+        <>
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -216,7 +221,8 @@ export default function OrderDetailsPage() {
               </aside>
             </div>
           )}
-        </SignedIn>
+        </>
+        )}
 
         <Footer />
       </main>

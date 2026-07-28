@@ -1,22 +1,6 @@
-import { kv } from "@vercel/kv";
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
-type Address = {
-  id: string;
-  label: string;
-  fullName: string;
-  phone: string;
-  line1: string;
-  line2: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
 type AddressInput = {
   id?: string;
@@ -31,10 +15,6 @@ type AddressInput = {
   country?: string;
   isDefault?: boolean;
 };
-
-function key(userId: string) {
-  return `user:${userId}:addresses`;
-}
 
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -69,147 +49,127 @@ function validateAddressInput(input: AddressInput) {
   return null;
 }
 
-function normalizeStored(raw: unknown): Address[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object")
-    .map((x) => ({
-      id: asText(x.id),
-      label: asText(x.label),
-      fullName: asText(x.fullName),
-      phone: asText(x.phone),
-      line1: asText(x.line1),
-      line2: asText(x.line2),
-      city: asText(x.city),
-      state: asText(x.state),
-      postalCode: asText(x.postalCode),
-      country: asText(x.country) || "US",
-      isDefault: x.isDefault === true,
-      createdAt: asText(x.createdAt),
-      updatedAt: asText(x.updatedAt),
-    }))
-    .filter((x) => x.id && x.fullName && x.line1 && x.city && x.postalCode);
+function toClient(row: Record<string, unknown>) {
+  return {
+    id: asText(row.id),
+    label: asText(row.label),
+    fullName: asText(row.full_name),
+    phone: asText(row.phone),
+    line1: asText(row.line1),
+    line2: asText(row.line2),
+    city: asText(row.city),
+    state: asText(row.state),
+    postalCode: asText(row.postal_code),
+    country: asText(row.country) || "US",
+    isDefault: row.is_default === true,
+    createdAt: asText(row.created_at),
+    updatedAt: asText(row.updated_at),
+  };
 }
 
-function ensureDefault(addresses: Address[]) {
-  if (addresses.length === 0) return addresses;
-  const hasDefault = addresses.some((x) => x.isDefault);
-  if (hasDefault) return addresses;
-  return addresses.map((x, idx) => (idx === 0 ? { ...x, isDefault: true } : x));
+async function clearDefault(userId: string) {
+  const { error } = await supabaseAdmin
+    .from("user_addresses")
+    .update({ is_default: false })
+    .eq("user_id", userId);
+  if (error) throw error;
 }
 
-async function loadAddresses(userId: string) {
-  const raw = await kv.get<unknown>(key(userId));
-  return ensureDefault(normalizeStored(raw));
-}
+export async function GET(req: Request) {
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-async function saveAddresses(userId: string, addresses: Address[]) {
-  await kv.set(key(userId), ensureDefault(addresses));
-}
+  const { data, error } = await supabaseAdmin
+    .from("user_addresses")
+    .select("*")
+    .eq("user_id", auth.userId)
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: false });
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const addresses = await loadAddresses(userId);
-  return NextResponse.json({ addresses });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ addresses: (data ?? []).map(toClient) });
 }
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-  const body = await req.json().catch(() => null);
-  const input = normalizeInput(body);
+  const input = normalizeInput(await req.json().catch(() => null));
   const error = validateAddressInput(input);
   if (error) return NextResponse.json({ error }, { status: 400 });
 
-  const now = new Date().toISOString();
-  const newAddress: Address = {
-    id: crypto.randomUUID(),
-    label: input.label || "Address",
-    fullName: input.fullName || "",
-    phone: input.phone || "",
-    line1: input.line1 || "",
-    line2: input.line2 || "",
-    city: input.city || "",
-    state: input.state || "",
-    postalCode: input.postalCode || "",
-    country: input.country || "US",
-    isDefault: input.isDefault === true,
-    createdAt: now,
-    updatedAt: now,
-  };
+  if (input.isDefault) await clearDefault(auth.userId);
 
-  const current = await loadAddresses(userId);
-  const next = newAddress.isDefault
-    ? [newAddress, ...current.map((x) => ({ ...x, isDefault: false }))]
-    : [...current, newAddress];
+  const { data, error: insertError } = await supabaseAdmin
+    .from("user_addresses")
+    .insert({
+      user_id: auth.userId,
+      label: input.label || "Address",
+      full_name: input.fullName,
+      phone: input.phone,
+      line1: input.line1,
+      line2: input.line2 || "",
+      city: input.city,
+      state: input.state,
+      postal_code: input.postalCode,
+      country: input.country || "US",
+      is_default: input.isDefault === true,
+    })
+    .select("*")
+    .single();
 
-  await saveAddresses(userId, next);
-  return NextResponse.json({ ok: true, address: newAddress });
+  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+  return NextResponse.json({ ok: true, address: toClient(data as Record<string, unknown>) });
 }
 
 export async function PUT(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-  const body = await req.json().catch(() => null);
-  const input = normalizeInput(body);
-  if (!input.id) {
-    return NextResponse.json({ error: "Address id is required" }, { status: 400 });
-  }
+  const input = normalizeInput(await req.json().catch(() => null));
+  if (!input.id) return NextResponse.json({ error: "Address id is required" }, { status: 400 });
 
   const error = validateAddressInput(input);
   if (error) return NextResponse.json({ error }, { status: 400 });
+  if (input.isDefault) await clearDefault(auth.userId);
 
-  const current = await loadAddresses(userId);
-  const index = current.findIndex((x) => x.id === input.id);
-  if (index < 0) return NextResponse.json({ error: "Address not found" }, { status: 404 });
+  const { data, error: updateError } = await supabaseAdmin
+    .from("user_addresses")
+    .update({
+      label: input.label || "Address",
+      full_name: input.fullName,
+      phone: input.phone,
+      line1: input.line1,
+      line2: input.line2 || "",
+      city: input.city,
+      state: input.state,
+      postal_code: input.postalCode,
+      country: input.country || "US",
+      is_default: input.isDefault === true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.id)
+    .eq("user_id", auth.userId)
+    .select("*")
+    .single();
 
-  const prev = current[index];
-  const updated: Address = {
-    ...prev,
-    label: input.label || "Address",
-    fullName: input.fullName || "",
-    phone: input.phone || "",
-    line1: input.line1 || "",
-    line2: input.line2 || "",
-    city: input.city || "",
-    state: input.state || "",
-    postalCode: input.postalCode || "",
-    country: input.country || "US",
-    isDefault: input.isDefault === true,
-    updatedAt: new Date().toISOString(),
-  };
-
-  const next = current.map((x, i) => {
-    if (i === index) return updated;
-    if (updated.isDefault) return { ...x, isDefault: false };
-    return x;
-  });
-
-  await saveAddresses(userId, next);
-  return NextResponse.json({ ok: true, address: updated });
+  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  return NextResponse.json({ ok: true, address: toClient(data as Record<string, unknown>) });
 }
 
 export async function DELETE(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireSupabaseUser(req);
+  if ("response" in auth) return auth.response;
 
-  const body = await req.json().catch(() => null);
-  const input = normalizeInput(body);
-  if (!input.id) {
-    return NextResponse.json({ error: "Address id is required" }, { status: 400 });
-  }
+  const input = normalizeInput(await req.json().catch(() => null));
+  if (!input.id) return NextResponse.json({ error: "Address id is required" }, { status: 400 });
 
-  const current = await loadAddresses(userId);
-  const next = current.filter((x) => x.id !== input.id);
+  const { error } = await supabaseAdmin
+    .from("user_addresses")
+    .delete()
+    .eq("id", input.id)
+    .eq("user_id", auth.userId);
 
-  if (next.length === current.length) {
-    return NextResponse.json({ error: "Address not found" }, { status: 404 });
-  }
-
-  await saveAddresses(userId, next);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
