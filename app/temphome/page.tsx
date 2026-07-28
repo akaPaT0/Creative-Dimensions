@@ -53,15 +53,15 @@ export default async function TempHomePage() {
   const featured = products.filter((p) => p.featured === true);
 
   return (
-    <main className="min-h-screen relative text-white">
+    <main className="min-h-screen relative text-white selection:bg-[#FF8B64]/30 selection:text-[#FF8B64]">
       <Background />
       <Navbar />
 
       <section className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20">
 
-        {/* ── HERO ──────────────────────────────────────────────────────── */}
+        {/* ── HERO (Photoshop Specification) ─────────────────────────── */}
         <section className="text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
             Custom 3D Prints Made Different
           </h1>
 
@@ -73,42 +73,42 @@ export default async function TempHomePage() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <a
               href="#all"
-              className="rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg"
+              className="rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg hover:scale-[1.02] active:scale-[0.98]"
             >
               Shop All
             </a>
 
             <TemphomeCustomRequestCta
-              className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-[#232326] px-8 py-3.5 text-sm sm:text-base font-semibold text-[#FF8B64] hover:bg-[#2c2c30] transition"
+              className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-[#232326] px-8 py-3.5 text-sm sm:text-base font-semibold text-[#FF8B64] hover:bg-[#2c2c30] transition hover:scale-[1.02] active:scale-[0.98]"
               buttonLabel="Custom Request"
             />
           </div>
         </section>
 
-        {/* ── FEATURED CONTAINER (Matching Exact Photoshop Mockup) ─────── */}
+        {/* ── FEATURED CONTAINER (Exact Photoshop Layout & Spacing) ───── */}
         {featured.length > 0 && (
           <section
             id="featured"
-            className="mt-16 rounded-[28px] border border-white/10 bg-[#161618]/85 backdrop-blur-md p-5 sm:p-7"
+            className="mt-16 rounded-[32px] border border-white/10 bg-[#1A1A1D]/80 backdrop-blur-xl p-6 sm:p-8 lg:p-9 shadow-2xl"
           >
-            {/* Featured Pill Badge with Arrow */}
-            <div className="mb-5">
+            {/* Pill Badge */}
+            <div className="mb-6 sm:mb-8">
               <a
                 href="#all"
-                className="inline-flex items-center gap-1 rounded-full bg-[#242427] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#FF8B64] border border-white/10 hover:border-white/20 transition"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#27272A]/80 px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#FF8B64] border border-white/10 hover:border-white/20 transition"
               >
                 <span>Featured</span>
                 <span>→</span>
               </a>
             </div>
 
-            {/* 1:1 Square Cards Grid (Image + Bottom-Right Price Overlay) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
+            {/* 5 1:1 Square Cards Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5 lg:gap-6">
               {featured.slice(0, 5).map((p: Product) => (
                 <Link
                   key={`f-${getStableKey(p)}`}
                   href={getProductHref(p)}
-                  className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-[#242427] border border-white/5 hover:border-white/20 transition duration-200"
+                  className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-[#28282B] border border-white/5 hover:border-white/20 transition-all duration-300 shadow-md"
                 >
                   <Image
                     src={getCardImage(p)}
@@ -119,7 +119,7 @@ export default async function TempHomePage() {
                   />
 
                   {/* Price Pill Overlay (Bottom Right Corner) */}
-                  <div className="absolute bottom-2.5 right-2.5 rounded-full bg-[#1c1c1e]/85 backdrop-blur-md px-3 py-1 text-[#FF8B64] font-bold text-xs sm:text-sm border border-white/10 shadow-md">
+                  <div className="absolute bottom-3 right-3 rounded-full bg-[#1C1C1E]/80 backdrop-blur-md px-3.5 py-1 text-[#FF8B64] font-bold text-xs sm:text-sm border border-white/10 shadow-lg">
                     {getPriceLabel(p)}
                   </div>
                 </Link>
@@ -132,13 +132,13 @@ export default async function TempHomePage() {
         <ShopCatalogClient products={products} />
 
         {/* ── CUSTOM REQUEST BANNER ───────────────────────────────────── */}
-        <section className="mt-16 rounded-[24px] border border-white/10 bg-[#161618]/85 p-8 text-center backdrop-blur-md">
+        <section className="mt-16 rounded-[32px] border border-white/10 bg-[#1A1A1D]/80 p-8 sm:p-10 text-center backdrop-blur-xl shadow-xl">
           <p className="text-white/80 text-base sm:text-lg font-medium">
             Need a custom design or special 3D print?
           </p>
-          <div className="mt-4">
+          <div className="mt-5">
             <TemphomeCustomRequestCta
-              className="inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-8 py-3 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
+              className="inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg"
               buttonLabel="Custom request"
             />
           </div>
