@@ -57,7 +57,7 @@ export default async function TempHomePage() {
       <Background />
       <Navbar />
 
-      <section className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20">
+      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20">
 
         {/* ── HERO (Photoshop Specification) ─────────────────────────── */}
         <section className="text-center max-w-3xl mx-auto">
@@ -85,17 +85,20 @@ export default async function TempHomePage() {
           </div>
         </section>
 
-        {/* ── FEATURED CONTAINER (Exact Photoshop Layout & Spacing) ───── */}
+        {/* ── FEATURED CONTAINER (Exact Photoshop Colors, Glows & Spacing) ──── */}
         {featured.length > 0 && (
           <section
             id="featured"
-            className="mt-16 rounded-[32px] border border-white/10 bg-[#1A1A1D]/80 backdrop-blur-xl p-6 sm:p-8 lg:p-9 shadow-2xl"
+            className="mt-16 rounded-[36px] border border-white/10 bg-[#161618]/90 backdrop-blur-2xl p-7 sm:p-9 lg:p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] relative overflow-hidden"
           >
+            {/* Subtle Inner Glow Overlay */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,139,100,0.05),transparent_75%)]" />
+
             {/* Pill Badge */}
-            <div className="mb-6 sm:mb-8">
+            <div className="relative z-10 mb-7 sm:mb-9">
               <a
                 href="#all"
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#27272A]/80 px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#FF8B64] border border-white/10 hover:border-white/20 transition"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#252528] px-5 py-2 text-sm font-semibold text-[#FF8B64] border border-white/15 hover:border-white/30 transition shadow-sm"
               >
                 <span>Featured</span>
                 <span>→</span>
@@ -103,12 +106,12 @@ export default async function TempHomePage() {
             </div>
 
             {/* 5 1:1 Square Cards Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5 lg:gap-6">
+            <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 sm:gap-6 lg:gap-8">
               {featured.slice(0, 5).map((p: Product) => (
                 <Link
                   key={`f-${getStableKey(p)}`}
                   href={getProductHref(p)}
-                  className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-[#28282B] border border-white/5 hover:border-white/20 transition-all duration-300 shadow-md"
+                  className="group relative aspect-square w-full overflow-hidden rounded-[24px] bg-[#252528] border border-white/5 hover:border-white/20 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-[1.02]"
                 >
                   <Image
                     src={getCardImage(p)}
@@ -118,8 +121,8 @@ export default async function TempHomePage() {
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   />
 
-                  {/* Price Pill Overlay (Bottom Right Corner) */}
-                  <div className="absolute bottom-3 right-3 rounded-full bg-[#1C1C1E]/80 backdrop-blur-md px-3.5 py-1 text-[#FF8B64] font-bold text-xs sm:text-sm border border-white/10 shadow-lg">
+                  {/* Price Pill Overlay */}
+                  <div className="absolute bottom-3.5 right-3.5 sm:bottom-4 sm:right-4 rounded-full bg-[#1C1C1E]/90 backdrop-blur-md px-4 py-1.5 text-[#FF8B64] font-bold text-xs sm:text-sm border border-white/10 shadow-lg">
                     {getPriceLabel(p)}
                   </div>
                 </Link>
@@ -132,7 +135,7 @@ export default async function TempHomePage() {
         <ShopCatalogClient products={products} />
 
         {/* ── CUSTOM REQUEST BANNER ───────────────────────────────────── */}
-        <section className="mt-16 rounded-[32px] border border-white/10 bg-[#1A1A1D]/80 p-8 sm:p-10 text-center backdrop-blur-xl shadow-xl">
+        <section className="mt-16 rounded-[36px] border border-white/10 bg-[#161618]/90 p-8 sm:p-10 text-center backdrop-blur-2xl shadow-xl">
           <p className="text-white/80 text-base sm:text-lg font-medium">
             Need a custom design or special 3D print?
           </p>
