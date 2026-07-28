@@ -57,20 +57,20 @@ export default async function TempHomePage() {
       <Background />
       <Navbar />
 
-      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20">
+      <section className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-20">
 
-        {/* ── HERO (Photoshop Specification) ─────────────────────────── */}
+        {/* ── HERO (Exact Photoshop Specification) ────────────────────── */}
         <section className="text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
             Custom 3D Prints Made Different
           </h1>
 
-          <p className="mt-4 text-white/60 text-sm sm:text-base lg:text-lg max-w-md mx-auto leading-relaxed">
+          <p className="mt-3.5 text-white/60 text-sm sm:text-base lg:text-lg max-w-md mx-auto leading-relaxed">
             Unique keychains, figurines &amp; accessories -
             <br className="hidden sm:inline" /> printed on demand in Lebanon.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
             <a
               href="#all"
               className="rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg hover:scale-[1.02] active:scale-[0.98]"
@@ -85,20 +85,17 @@ export default async function TempHomePage() {
           </div>
         </section>
 
-        {/* ── FEATURED CONTAINER (Exact Photoshop Colors, Glows & Spacing) ──── */}
+        {/* ── FEATURED CONTAINER (Exact Photoshop Colors & Spacing) ──── */}
         {featured.length > 0 && (
           <section
             id="featured"
-            className="mt-16 rounded-[36px] border border-white/10 bg-[#161618]/90 backdrop-blur-2xl p-7 sm:p-9 lg:p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] relative overflow-hidden"
+            className="mt-14 rounded-[28px] border border-white/10 bg-[#171719]/90 backdrop-blur-xl p-5 sm:p-6 lg:p-7 shadow-2xl"
           >
-            {/* Subtle Inner Glow Overlay */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,139,100,0.05),transparent_75%)]" />
-
             {/* Pill Badge */}
-            <div className="relative z-10 mb-7 sm:mb-9">
+            <div className="mb-4 sm:mb-5">
               <a
                 href="#all"
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#252528] px-5 py-2 text-sm font-semibold text-[#FF8B64] border border-white/15 hover:border-white/30 transition shadow-sm"
+                className="inline-flex items-center gap-1 rounded-full bg-[#252528] px-3.5 py-1 text-xs sm:text-sm font-semibold text-[#FF8B64] border border-white/15 hover:border-white/30 transition"
               >
                 <span>Featured</span>
                 <span>→</span>
@@ -106,12 +103,12 @@ export default async function TempHomePage() {
             </div>
 
             {/* 5 1:1 Square Cards Row */}
-            <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
               {featured.slice(0, 5).map((p: Product) => (
                 <Link
                   key={`f-${getStableKey(p)}`}
                   href={getProductHref(p)}
-                  className="group relative aspect-square w-full overflow-hidden rounded-[24px] bg-[#252528] border border-white/5 hover:border-white/20 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-[1.02]"
+                  className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-[#222225] border border-white/10 hover:border-white/25 transition-all duration-200 shadow-md"
                 >
                   <Image
                     src={getCardImage(p)}
@@ -122,7 +119,7 @@ export default async function TempHomePage() {
                   />
 
                   {/* Price Pill Overlay */}
-                  <div className="absolute bottom-3.5 right-3.5 sm:bottom-4 sm:right-4 rounded-full bg-[#1C1C1E]/90 backdrop-blur-md px-4 py-1.5 text-[#FF8B64] font-bold text-xs sm:text-sm border border-white/10 shadow-lg">
+                  <div className="absolute bottom-2.5 right-2.5 rounded-full bg-[#29292c]/90 backdrop-blur-md px-3 py-0.5 text-[#FF8B64] font-bold text-xs sm:text-sm border border-white/15 shadow-sm">
                     {getPriceLabel(p)}
                   </div>
                 </Link>
@@ -135,11 +132,11 @@ export default async function TempHomePage() {
         <ShopCatalogClient products={products} />
 
         {/* ── CUSTOM REQUEST BANNER ───────────────────────────────────── */}
-        <section className="mt-16 rounded-[36px] border border-white/10 bg-[#161618]/90 p-8 sm:p-10 text-center backdrop-blur-2xl shadow-xl">
+        <section className="mt-14 rounded-[28px] border border-white/10 bg-[#171719]/90 p-7 sm:p-9 text-center backdrop-blur-xl shadow-xl">
           <p className="text-white/80 text-base sm:text-lg font-medium">
             Need a custom design or special 3D print?
           </p>
-          <div className="mt-5">
+          <div className="mt-4">
             <TemphomeCustomRequestCta
               className="inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg"
               buttonLabel="Custom request"
@@ -148,7 +145,7 @@ export default async function TempHomePage() {
         </section>
 
         {/* ── FOOTER ─────────────────────────────────────────────────── */}
-        <div className="mt-16">
+        <div className="mt-14">
           <Footer />
         </div>
 
