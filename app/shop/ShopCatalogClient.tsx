@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Filter, Box } from "lucide-react";
+import { Filter } from "lucide-react";
 
 export type Product = {
   id?: string;
@@ -60,40 +60,16 @@ function scoreMatch(query: string, target: string) {
 }
 
 function getCardImage(p: Product) {
-  if (Array.isArray(p.images) && p.images.length > 0 && p.images[0]) return p.images[0];
-  if (typeof p.image === "string" && p.image.trim()) return p.image;
+  if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
+  if (typeof p.image === "string" && p.image) return p.image;
 
+  // fallback for older data
   const cat = p?.category;
   const sub = p?.subCategory || "other";
   const slug = p?.slug;
   if (cat && slug) return `/products/${cat}/${sub}/${slug}-1.webp`;
 
-  return "";
-}
-
-function ProductCardImage({ p, alt }: { p: Product; alt: string }) {
-  const [error, setError] = useState(false);
-  const src = getCardImage(p);
-
-  if (!src || error) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 text-white/30 rounded-lg">
-        <Box className="w-8 h-8 mb-1 opacity-40" />
-        <span className="text-[10px] font-mono uppercase tracking-wider">3D Print</span>
-      </div>
-    );
-  }
-
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      onError={() => setError(true)}
-      className="object-cover group-hover:scale-[1.03] transition duration-300 rounded-lg"
-      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-    />
-  );
+  return "/products/placeholder.jpg";
 }
 
 function getTitle(p: Product) {
@@ -119,9 +95,9 @@ function getPriceLabel(p: Product) {
   const price = p.price ?? p.priceUSD;
   const currency = p.currency || "USD";
 
-  if (typeof price === "number") return `$${price}`;
+  if (typeof price === "number") return `${price} ${currency}`;
   if (typeof price === "string" && price.trim()) return price;
-  return "Custom Quote";
+  return "DM for price";
 }
 
 function getNumericPrice(p: Product) {
@@ -176,6 +152,7 @@ function ShopSearchBar({
 
     const out: { s: Suggestion; score: number }[] = [];
 
+    // categories
     for (const c of categories) {
       const sc = scoreMatch(q, c);
       if (sc >= 0)
@@ -185,6 +162,7 @@ function ShopSearchBar({
         });
     }
 
+    // subcategories
     for (const s of subCategories) {
       const sc = scoreMatch(q, s);
       if (sc >= 0)
@@ -194,6 +172,7 @@ function ShopSearchBar({
         });
     }
 
+    // synonyms
     for (const [k, words] of Object.entries(SYNONYMS)) {
       if (!k.startsWith(q) && scoreMatch(q, k) < 0) continue;
       for (const w of words) {
@@ -203,6 +182,7 @@ function ShopSearchBar({
       }
     }
 
+    // product names
     for (const p of products) {
       const name = getTitle(p);
       const sc = scoreMatch(q, name);
@@ -220,6 +200,7 @@ function ShopSearchBar({
       }
     }
 
+    // de-dupe + top 8
     const seen = new Set<string>();
     const ranked = out.sort((a, b) => b.score - a.score);
     const final: Suggestion[] = [];
@@ -299,12 +280,12 @@ function ShopSearchBar({
             setOpen(false);
           }
         }}
-        placeholder="Search products… (try: keychain, bmw, cat)"
-        className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#FF8B64]/50 transition"
+        placeholder="Search… (try: key, car, minecraft)"
+        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/35"
       />
 
       {open && suggestions.length > 0 && (
-        <div className="absolute z-[210] mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/90 backdrop-blur-xl shadow-2xl">
+        <div className="absolute z-[210] mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0D0D0D]/85 backdrop-blur-xl">
           {suggestions.map((s, i) => (
             <button
               key={`${s.type}:${
@@ -313,13 +294,13 @@ function ShopSearchBar({
               type="button"
               onMouseEnter={() => setActive(i)}
               onClick={() => pick(s)}
-              className={`w-full px-4 py-2.5 text-left text-sm transition ${
-                i === active ? "bg-white/10 text-white" : "text-white/80"
+              className={`w-full px-4 py-3 text-left text-sm transition ${
+                i === active ? "bg-white/10" : "bg-transparent"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="truncate">{s.label}</span>
-                <span className="text-xs text-[#FF8B64] shrink-0 capitalize">
+                <span className="text-white/90 truncate">{s.label}</span>
+                <span className="text-xs text-white/45 shrink-0">
                   {s.type === "subCategory" ? "sub" : s.type}
                 </span>
               </div>
@@ -339,6 +320,8 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     "default"
   );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // ✅ default load as 2 columns
   const [columns, setColumns] = useState<1 | 2 | 3 | 4>(2);
 
   const categories = useMemo(() => {
@@ -389,7 +372,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
             setCategory(v);
             setSubCategory("all");
           }}
-          className="rounded-xl border border-white/15 bg-[#0D0D0D]/60 px-3 py-2 text-xs text-white outline-none"
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
         >
           {categories.map((c) => (
             <option key={c} value={c}>
@@ -401,7 +384,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         <select
           value={subCategory}
           onChange={(e) => setSubCategory(e.target.value)}
-          className="rounded-xl border border-white/15 bg-[#0D0D0D]/60 px-3 py-2 text-xs text-white outline-none"
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
         >
           {subCategoryOptions.map((s) => (
             <option key={s} value={s}>
@@ -415,11 +398,11 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           onChange={(e) =>
             setSort(e.target.value as "default" | "price-asc" | "price-desc")
           }
-          className="rounded-xl border border-white/15 bg-[#0D0D0D]/60 px-3 py-2 text-xs text-white outline-none"
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
         >
-          <option value="default">Sort: Default</option>
-          <option value="price-asc">Price: Low to High</option>
-          <option value="price-desc">Price: High to Low</option>
+          <option value="default">Sort: default</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
         </select>
 
         <select
@@ -427,12 +410,12 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           onChange={(e) =>
             setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)
           }
-          className="rounded-xl border border-white/15 bg-[#0D0D0D]/60 px-3 py-2 text-xs text-white outline-none"
+          className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
         >
-          <option value={1}>1 Column</option>
-          <option value={2}>2 Columns</option>
-          <option value={3}>3 Columns</option>
-          <option value={4}>4 Columns</option>
+          <option value={1}>Columns: 1</option>
+          <option value={2}>Columns: 2</option>
+          <option value={3}>Columns: 3</option>
+          <option value={4}>Columns: 4</option>
         </select>
       </>
     );
@@ -450,6 +433,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
   const filtered = useMemo(() => {
     const q = norm(search);
+
     let list = products.slice();
 
     if (category !== "all") list = list.filter((p) => p.category === category);
@@ -474,6 +458,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
     return list;
   }, [products, search, category, subCategory, sort]);
 
+  // Count active filters for the FAB badge
   const activeFilterCount = [
     category !== "all",
     subCategory !== "all",
@@ -482,7 +467,8 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
   return (
     <>
-      {/* Mobile filter bottom sheet */}
+      {/* ── Mobile filter bottom sheet ─────────────────────────────────── */}
+      {/* Backdrop */}
       {mobileFiltersOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 sm:hidden"
@@ -490,13 +476,16 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         />
       )}
 
+      {/* Sheet — slides up from the bottom */}
       <div
         className={`fixed inset-x-0 bottom-0 z-50 sm:hidden transition-transform duration-300 ease-in-out ${
           mobileFiltersOpen ? "translate-y-0" : "translate-y-full"
         }`}
       >
         <div className="rounded-t-3xl border-t border-white/10 bg-[#141210] px-5 pb-10 pt-5">
+          {/* Drag handle */}
           <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/20" />
+
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-white">Filter &amp; Search</p>
             {activeFilterCount > 0 && (
@@ -509,7 +498,11 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               </button>
             )}
           </div>
-          <div className="grid gap-3">{renderControls()}</div>
+
+          <div className="grid gap-3">
+            {renderControls()}
+          </div>
+
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(false)}
@@ -520,7 +513,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         </div>
       </div>
 
-      {/* FAB for Mobile */}
+      {/* FAB — fixed, always visible on mobile */}
       <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 sm:hidden">
         <button
           type="button"
@@ -538,84 +531,94 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         </button>
       </div>
 
-      {/* Clean borderless section */}
-      <section id="all" className="mt-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
-          <h2 className="text-xl sm:text-2xl font-bold text-white">Products</h2>
-
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => {
-                  setCategory(c);
-                  setSubCategory("all");
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition ${
-                  category === c
-                    ? "bg-[#FF8B64] text-black"
-                    : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {c === "all" ? "All Products" : c}
-              </button>
-            ))}
-          </div>
+    <section
+      id="all"
+      className="mt-10 isolate rounded-2xl border border-white/10 bg-white/5 p-6"
+    >
+      <div className="flex items-start justify-between gap-3 text-left">
+        <div>
+          <h2 className="text-xl font-semibold text-white">All products</h2>
+          <p className="text-sm text-white/60 max-sm:hidden">
+            Filter by category, subcategory, or search by keyword.
+          </p>
         </div>
 
-        {/* Controls — desktop search & filters */}
-        <div className="mt-4 hidden gap-3 sm:grid lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
-          {renderControls()}
-        </div>
-
-        {/* Count */}
-        <div className="mt-4 text-xs text-white/50">
-          Showing {filtered.length} items
-        </div>
-
-        {/* Clean Product Grid */}
-        <div
-          className="mt-6 grid gap-6"
-          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        <button
+          type="button"
+          onClick={resetAll}
+          className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white transition hover:bg-white/10 sm:inline-flex"
         >
-          {filtered.map((p) => (
-            <Link
-              key={getStableKey(p)}
-              href={getProductHref(p)}
-              className="group flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5">
-                  <ProductCardImage p={p} alt={getTitle(p)} />
-                </div>
+          Reset
+        </button>
+      </div>
 
-                <div className="mt-3 flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-white text-sm line-clamp-2 leading-snug group-hover:text-[#FF8B64] transition">
-                    {getTitle(p)}
-                  </h3>
-                  <span className="shrink-0 text-[#FF8B64] font-bold text-xs pt-0.5">
-                    {getPriceLabel(p)}
-                  </span>
-                </div>
-              </div>
+      {/* Controls — desktop only */}
+      <div className="mt-5 hidden gap-3 sm:grid lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
+        {renderControls()}
+      </div>
 
-              <div className="mt-2 text-[11px] text-white/40 capitalize">
-                {p.category} {p.subCategory ? `/ ${p.subCategory}` : ""}
-              </div>
-            </Link>
-          ))}
+      {/* Results */}
+      <div className="mt-6 flex items-center justify-between text-sm text-white/60">
+        <div>{filtered.length} results</div>
+        <div className="hidden sm:block">
+          Tip: type <span className="text-white/80">key</span> to see suggestions
         </div>
+      </div>
 
-        {filtered.length === 0 && (
-          <div className="mt-12 text-center text-white/50 text-sm py-12">
-            No matching products found. Try resetting your search.
-          </div>
-        )}
+      {/* Cards */}
+      <div
+        className="mt-4 grid gap-4"
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+      >
+        {filtered.map((p) => (
+          <Link
+            key={getStableKey(p)}
+            href={getProductHref(p)}
+            className="group rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5 hover:bg-black/30 transition"
+          >
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
+              <Image
+                src={getCardImage(p)}
+                alt={getTitle(p)}
+                fill
+                className="object-cover group-hover:scale-[1.02] transition"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
+            </div>
 
-        <div className="h-16 sm:hidden" />
-      </section>
+            <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+              <div className="min-w-0">
+                <div className="text-white font-semibold text-[15px] leading-snug line-clamp-2">
+                  {getTitle(p)}
+                </div>
+              </div>
+
+              <div className="shrink-0 text-white/80 text-sm sm:text-right">
+                {getPriceLabel(p)}
+              </div>
+            </div>
+
+            <div className="mt-1 hidden sm:block text-sm text-white/60 line-clamp-2">
+              {getDesc(p)}
+            </div>
+
+            <div className="mt-2 text-xs text-white/45">
+              {p.category}
+              {p.subCategory ? ` / ${p.subCategory}` : ""}
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="mt-10 text-center text-white/60">
+          No matches. Try a different keyword or reset filters.
+        </div>
+      )}
+
+      {/* Bottom padding so FAB doesn't overlap last card */}
+      <div className="h-16 sm:hidden" />
+    </section>
     </>
   );
 }
