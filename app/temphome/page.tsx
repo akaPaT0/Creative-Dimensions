@@ -168,7 +168,7 @@ export default async function TempHomePage() {
             </Link>
           </div>
 
-          <div className="flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
+          <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
             {[
               {
                 title: "Keychains",
@@ -210,28 +210,24 @@ export default async function TempHomePage() {
               <Link
                 key={cat.title}
                 href={cat.href}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#161619]/90 p-3.5 hover:border-[#FF8B64]/50 transition-all duration-300 shadow-md hover:-translate-y-0.5 w-[170px] sm:w-[220px] md:w-[260px] shrink-0 snap-start"
+                className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 w-[145px] sm:w-auto shrink-0 snap-start shadow-md"
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5 mb-3">
+                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5">
                   <Image
                     src={getCardImage(cat.sample || ({} as Product))}
                     alt={cat.title}
                     fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 640px) 170px, 260px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                    sizes="(max-width: 640px) 150px, (max-width: 1024px) 33vw, 16vw"
                   />
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-[#FF8B64] transition-colors line-clamp-1">
-                      {cat.title}
-                    </h3>
-                    <span className="text-xs text-white/40 group-hover:text-[#FF8B64] transition-colors group-hover:translate-x-0.5 duration-200">
-                      →
-                    </span>
+                <div className="mt-2.5 flex flex-col flex-1 justify-between">
+                  <div className="flex items-center justify-between gap-1 text-white text-xs sm:text-sm font-semibold truncate group-hover:text-[#FF8B64] transition-colors">
+                    <span className="truncate">{cat.title}</span>
+                    <span className="text-xs text-white/40 group-hover:text-[#FF8B64] transition-colors shrink-0">→</span>
                   </div>
-                  <p className="mt-0.5 text-xs text-white/50 line-clamp-1">
+                  <p className="mt-0.5 text-[11px] text-white/50 truncate">
                     {cat.desc}
                   </p>
                 </div>
