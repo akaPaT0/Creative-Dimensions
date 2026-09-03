@@ -244,28 +244,13 @@ export default async function TempHomePage() {
             href="/shop"
             className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-[#141417]/90 p-6 sm:p-8 hover:border-[#FF8B64]/50 transition-all duration-300 shadow-xl hover:-translate-y-0.5"
           >
-            <div>
-              {/* Product Preview Thumbnails Row */}
-              <div className="flex items-center gap-2.5 mb-5">
-                {products.slice(0, 3).map((p, idx) => (
-                  <div
-                    key={`cat-prev-${idx}`}
-                    className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-black/50 border border-white/10 shadow-md group-hover:scale-105 transition-transform duration-300"
-                  >
-                    <Image
-                      src={getCardImage(p)}
-                      alt={getTitle(p)}
-                      fill
-                      className="object-cover"
-                      sizes="56px"
-                    />
-                  </div>
-                ))}
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-dashed border-white/15 bg-white/[0.02] flex items-center justify-center text-xs text-white/40 font-semibold group-hover:border-[#FF8B64]/40 group-hover:text-[#FF8B64] transition-colors">
-                  +more
-                </div>
-              </div>
+            {/* Subtle background glow on hover */}
+            <div
+              className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-[#FF8B64]/10 blur-2xl rounded-full group-hover:bg-[#FF8B64]/20 transition-all duration-500"
+              aria-hidden="true"
+            />
 
+            <div className="relative">
               <h3 className="text-xl sm:text-2xl font-bold text-white group-hover:text-[#FF8B64] transition-colors">
                 Browse Full Catalog
               </h3>
@@ -274,15 +259,23 @@ export default async function TempHomePage() {
               </p>
             </div>
 
-            <div className="mt-6 flex items-center gap-1 text-xs sm:text-sm font-semibold text-[#FF8B64]">
-              <span>Open Catalog</span>
-              <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
+            <div className="relative mt-8">
+              <span className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-xs sm:text-sm font-bold text-white group-hover:bg-[#FF8B64] group-hover:text-[#0D0D0D] group-hover:border-[#FF8B64] transition-all duration-200 shadow-md">
+                <span>Explore Catalog</span>
+                <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
+              </span>
             </div>
           </Link>
 
           {/* Card 2: Custom Request Studio */}
           <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-[#141417]/90 p-6 sm:p-8 shadow-xl">
-            <div>
+            {/* Subtle background glow */}
+            <div
+              className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-[#FF8B64]/10 blur-2xl rounded-full"
+              aria-hidden="true"
+            />
+
+            <div className="relative">
               <h3 className="text-xl sm:text-2xl font-bold text-white">
                 Custom 3D Printing
               </h3>
@@ -291,7 +284,7 @@ export default async function TempHomePage() {
               </p>
             </div>
 
-            <div className="mt-6">
+            <div className="relative mt-8">
               <TemphomeCustomRequestCta
                 className="inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-6 py-3 text-xs sm:text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-md hover:scale-[1.02] active:scale-[0.98]"
                 buttonLabel="Start Custom Order"
