@@ -6,9 +6,7 @@ import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import { getProducts } from "../../../lib/products-db";
 
-function normalize(s: string) {
-  return decodeURIComponent(s).trim().toLowerCase();
-}
+import { slugify } from "@/app/lib/product-seo";
 
 export default async function Page({
   params,
@@ -16,17 +14,17 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug: rawSlug } = await params;
-  const slug = normalize(rawSlug);
+  const slug = slugify(rawSlug);
   const products = await getProducts();
 
   const matches = (products as any[]).filter(
-    (p) => p?.slug && normalize(String(p.slug)) === slug
+    (p) => p?.slug && slugify(String(p.slug)) === slug
   );
 
   // If exactly one match, redirect to the real product route
   if (matches.length === 1) {
     const p = matches[0];
-    redirect(`/shop/${p.category}/${encodeURIComponent(p.slug)}`);
+    redirect(`/shop/${p.category}/${encodeURIComponent(slugify(p.slug))}`);
   }
 
   // If not found or multiple (rare), show a small resolver page

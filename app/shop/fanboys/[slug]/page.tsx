@@ -14,35 +14,28 @@ import LikeWishlistRow from "../../../components/LikeWishlistRow";
 import AddToCartButton from "../../../components/AddToCartButton";
 import ProductCustomizeColorsAction from "../../../components/ProductCustomizeColorsAction";
 import { SITE_URL } from "../../../lib/site";
+import {
+  buildProductMetadata,
+  buildProductJsonLd,
+  slugify,
+  getProductImages,
+} from "@/app/lib/product-seo";
 
 export const revalidate = 300;
 
-function normalize(s: string) {
-  try {
-    return decodeURIComponent(s).trim().toLowerCase();
-  } catch {
-    return s.trim().toLowerCase();
-  }
-}
-
 function getImages(p: Product) {
-  if (Array.isArray(p.images) && p.images.length) return p.images;
-  if (typeof p.image === "string" && p.image) return [p.image];
-  if (p.category && p.slug) return [`/products/${p.category}/${p.slug}-1.jpg`];
-  return ["/products/placeholder.jpg"];
+  return getProductImages(p);
 }
 
 function getCardImage(p: Product) {
-  if (Array.isArray(p.images) && p.images.length) return p.images[0];
-  if (typeof p.image === "string" && p.image) return p.image;
-  if (p.category && p.slug) return `/products/${p.category}/${p.slug}-1.jpg`;
-  return "/products/placeholder.jpg";
+  const imgs = getProductImages(p);
+  return imgs[0] || "/products/placeholder.jpg";
 }
 
 async function getProduct(slug: string) {
   const products = await getProducts();
   return products.find(
-    (x) => x.category === "fanboys" && normalize(String(x.slug)) === slug
+    (x) => x.category === "fanboys" && slugify(String(x.slug)) === slug
   );
 }
 
@@ -50,7 +43,7 @@ export async function generateStaticParams() {
   const products = await getProducts();
   return products
     .filter((x) => x.category === "fanboys" && x.slug)
-    .map((x) => ({ slug: String(x.slug) }));
+    .map((x) => ({ slug: slugify(String(x.slug)) }));
 }
 
 export async function generateMetadata({
@@ -59,49 +52,16 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug: rawSlug } = await params;
-  const p = await getProduct(normalize(rawSlug));
+  const p = await getProduct(slugify(rawSlug));
 
   if (!p) {
     return {
-      title: "Product not found",
+      title: "Product Not Found | Creative Dimensions",
       robots: { index: false, follow: false },
     };
   }
 
-  const imgs = getImages(p);
-  const first = imgs[0] || "/products/placeholder.jpg";
-  const ogImages = imgs.map((img) => {
-    const url = String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`;
-    return { url, width: 1200, height: 630, alt: p.name };
-  });
-
-  const title = `${p.name} | Creative Dimensions`;
-  const desc =
-    typeof p.description === "string" && p.description.trim()
-      ? p.description.trim().slice(0, 200)
-      : "Custom 3D printed item in Lebanon.";
-
-  const url = `${SITE_URL}/shop/fanboys/${encodeURIComponent(p.slug)}`;
-
-  return {
-    title,
-    description: desc,
-    alternates: { canonical: url },
-    openGraph: {
-      title,
-      description: desc,
-      url,
-      siteName: "Creative Dimensions",
-      type: "website",
-      images: ogImages,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description: desc,
-      images: [ogImages[0]?.url || `${SITE_URL}${first}`],
-    },
-  };
+  return buildProductMetadata(p, "fanboys");
 }
 
 export default async function FanboySlugPage({
@@ -112,7 +72,7 @@ export default async function FanboySlugPage({
   const { slug: rawSlug } = await params;
   const products = await getProducts();
   const p = products.find(
-    (x) => x.category === "fanboys" && normalize(String(x.slug)) === normalize(rawSlug)
+    (x) => x.category === "fanboys" && slugify(String(x.slug)) === slugify(rawSlug)
   );
 
   if (!p) {
@@ -126,7 +86,7 @@ export default async function FanboySlugPage({
             className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 transition"
           >
             <ChevronLeft size={16} strokeWidth={2.25} />
-            Back to Fanboys
+            Back to Collectibles
           </Link>
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
             Not found.
@@ -147,19 +107,20 @@ export default async function FanboySlugPage({
       )
     : [];
 
-  const similar = sameSub.length > total - 1
-    ? sameSub
-    : [
-        ...sameSub.slice(0, total),
-        ...products
-          .filter(
-            (x) =>
-              x.category === p.category &&
-              x.slug !== p.slug &&
-              !sameSub.some((s) => s.id === x.id)
-          )
-          .slice(0, Math.max(0, total - sameSub.length)),
-      ];
+  const similar =
+    sameSub.length > total - 1
+      ? sameSub
+      : [
+          ...sameSub.slice(0, total),
+          ...products
+            .filter(
+              (x) =>
+                x.category === p.category &&
+                x.slug !== p.slug &&
+                !sameSub.some((s) => s.id === x.id)
+            )
+            .slice(0, Math.max(0, total - sameSub.length)),
+        ];
 
   const recommendedItems = similar.map((x) => ({
     id: x.id,
@@ -168,40 +129,19 @@ export default async function FanboySlugPage({
     image: getCardImage(x),
   }));
 
-  const productUrl = `${SITE_URL}/shop/fanboys/${encodeURIComponent(p.slug)}`;
-  const productImages = imgs.map((img) =>
-    String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`
-  );
-  const hasPrice = typeof p.priceUSD === "number" && Number.isFinite(p.priceUSD);
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: p.name,
-    description: p.description || "",
-    image: productImages || [],
-    brand: {
-      "@type": "Brand",
-      name: "Creative Dimensions",
-    },
-    ...(hasPrice
-      ? {
-          offers: {
-            "@type": "Offer",
-            url: productUrl,
-            priceCurrency: "USD",
-            price: String(p.priceUSD),
-            availability: "https://schema.org/InStock",
-            itemCondition: "https://schema.org/NewCondition",
-          },
-        }
-      : {}),
-  };
+  const cleanSlug = slugify(p.slug);
+  const productUrl = `${SITE_URL}/shop/fanboys/${encodeURIComponent(cleanSlug)}`;
+  const { productSchema, breadcrumbSchema } = buildProductJsonLd(p, "fanboys");
 
   return (
     <div className="relative min-h-screen">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <Background />
       <Navbar />
