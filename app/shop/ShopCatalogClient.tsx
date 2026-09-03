@@ -763,7 +763,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
           <Link
             key={getStableKey(p)}
             href={getProductHref(p)}
-            className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 shadow-md"
+            className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 shadow-md [content-visibility:auto] [contain-intrinsic-size:260px]"
           >
             <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5">
               <Image

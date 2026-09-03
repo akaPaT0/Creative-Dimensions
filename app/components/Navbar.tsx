@@ -49,7 +49,14 @@ export default function Navbar() {
   const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    let last = false;
+    const onScroll = () => {
+      const next = window.scrollY > 8;
+      if (next !== last) {
+        last = next;
+        setScrolled(next);
+      }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
