@@ -79,7 +79,7 @@ export default function DynamicCategoryStage({
       {/* Stage Carousel */}
       {items.length > 0 ? (
         <div className="w-full min-w-0 max-w-full overflow-hidden">
-          <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0 touch-pan-x">
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
           {items.map((p) => (
             <Link
               key={`sig-${getStableKey(p)}`}
