@@ -57,19 +57,19 @@ export default function DynamicCategoryStage({
   return (
     <section className="relative w-full min-w-0 max-w-full overflow-hidden">
       {/* Stage Header */}
-      <div className="mb-4 sm:mb-6 flex items-baseline justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+      <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3 min-w-0 w-full">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
             Signature Prints
           </h2>
-          <p className="text-xs sm:text-sm text-white/50 mt-0.5">
+          <p className="text-xs sm:text-sm text-white/50 mt-0.5 line-clamp-1">
             Handpicked signature models and community favorites
           </p>
         </div>
 
         <a
           href="#all"
-          className="text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1 shrink-0"
+          className="text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
         >
           <span>Browse all</span>
           <span aria-hidden="true">↓</span>
@@ -78,7 +78,8 @@ export default function DynamicCategoryStage({
 
       {/* Stage Carousel */}
       {items.length > 0 ? (
-        <div className="flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
+        <div className="w-full min-w-0 max-w-full overflow-hidden">
+          <div className="flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
           {items.map((p) => (
             <Link
               key={`sig-${getStableKey(p)}`}
@@ -105,7 +106,7 @@ export default function DynamicCategoryStage({
               </div>
             </Link>
           ))}
-          <div className="shrink-0 w-2 sm:hidden pointer-events-none" aria-hidden="true" />
+          </div>
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center max-w-md mx-auto">

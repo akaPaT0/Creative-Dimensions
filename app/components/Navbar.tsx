@@ -97,10 +97,10 @@ export default function Navbar() {
             className={`${ubuntu.className} text-[30px] font-semibold tracking-tight
               bg-gradient-to-r from-[#FF8B64] to-[#3BC7C4]
               hover:from-[#3BC7C4] hover:to-[#FF8B64]
-              bg-clip-text text-transparent transition`}
+              bg-clip-text text-transparent transition px-1 py-0.5 inline-flex items-center`}
           >
             Creative Dimensions{" "}
-            <span className="text-white text-[12px] font-semibold tracking-wide">
+            <span className="text-white text-[12px] font-semibold tracking-wide ml-1.5">
               beta
             </span>
           </Link>
@@ -147,26 +147,26 @@ export default function Navbar() {
             : "bg-transparent border-b border-transparent shadow-none"
         }`}
       >
-        <div className="px-4 py-4 flex items-center justify-between">
+        <div className="mx-auto w-full px-4 py-3.5 flex items-center justify-between gap-3">
           <Link
             href="/"
             className={`${ubuntu.className} font-semibold tracking-tight
               bg-gradient-to-r from-[#FF8B64] to-[#3BC7C4]
-              bg-clip-text text-transparent transition text-lg`}
+              bg-clip-text text-transparent transition text-base sm:text-lg truncate shrink min-w-0 px-1 py-0.5 inline-flex items-center`}
           >
             Creative Dimensions{" "}
-            <span className="text-white text-[11px] font-semibold tracking-wide">
+            <span className="text-white text-[10px] sm:text-[11px] font-semibold tracking-wide ml-1">
               beta
             </span>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/cart"
               aria-label="Open cart"
-              className="relative text-white p-2 rounded-lg border border-white/10 hover:border-white/20 transition"
+              className="relative text-white p-2 rounded-lg border border-white/10 hover:border-white/20 transition shrink-0"
             >
-              <ShoppingCart size={20} />
+              <ShoppingCart size={19} />
               {cartCount > 0 && (
                 <span className="absolute -right-1 -top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-[#FF8B64] px-1 text-[10px] font-semibold text-black">
                   {cartCount > 99 ? "99+" : cartCount}
@@ -180,9 +180,9 @@ export default function Navbar() {
               aria-expanded={open}
               aria-controls="mobile-menu"
               suppressHydrationWarning
-              className="text-white p-2 rounded-lg border border-white/10 hover:border-white/20 transition"
+              className="text-white p-2 rounded-lg border border-white/10 hover:border-white/20 transition shrink-0"
             >
-              {open ? <X size={20} /> : <Menu size={20} />}
+              {open ? <X size={19} /> : <Menu size={19} />}
             </button>
           </div>
         </div>
