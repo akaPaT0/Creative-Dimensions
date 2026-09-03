@@ -8,11 +8,13 @@ import { SupabaseAuthProvider } from "@/app/lib/supabase/auth-client";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -67,7 +69,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SupabaseAuthProvider>
           <BackgroundMusic />
           <script
