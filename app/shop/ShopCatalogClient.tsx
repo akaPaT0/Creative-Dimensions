@@ -629,7 +629,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
       {/* ── CATEGORY PILLS (NO WRAPPER BOX) ──────── */}
       <div className="mt-4 w-full min-w-0 max-w-full">
-        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex items-center gap-2 sm:gap-2.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
+        <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
           {ALL_CATEGORY_TABS.map((tab) => {
             const isActive = category === tab.id;
             return (

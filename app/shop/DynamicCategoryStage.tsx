@@ -78,8 +78,7 @@ export default function DynamicCategoryStage({
 
       {/* Stage Carousel */}
       {items.length > 0 ? (
-        <div className="w-full min-w-0 max-w-full overflow-hidden">
-          <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
+        <div className="flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
           {items.map((p) => (
             <Link
               key={`sig-${getStableKey(p)}`}
@@ -106,7 +105,7 @@ export default function DynamicCategoryStage({
               </div>
             </Link>
           ))}
-          </div>
+          <div className="shrink-0 w-2 sm:hidden pointer-events-none" aria-hidden="true" />
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center max-w-md mx-auto">
