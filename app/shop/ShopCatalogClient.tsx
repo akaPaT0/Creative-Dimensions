@@ -627,9 +627,9 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         </button>
       </div>
 
-      {/* ── TIER 1: LUXURY CATEGORY TABS (FROSTED GLASS RAIL) ──────── */}
+      {/* ── CATEGORY PILLS (NO WRAPPER BOX) ──────── */}
       <div className="mt-4 w-full min-w-0 max-w-full">
-        <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl border border-white/10 bg-[#131316]/90 backdrop-blur-xl shadow-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
           {ALL_CATEGORY_TABS.map((tab) => {
             const isActive = category === tab.id;
             return (
@@ -640,10 +640,10 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
                   setCategory(tab.id);
                   setSubCategory("all");
                 }}
-                className={`relative px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`relative px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
                   isActive
-                    ? "bg-[#FF8B64] text-black font-bold shadow-md shadow-[#FF8B64]/25 scale-[1.01]"
-                    : "text-white/65 hover:text-white hover:bg-white/[0.06]"
+                    ? "bg-[#FF8B64] text-black font-bold shadow-md shadow-[#FF8B64]/20 scale-[1.02]"
+                    : "border border-white/10 bg-white/5 text-white/70 hover:text-white hover:border-white/25 hover:bg-white/10"
                 }`}
               >
                 <span>{tab.label}</span>
