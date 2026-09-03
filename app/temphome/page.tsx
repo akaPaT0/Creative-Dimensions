@@ -6,6 +6,8 @@ import Image from "next/image";
 import { getProducts } from "../lib/products-db";
 import type { Product } from "../shop/ShopCatalogClient";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
+import { SITE_URL } from "../lib/site";
+import { slugify } from "../lib/product-seo";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -51,8 +53,25 @@ export default async function TempHomePage() {
   const products = await getProducts();
   const featured = products.filter((p) => p.featured === true);
 
+  const homeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Creative Dimensions",
+    url: SITE_URL,
+    description: "Custom 3D printed products, keychains, and accessories in Lebanon.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/shop?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <main className="min-h-screen relative text-white selection:bg-[#FF8B64]/30 selection:text-[#FF8B64]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
+      />
       <Background />
       <Navbar />
 

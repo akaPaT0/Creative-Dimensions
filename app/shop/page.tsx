@@ -6,12 +6,38 @@ import ShopCatalogClient from "./ShopCatalogClient";
 import DynamicCategoryStage from "./DynamicCategoryStage";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
 import CustomRequestModal from "../components/CustomRequestModal";
+import { SITE_URL } from "../lib/site";
+import { slugify } from "../lib/product-seo";
 
 export default async function Shop() {
   const products = await getProducts();
 
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Creative Dimensions Catalog",
+    description: "Browse 3D printed keychains, desk accessories, and collectibles in Lebanon.",
+    url: `${SITE_URL}/shop`,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: products
+        .filter((p) => p.category && p.slug)
+        .slice(0, 40)
+        .map((p, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: p.name,
+          url: `${SITE_URL}/shop/${p.category}/${encodeURIComponent(slugify(p.slug))}`,
+        })),
+    },
+  };
+
   return (
     <main className="min-h-screen relative text-white selection:bg-[#FF8B64]/30 selection:text-[#FF8B64]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
       <Background />
       <Navbar />
 
