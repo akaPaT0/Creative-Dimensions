@@ -592,7 +592,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
       </div>
 
       {/* FAB — fixed, always visible on mobile */}
-      <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 sm:hidden">
+      <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2 sm:hidden">
         <button
           type="button"
           onClick={() => setMobileFiltersOpen((o) => !o)}
@@ -629,7 +629,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
       {/* ── CATEGORY PILLS (NO WRAPPER BOX) ──────── */}
       <div className="mt-4 w-full min-w-0 max-w-full">
-        <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex items-center gap-2 sm:gap-2.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1 touch-pan-x">
           {ALL_CATEGORY_TABS.map((tab) => {
             const isActive = category === tab.id;
             return (
@@ -663,7 +663,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by title, car, anime, keyword..."
-            className="w-full rounded-xl border border-white/10 bg-[#141417]/80 pl-10 pr-10 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-[#FF8B64]/60 transition-all duration-200"
+            className="w-full rounded-xl border border-white/10 bg-[#141417]/80 pl-10 pr-10 py-2.5 text-base sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-[#FF8B64]/60 transition-all duration-200"
           />
           {search && (
             <button
@@ -696,7 +696,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               <select
                 value={subCategory}
                 onChange={(e) => setSubCategory(e.target.value)}
-                className="appearance-none rounded-xl border border-white/10 bg-[#141417]/80 pl-3.5 pr-8 py-2.5 text-xs sm:text-sm text-white/80 font-medium outline-none focus:border-[#FF8B64]/60 transition cursor-pointer capitalize"
+                className="appearance-none rounded-xl border border-white/10 bg-[#141417]/80 pl-3.5 pr-8 py-2.5 text-base sm:text-sm text-white/80 font-medium outline-none focus:border-[#FF8B64]/60 transition cursor-pointer capitalize"
               >
                 {subCategoryOptions.map((s) => (
                   <option key={`sub-opt-${s}`} value={s} className="bg-[#141417] text-white">
@@ -713,7 +713,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as any)}
-              className="appearance-none rounded-xl border border-white/10 bg-[#141417]/80 pl-3.5 pr-8 py-2.5 text-xs sm:text-sm text-white/80 font-medium outline-none focus:border-[#FF8B64]/60 transition cursor-pointer"
+              className="appearance-none rounded-xl border border-white/10 bg-[#141417]/80 pl-3.5 pr-8 py-2.5 text-base sm:text-sm text-white/80 font-medium outline-none focus:border-[#FF8B64]/60 transition cursor-pointer"
             >
               <option value="default" className="bg-[#141417] text-white">Sort: Featured</option>
               <option value="price-asc" className="bg-[#141417] text-white">Price: Low to High</option>
@@ -755,16 +755,9 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
       {/* Cards */}
       <div
-        className={`mt-4 grid gap-3 sm:gap-4 lg:gap-5 ${
-          columns === null
-            ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-3"
-            : "max-sm:!grid-cols-2"
+        className={`mt-4 grid gap-3 sm:gap-4 lg:gap-5 grid-cols-2 sm:grid-cols-3 ${
+          columns === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"
         }`}
-        style={
-          columns !== null
-            ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }
-            : undefined
-        }
       >
         {filtered.map((p) => (
           <Link

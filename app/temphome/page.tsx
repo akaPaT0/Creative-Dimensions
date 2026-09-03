@@ -115,7 +115,7 @@ export default async function TempHomePage() {
             </div>
 
             {/* Cards: Clean carousel on mobile, 5-col grid on desktop */}
-            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
+            <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex sm:grid sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0 touch-pan-x">
               {featured.slice(0, 5).map((p: Product) => (
                 <Link
                   key={`f-${getStableKey(p)}`}
@@ -168,7 +168,7 @@ export default async function TempHomePage() {
             </Link>
           </div>
 
-          <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex sm:grid sm:grid-cols-3 md:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0 touch-pan-x">
             {[
               {
                 title: "Keychains",
@@ -260,7 +260,7 @@ export default async function TempHomePage() {
             </div>
 
             <div className="relative mt-8">
-              <span className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-xs sm:text-sm font-bold text-white group-hover:bg-[#FF8B64] group-hover:text-[#0D0D0D] group-hover:border-[#FF8B64] transition-all duration-200 shadow-md">
+              <span className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3.5 sm:py-3 text-xs sm:text-sm font-bold text-white group-hover:bg-[#FF8B64] group-hover:text-[#0D0D0D] group-hover:border-[#FF8B64] transition-all duration-200 shadow-md">
                 <span>Explore Catalog</span>
                 <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
               </span>
@@ -286,7 +286,7 @@ export default async function TempHomePage() {
 
             <div className="relative mt-8">
               <TemphomeCustomRequestCta
-                className="inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-6 py-3 text-xs sm:text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-6 py-3.5 sm:py-3 text-xs sm:text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-md hover:scale-[1.02] active:scale-[0.98]"
                 buttonLabel="Start Custom Order"
               />
             </div>
