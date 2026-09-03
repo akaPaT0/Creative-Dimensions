@@ -2,261 +2,55 @@ import { getProducts } from "../lib/products-db";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
-import Link from "next/link";
-import Image from "next/image";
 import ShopCatalogClient from "./ShopCatalogClient";
-import LikeIconButton from "../components/LikeIconButton";
-import WishlistIconButton from "../components/WishlistIconButton";
+import DynamicCategoryStage from "./DynamicCategoryStage";
+import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
 import CustomRequestModal from "../components/CustomRequestModal";
-
-/** Helpers */
-function getCardImage(p: any) {
-  if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
-  if (typeof p.image === "string" && p.image) return p.image;
-
-  // fallback for older data
-  const cat = p?.category;
-  const sub = p?.subCategory || "other";
-  const slug = p?.slug;
-  if (cat && slug) return `/products/${cat}/${sub}/${slug}-1.webp`;
-
-  return "/products/placeholder.jpg";
-}
-
-function getTitle(p: any) {
-  return (
-    p.title ||
-    p.name ||
-    p.label ||
-    (p.slug ? String(p.slug).replace(/-/g, " ") : "Product")
-  );
-}
-
-function getDesc(p: any) {
-  return (
-    p.shortDesc ||
-    p.shortDescription ||
-    p.desc ||
-    p.description ||
-    "Custom 3D print item."
-  );
-}
-
-function getPriceLabel(p: any) {
-  const price = p.price ?? p.priceUSD;
-  const currency = p.currency || "USD";
-
-  if (typeof price === "number") return `${price} ${currency}`;
-  if (typeof price === "string" && price.trim()) return price;
-  return "DM for price";
-}
-
-/** IMPORTANT: your routes are /shop/{category}/{slug} */
-function getProductHref(p: any) {
-  if (p?.category && p?.slug) return `/shop/${p.category}/${p.slug}`;
-  if (p?.category) return `/shop/${p.category}`;
-  return "/shop";
-}
-
-function getStableKey(p: any) {
-  return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;
-}
-
-/** Featured: featured:true, picked by category limits + auto-fill */
-function pickFeaturedByCategory(
-  items: any[],
-  limits: Record<string, number>,
-  total = 6
-) {
-  const featuredOnly = items.filter((p) => p.featured === true);
-
-  const picked: any[] = [];
-  const used = new Set<string>();
-
-  // 1) Pick by category limits
-  for (const [cat, limit] of Object.entries(limits)) {
-    const list = featuredOnly.filter(
-      (p) => p.category === cat && !used.has(getStableKey(p))
-    );
-
-    for (const p of list.slice(0, limit)) {
-      picked.push(p);
-      used.add(getStableKey(p));
-      if (picked.length >= total) return picked.slice(0, total);
-    }
-  }
-
-  // 2) Fill remaining spots with any other featured items
-  for (const p of featuredOnly) {
-    const k = getStableKey(p);
-    if (!used.has(k)) {
-      picked.push(p);
-      used.add(k);
-      if (picked.length >= total) break;
-    }
-  }
-
-  return picked.slice(0, total);
-}
 
 export default async function Shop() {
   const products = await getProducts();
-  const featured = pickFeaturedByCategory(
-    products as any[],
-    {
-      keychains: 2,
-      tools: 1,
-      accessories: 1,
-      "desk-add-ons": 1,
-      fanboys: 1,
-    },
-    6
-  );
 
   return (
     <div className="relative min-h-screen">
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="text-center sm:text-left">
-            <h1 className="text-4xl font-semibold text-white">Shop</h1>
-            <p className="mt-2 text-white/70">
-              Prints, parts, and digital files built with the Creative Dimensions
-              vibe.
+      <main className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-14 pt-36 sm:pt-44 lg:pt-52 pb-24">
+        {/* ── STORE HEADER ─────────────────────────────────────────── */}
+        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-8 sm:gap-12 mb-16 sm:mb-24 lg:mb-28">
+          {/* Subtle warm glow behind headline */}
+          <div
+            className="pointer-events-none absolute -top-16 left-0 w-[420px] h-60 bg-[#FF8B64]/12 blur-3xl rounded-full"
+            aria-hidden="true"
+          />
+
+          <div className="relative max-w-2xl">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+              Shop{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF8B64] via-[#ffa282] to-[#ffd0b5]">
+                All
+              </span>
+            </h1>
+            <p className="mt-4 sm:mt-5 text-sm sm:text-base lg:text-lg text-white/70 max-w-xl leading-relaxed">
+              Unique keychains, figurines &amp; accessories — printed on demand in Lebanon.
             </p>
           </div>
 
-          <div className="flex gap-3 justify-center sm:justify-end">
-            <CustomRequestModal
-              productName="Custom Order"
-              productUrl="https://creativedimensionslb.com/shop"
-              className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-white/90 hover:bg-white/10 transition"
+          <div className="shrink-0 pt-2 sm:pt-0">
+            <TemphomeCustomRequestCta
+              className="inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-8 py-4 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg hover:scale-[1.02] active:scale-[0.98]"
               buttonLabel="Custom Request"
             />
-
-            <Link
-              href="#all"
-              className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
-            >
-              Browse All
-            </Link>
           </div>
         </div>
 
-        {/* Quick categories */}
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              title: "New Arrivals",
-              desc: "Fresh drops and latest uploads.",
-              href: "/shop/new-arrivals",
-            },
-            {
-              title: "Keychains",
-              desc: "Clean, custom, gift-ready.",
-              href: "/shop/keychains",
-            },
-            {
-              title: "Tools",
-              desc: "Maker essentials and workshop gear.",
-              href: "/shop/tools",
-            },
-            {
-              title: "Accessories",
-              desc: "Upgrades, add-ons, extras.",
-              href: "/shop/accessories",
-            },
-            {
-              title: "Desk Add-Ons",
-              desc: "Stands, trays, and desktop upgrades.",
-              href: "/shop/desk-add-ons",
-            },
-            {
-              title: "Fanboys",
-              desc: "Fandom prints and fun stuff.",
-              href: "/shop/fanboys",
-            },
-          ].map((c) => (
-            <Link
-              key={c.title}
-              href={c.href}
-              className="group rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 transition hover:bg-white/10"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-lg font-semibold text-white">
-                    {c.title}
-                  </div>
-                  <div className="mt-1 text-sm text-white/65">{c.desc}</div>
-                </div>
-                <span className="text-white/40 group-hover:text-white/70 transition">
-                  →
-                </span>
-              </div>
-            </Link>
-          ))}
+        {/* ── DYNAMIC CATEGORY SHOWCASE STAGE ───────────────────────── */}
+        <DynamicCategoryStage products={products as any[]} />
+
+        {/* All products (interactive catalog with search, filters & responsive grid) */}
+        <div id="all" className="mt-16 sm:mt-20">
+          <ShopCatalogClient products={products as any[]} />
         </div>
-
-        {/* Featured */}
-        <div
-          id="featured"
-          className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6"
-        >
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
-            <h2 className="text-xl font-semibold text-white">Featured</h2>
-            <p className="text-sm text-white/60">
-              Handpicked drops, limited runs, and best-sellers.
-            </p>
-          </div>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((p: any) => (
-              <Link
-                key={getStableKey(p)}
-                href={getProductHref(p)}
-                className="group flex h-full flex-col rounded-2xl border border-white/10 bg-black/20 p-4 sm:p-5 hover:bg-black/30 transition"
-              >
-                <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
-                  <Image
-                    src={getCardImage(p)}
-                    alt={getTitle(p)}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-                  <LikeIconButton
-                    productId={String(p.id)}
-                    positionClass="bottom-2 right-10"
-                  />
-                  <WishlistIconButton productId={String(p.id)} />
-                </div>
-
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                  <div className="min-w-0">
-                    <div className="text-white font-semibold leading-snug line-clamp-2">
-                      {getTitle(p)}
-                    </div>
-                    <div className="mt-1 text-sm text-white/60 line-clamp-2">
-                      {getDesc(p)}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 text-white/80 text-sm sm:text-right">
-                    {getPriceLabel(p)}
-                  </div>
-                </div>
-
-                {/* ✅ removed View button (whole card is clickable via Link) */}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* All products (interactive) */}
-        <ShopCatalogClient products={products as any[]} />
 
         <div className="mt-10 text-center text-sm text-white/50">
           Want something specific? Hit{" "}

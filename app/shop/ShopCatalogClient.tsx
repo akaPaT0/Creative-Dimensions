@@ -3,7 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Filter } from "lucide-react";
+import { Filter, Search, X, ArrowUpDown, Grid3X3, LayoutGrid } from "lucide-react";
+
+export const ALL_CATEGORY_TABS = [
+  { id: "all", label: "All Prints" },
+  { id: "keychains", label: "Keychains" },
+  { id: "desk-add-ons", label: "Desk Add-Ons" },
+  { id: "accessories", label: "Accessories" },
+  { id: "fanboys", label: "Fanboys & Gaming" },
+  { id: "tools", label: "Tools" },
+  { id: "new-arrivals", label: "New Arrivals" },
+] as const;
 
 export type Product = {
   id?: string;
@@ -14,6 +24,7 @@ export type Product = {
   category: string;
   subCategory?: string;
   featured?: boolean;
+  isNew?: boolean;
   priceUSD?: number;
   price?: number | string;
   currency?: string;
@@ -93,10 +104,11 @@ function getDesc(p: Product) {
 
 function getPriceLabel(p: Product) {
   const price = p.price ?? p.priceUSD;
-  const currency = p.currency || "USD";
 
-  if (typeof price === "number") return `${price} ${currency}`;
-  if (typeof price === "string" && price.trim()) return price;
+  if (typeof price === "number") return `$${price}`;
+  if (typeof price === "string" && price.trim()) {
+    return price.startsWith("$") ? price : `$${price}`;
+  }
   return "DM for price";
 }
 
@@ -321,8 +333,8 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
   );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // ✅ default load as 2 columns
-  const [columns, setColumns] = useState<1 | 2 | 3 | 4>(2);
+  // null = auto-responsive (2 on mobile, 3 on tablet, 4 on desktop)
+  const [columns, setColumns] = useState<number | null>(null);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -333,7 +345,13 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
   const subCategoryOptions = useMemo(() => {
     const set = new Set<string>();
     for (const p of products) {
-      if (category !== "all" && p.category !== category) continue;
+      if (category === "new-arrivals") {
+        if (!p.isNew) continue;
+      } else if (category === "tools") {
+        if (p.category !== "tools" && p.subCategory !== "tools") continue;
+      } else if (category !== "all" && p.category !== category) {
+        continue;
+      }
       if (p.subCategory) set.add(p.subCategory);
     }
     return ["all", ...Array.from(set).sort()];
@@ -406,16 +424,16 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
         </select>
 
         <select
-          value={columns}
+          value={columns ?? 3}
           onChange={(e) =>
-            setColumns(Number(e.target.value) as 1 | 2 | 3 | 4)
+            setColumns(Number(e.target.value))
           }
           className="rounded-2xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-3 text-white outline-none"
         >
-          <option value={1}>Columns: 1</option>
           <option value={2}>Columns: 2</option>
           <option value={3}>Columns: 3</option>
           <option value={4}>Columns: 4</option>
+          <option value={5}>Columns: 5</option>
         </select>
       </>
     );
@@ -436,7 +454,15 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
     let list = products.slice();
 
-    if (category !== "all") list = list.filter((p) => p.category === category);
+    if (category !== "all") {
+      if (category === "new-arrivals") {
+        list = list.filter((p) => p.isNew === true);
+      } else if (category === "tools") {
+        list = list.filter((p) => p.category === "tools" || p.subCategory === "tools");
+      } else {
+        list = list.filter((p) => p.category === category);
+      }
+    }
     if (subCategory !== "all")
       list = list.filter((p) => (p.subCategory || "") === subCategory);
 
@@ -499,8 +525,60 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
             )}
           </div>
 
-          <div className="grid gap-3">
-            {renderControls()}
+          <div className="grid gap-3.5">
+            <div>
+              <label className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-1.5">
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  setSubCategory("all");
+                }}
+                className="w-full rounded-xl border border-white/15 bg-[#1c1a18] px-3.5 py-2.5 text-sm text-white outline-none"
+              >
+                {ALL_CATEGORY_TABS.map((tab) => (
+                  <option key={`m-cat-${tab.id}`} value={tab.id}>
+                    {tab.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {subCategoryOptions.length > 1 && (
+              <div>
+                <label className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-1.5">
+                  Subcategory
+                </label>
+                <select
+                  value={subCategory}
+                  onChange={(e) => setSubCategory(e.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-[#1c1a18] px-3.5 py-2.5 text-sm text-white outline-none"
+                >
+                  {subCategoryOptions.map((s) => (
+                    <option key={`m-sub-${s}`} value={s}>
+                      {s === "all" ? "All Subcategories" : s.replace(/-/g, " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs font-semibold text-white/50 uppercase tracking-wider block mb-1.5">
+                Sort By
+              </label>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as any)}
+                className="w-full rounded-xl border border-white/15 bg-[#1c1a18] px-3.5 py-2.5 text-sm text-white outline-none"
+              >
+                <option value="default">Featured</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+            </div>
           </div>
 
           <button
@@ -508,7 +586,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
             onClick={() => setMobileFiltersOpen(false)}
             className="mt-4 w-full rounded-xl bg-[#FF8B64] py-3 text-sm font-semibold text-black transition hover:opacity-90"
           >
-            Show {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+            Show Results
           </button>
         </div>
       </div>
@@ -533,78 +611,190 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
     <section
       id="all"
-      className="mt-10 isolate rounded-2xl border border-white/10 bg-white/5 p-6"
+      className="mt-20 sm:mt-28"
     >
-      <div className="flex items-start justify-between gap-3 text-left">
+      <div className="flex items-baseline justify-between gap-3 text-left mb-3 sm:mb-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">All products</h2>
-          <p className="text-sm text-white/60 max-sm:hidden">
-            Filter by category, subcategory, or search by keyword.
-          </p>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">All Products</h2>
         </div>
 
         <button
           type="button"
           onClick={resetAll}
-          className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white transition hover:bg-white/10 sm:inline-flex"
+          className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs sm:text-sm text-white transition hover:bg-white/10 sm:inline-flex"
         >
-          Reset
+          Reset filters
         </button>
       </div>
 
-      {/* Controls — desktop only */}
-      <div className="mt-5 hidden gap-3 sm:grid lg:grid-cols-[1.6fr_0.8fr_0.8fr_0.8fr_0.8fr]">
-        {renderControls()}
+      {/* ── TIER 1: LUXURY CATEGORY TABS (FROSTED GLASS RAIL) ──────── */}
+      <div className="mt-4">
+        <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl border border-white/10 bg-[#131316]/90 backdrop-blur-xl shadow-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {ALL_CATEGORY_TABS.map((tab) => {
+            const isActive = category === tab.id;
+            return (
+              <button
+                key={`cat-tab-${tab.id}`}
+                type="button"
+                onClick={() => {
+                  setCategory(tab.id);
+                  setSubCategory("all");
+                }}
+                className={`relative px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? "bg-[#FF8B64] text-black font-bold shadow-md shadow-[#FF8B64]/25 scale-[1.01]"
+                    : "text-white/65 hover:text-white hover:bg-white/[0.06]"
+                }`}
+              >
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Results */}
-      <div className="mt-6 flex items-center justify-between text-sm text-white/60">
-        <div>{filtered.length} results</div>
-        <div className="hidden sm:block">
-          Tip: type <span className="text-white/80">key</span> to see suggestions
+      {/* ── UNIFIED TOOLBAR: SEARCH, SUBCATEGORY & SORT ─────────────── */}
+      <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Live Search Input */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-white/40 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title, car, anime, keyword..."
+            className="w-full rounded-xl border border-white/10 bg-[#141417]/80 pl-10 pr-10 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-[#FF8B64]/60 transition-all duration-200"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/40 hover:text-white p-1"
+              aria-label="Clear search"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
         </div>
+
+        {/* Right Controls: Subcategory, Sort & Grid Layout */}
+        <div className="flex items-center gap-2.5 justify-between sm:justify-end flex-wrap">
+          {/* Active filter count / clear */}
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={resetAll}
+              className="text-xs text-[#FF8B64] hover:underline transition sm:hidden"
+            >
+              Clear filters
+            </button>
+          )}
+
+          {/* Contextual Subcategory Filter (unified style) */}
+          {category !== "all" && subCategoryOptions.length > 2 && (
+            <div className="relative">
+              <select
+                value={subCategory}
+                onChange={(e) => setSubCategory(e.target.value)}
+                className="appearance-none rounded-xl border border-white/10 bg-[#141417]/80 pl-3.5 pr-8 py-2.5 text-xs sm:text-sm text-white/80 font-medium outline-none focus:border-[#FF8B64]/60 transition cursor-pointer capitalize"
+              >
+                {subCategoryOptions.map((s) => (
+                  <option key={`sub-opt-${s}`} value={s} className="bg-[#141417] text-white">
+                    {s === "all" ? `All ${category.replace(/-/g, " ")}` : s.replace(/-/g, " ")}
+                  </option>
+                ))}
+              </select>
+              <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-white/40 pointer-events-none" />
+            </div>
+          )}
+
+          {/* Sort Selector (unified style) */}
+          <div className="relative">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as any)}
+              className="appearance-none rounded-xl border border-white/10 bg-[#141417]/80 pl-3.5 pr-8 py-2.5 text-xs sm:text-sm text-white/80 font-medium outline-none focus:border-[#FF8B64]/60 transition cursor-pointer"
+            >
+              <option value="default" className="bg-[#141417] text-white">Sort: Featured</option>
+              <option value="price-asc" className="bg-[#141417] text-white">Price: Low to High</option>
+              <option value="price-desc" className="bg-[#141417] text-white">Price: High to Low</option>
+            </select>
+            <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-white/40 pointer-events-none" />
+          </div>
+
+          {/* Desktop Column Density Toggle (3 or 4 cols) */}
+          <div className="hidden sm:flex items-center rounded-xl border border-white/10 bg-[#141417]/80 p-1">
+            <button
+              type="button"
+              onClick={() => setColumns(3)}
+              title="3 Columns"
+              className={`p-1.5 rounded-lg transition ${
+                (columns ?? 3) === 3 ? "bg-white/15 text-white" : "text-white/40 hover:text-white"
+              }`}
+            >
+              <Grid3X3 className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setColumns(4)}
+              title="4 Columns"
+              className={`p-1.5 rounded-lg transition ${
+                (columns ?? 3) === 4 ? "bg-white/15 text-white" : "text-white/40 hover:text-white"
+              }`}
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Tip */}
+      <div className="mt-4 hidden sm:flex items-center justify-end text-xs text-white/40">
+        <div>Tip: search by item name or category</div>
       </div>
 
       {/* Cards */}
       <div
-        className="mt-4 grid gap-4"
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        className={`mt-4 grid gap-3 sm:gap-4 lg:gap-5 ${
+          columns === null
+            ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-3"
+            : "max-sm:!grid-cols-2"
+        }`}
+        style={
+          columns !== null
+            ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }
+            : undefined
+        }
       >
         {filtered.map((p) => (
           <Link
             key={getStableKey(p)}
             href={getProductHref(p)}
-            className="group rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5 hover:bg-black/30 transition"
+            className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 shadow-md"
           >
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white/5 border border-white/10">
+            <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5">
               <Image
                 src={getCardImage(p)}
                 alt={getTitle(p)}
                 fill
-                className="object-cover group-hover:scale-[1.02] transition"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover group-hover:scale-[1.04] transition duration-300"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
             </div>
 
-            <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-              <div className="min-w-0">
-                <div className="text-white font-semibold text-[15px] leading-snug line-clamp-2">
+            <div className="mt-2.5 flex flex-col flex-1 justify-between">
+              <div>
+                <div className="text-white text-xs sm:text-sm font-semibold line-clamp-1 group-hover:text-[#FF8B64] transition-colors">
                   {getTitle(p)}
+                </div>
+                <div className="text-[11px] text-white/40 capitalize mt-0.5 truncate">
+                  {p.category}{p.subCategory ? ` · ${p.subCategory}` : ""}
                 </div>
               </div>
 
-              <div className="shrink-0 text-white/80 text-sm sm:text-right">
+              <div className="mt-1.5 text-xs sm:text-sm font-bold text-[#FF8B64]">
                 {getPriceLabel(p)}
               </div>
-            </div>
-
-            <div className="mt-1 hidden sm:block text-sm text-white/60 line-clamp-2">
-              {getDesc(p)}
-            </div>
-
-            <div className="mt-2 text-xs text-white/45">
-              {p.category}
-              {p.subCategory ? ` / ${p.subCategory}` : ""}
             </div>
           </Link>
         ))}
