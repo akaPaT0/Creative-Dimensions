@@ -11,16 +11,16 @@ export default async function Shop() {
   const products = await getProducts();
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-hidden w-full max-w-full">
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-14 pt-36 sm:pt-44 lg:pt-52 pb-24">
+      <main className="relative z-10 mx-auto max-w-[1440px] w-full min-w-0 px-4 sm:px-6 lg:px-10 xl:px-14 pt-36 sm:pt-44 lg:pt-52 pb-24">
         {/* ── STORE HEADER ─────────────────────────────────────────── */}
         <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-8 sm:gap-12 mb-16 sm:mb-24 lg:mb-28">
           {/* Subtle warm glow behind headline */}
           <div
-            className="pointer-events-none absolute -top-16 left-0 w-[420px] h-60 bg-[#FF8B64]/12 blur-3xl rounded-full"
+            className="pointer-events-none absolute -top-16 left-0 w-72 sm:w-[420px] max-w-full h-60 bg-[#FF8B64]/12 blur-3xl rounded-full"
             aria-hidden="true"
           />
 

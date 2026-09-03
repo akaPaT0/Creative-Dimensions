@@ -141,10 +141,10 @@ export default function Navbar() {
 
       {/* Mobile Nav */}
       <nav
-        className={`fixed inset-x-0 top-0 z-50 md:hidden transition-all duration-200 ${
+        className={`fixed inset-x-0 top-0 z-50 lg:hidden w-full max-w-full transition-all duration-200 ${
           scrolled || open
-            ? "bg-[#0D0D0D]/10 border border-white/10 backdrop-blur-xs backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
-            : "bg-transparent border border-transparent shadow-none"
+            ? "bg-[#0D0D0D]/90 border-b border-white/10 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+            : "bg-transparent border-b border-transparent shadow-none"
         }`}
       >
         <div className="px-4 py-4 flex items-center justify-between">

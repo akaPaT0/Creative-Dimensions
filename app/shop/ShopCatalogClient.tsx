@@ -611,7 +611,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
 
     <section
       id="all"
-      className="mt-20 sm:mt-28"
+      className="mt-20 sm:mt-28 w-full min-w-0 max-w-full"
     >
       <div className="flex items-baseline justify-between gap-3 text-left mb-3 sm:mb-4">
         <div>
@@ -628,7 +628,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
       </div>
 
       {/* ── TIER 1: LUXURY CATEGORY TABS (FROSTED GLASS RAIL) ──────── */}
-      <div className="mt-4">
+      <div className="mt-4 w-full min-w-0 max-w-full">
         <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl border border-white/10 bg-[#131316]/90 backdrop-blur-xl shadow-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {ALL_CATEGORY_TABS.map((tab) => {
             const isActive = category === tab.id;

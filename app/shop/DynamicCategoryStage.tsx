@@ -55,7 +55,7 @@ export default function DynamicCategoryStage({
   }, [products]);
 
   return (
-    <section className="relative">
+    <section className="relative w-full min-w-0 max-w-full overflow-hidden">
       {/* Stage Header */}
       <div className="mb-4 sm:mb-6 flex items-baseline justify-between gap-4">
         <div>
