@@ -19,8 +19,7 @@ function getCardImage(p: Product) {
 export default async function Page() {
   const products = await getProducts();
   const keychains = products.filter((p) => p.category === "keychains");
-  const hasAnySubCats = keychains.some((p) => Boolean(p.subCategory));
-  const list = hasAnySubCats ? keychains.filter((p) => Boolean(p.subCategory)) : keychains;
+  const list = keychains;
 
   return (
     <div className="relative min-h-screen">
