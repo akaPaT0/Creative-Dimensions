@@ -8,6 +8,8 @@ import type { Product } from "../../data/products";
 import { getProducts } from "../../lib/products-db";
 import LikeIconButton from "../../components/LikeIconButton";
 import WishlistIconButton from "../../components/WishlistIconButton";
+import { SITE_URL } from "../../lib/site";
+import { slugify } from "../../lib/product-seo";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -21,10 +23,33 @@ export default async function Page() {
   const fanboys = products.filter((p) => p.category === "fanboys");
   const list = fanboys;
 
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "3D Printed Figurines & Collectibles in Lebanon",
+    url: `${SITE_URL}/shop/fanboys`,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: list
+        .filter((p) => p.slug)
+        .map((p, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: p.name,
+          url: `${SITE_URL}/shop/fanboys/${encodeURIComponent(slugify(String(p.slug)))}`,
+        })),
+    },
+  };
+
   return (
     <div className="relative min-h-screen">
       <Background />
       <Navbar />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
         <Link
