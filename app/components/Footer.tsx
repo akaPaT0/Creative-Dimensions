@@ -5,6 +5,17 @@ export default function Footer() {
   return (
     <footer className="relative z-10 mt-16 border-t border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        <div className="mb-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/55 sm:justify-start">
+          <Link href="/shop">Shop</Link>
+          <Link href="/shop/keychains">Keychains</Link>
+          <Link href="/shop/accessories">Accessories</Link>
+          <Link href="/shop/desk-add-ons">Desk Add-Ons</Link>
+          <Link href="/shop/fanboys">Figurines & Collectibles</Link>
+          <Link href="/custom-quote">Custom 3D Print</Link>
+          <Link href="/about">About</Link>
+          <Link href="/contact">Contact</Link>
+        </div>
+
         <div className="flex flex-col gap-6 items-center text-center sm:text-left sm:flex-row sm:items-center sm:justify-between">
           {/* Left */}
           <div>
