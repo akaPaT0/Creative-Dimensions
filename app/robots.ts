@@ -5,6 +5,25 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        userAgent: "OAI-SearchBot",
+        allow: "/",
+        disallow: [
+          "/admin",
+          "/admin/*",
+          "/api/*",
+          "/user",
+          "/user/*",
+          "/checkout",
+          "/orders",
+          "/orders/*",
+          "/invoice/*",
+          "/sign-in",
+          "/sign-in/*",
+          "/sign-up",
+          "/sign-up/*",
+        ],
+      },
+      {
         userAgent: "*",
         allow: "/",
         disallow: [
@@ -25,5 +44,6 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }
