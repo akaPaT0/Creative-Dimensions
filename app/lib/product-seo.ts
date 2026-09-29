@@ -28,12 +28,14 @@ export function getProductImages(p: Product): string[] {
 
 export function buildProductMetadata(p: Product, category: string): Metadata {
   const categoryLabel = CATEGORY_LABELS[category] || "3D Prints";
-  const title = `${p.name} | 3D Printed ${categoryLabel} | Creative Dimensions Lebanon`;
+  const title = `${p.name} | Creative Dimensions Lebanon`;
   const customDesc =
     typeof p.description === "string" && p.description.trim() ? p.description.trim() : "";
+  const suffix = " Made to order by Creative Dimensions in Lebanon.";
+  const maxCustom = Math.max(40, 155 - suffix.length);
   const desc = customDesc
-    ? `${customDesc.slice(0, 155)}${customDesc.length > 155 ? "..." : ""} - 3D printed on demand in Lebanon.`
-    : `Buy ${p.name} - premium precision 3D printed ${categoryLabel.toLowerCase()} by Creative Dimensions in Lebanon. Made to order with high-end finishes and fast delivery nationwide.`;
+    ? `${customDesc.slice(0, maxCustom).trim()}${customDesc.length > maxCustom ? "…" : ""}${suffix}`
+    : `${p.name}, a made-to-order 3D printed ${categoryLabel.toLowerCase()} from Creative Dimensions in Lebanon. Delivery available across Lebanon.`;
   const cleanSlug = slugify(p.slug);
   const url = `${SITE_URL}/shop/${category}/${encodeURIComponent(cleanSlug)}`;
   const images = getProductImages(p).map((img) =>
@@ -115,14 +117,12 @@ export function buildProductJsonLd(p: Product, category: string) {
               "@type": "Organization",
               name: "Creative Dimensions",
               url: SITE_URL,
+              logo: `${SITE_URL}/icon.png`,
             },
             hasMerchantReturnPolicy: {
               "@type": "MerchantReturnPolicy",
               applicableCountry: "LB",
-              returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-              merchantReturnDays: 7,
-              returnMethod: "https://schema.org/ReturnByMail",
-              returnFees: "https://schema.org/FreeReturn",
+              returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
             },
             shippingDetails: {
               "@type": "OfferShippingDetails",
