@@ -167,7 +167,7 @@ export default async function FanboySlugPage({
           <ProductGallery images={imgs} name={p.name} />
           <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-6">
             <div className="text-white/70 text-sm capitalize">{p.category}</div>
-            <h1 className="mt-2 text-3xl font-semibold text-white leading-tight">{p.name}</h1>
+            <div className="mt-2 text-3xl font-semibold text-white leading-tight">{p.name}</div>
             <div className="mt-4 text-white/75 whitespace-pre-line leading-relaxed">{p.description}</div>
             <div className="mt-6 flex items-end justify-between gap-4">
               <div className="text-white font-semibold text-2xl">{p.priceUSD ? `$${p.priceUSD}` : ""}</div>
