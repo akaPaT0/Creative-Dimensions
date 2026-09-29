@@ -59,11 +59,17 @@ export default function RootLayout({
 }>) {
   const organizationJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "OnlineStore",
+    "@id": `${SITE_URL}/#organization`,
     name: "Creative Dimensions",
     url: SITE_URL,
     logo: `${SITE_URL}/icon.png`,
     email: "info@creativedimensionslb.com",
+    telephone: "+96170304007",
+    areaServed: {
+      "@type": "Country",
+      name: "Lebanon",
+    },
     sameAs: ["https://instagram.com/creativedimensions.lb"],
   };
 
