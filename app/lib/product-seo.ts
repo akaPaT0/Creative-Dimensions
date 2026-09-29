@@ -83,8 +83,8 @@ export function buildProductJsonLd(p: Product, category: string) {
   const productImages = getProductImages(p).map((img) =>
     String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`
   );
-  const hasPrice = typeof p.priceUSD === "number" && Number.isFinite(p.priceUSD);
-  const priceValue = hasPrice ? Number(p.priceUSD).toFixed(2) : "0.00";
+  const hasPrice = typeof p.priceUSD === "number" && Number.isFinite(p.priceUSD) && p.priceUSD > 0;
+  const priceValue = hasPrice ? Number(p.priceUSD).toFixed(2) : null;
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -95,70 +95,76 @@ export function buildProductJsonLd(p: Product, category: string) {
     sku: p.id || cleanSlug,
     mpn: p.id || cleanSlug,
     category: categoryLabel,
+    url: productUrl,
+    mainEntityOfPage: productUrl,
     brand: {
       "@type": "Brand",
       name: "Creative Dimensions",
     },
-    offers: {
-      "@type": "Offer",
-      url: productUrl,
-      priceCurrency: "USD",
-      price: priceValue,
-      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      availability: "https://schema.org/InStock",
-      itemCondition: "https://schema.org/NewCondition",
-      seller: {
-        "@type": "Organization",
-        name: "Creative Dimensions",
-        url: SITE_URL,
-      },
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: "LB",
-        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-        merchantReturnDays: 7,
-        returnMethod: "https://schema.org/ReturnByMail",
-        returnFees: "https://schema.org/FreeReturn",
-      },
-      shippingDetails: {
-        "@type": "OfferShippingDetails",
-        shippingRate: {
-          "@type": "MonetaryAmount",
-          value: "3.00",
-          currency: "USD",
-        },
-        shippingDestination: {
-          "@type": "DefinedRegion",
-          addressCountry: "LB",
-        },
-        deliveryTime: {
-          "@type": "ShippingDeliveryTime",
-          businessDays: {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: [
-              "https://schema.org/Monday",
-              "https://schema.org/Tuesday",
-              "https://schema.org/Wednesday",
-              "https://schema.org/Thursday",
-              "https://schema.org/Friday",
-              "https://schema.org/Saturday",
-            ],
+    ...(hasPrice
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: productUrl,
+            priceCurrency: "USD",
+            price: priceValue,
+            priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+            availability: "https://schema.org/InStock",
+            itemCondition: "https://schema.org/NewCondition",
+            seller: {
+              "@type": "Organization",
+              name: "Creative Dimensions",
+              url: SITE_URL,
+            },
+            hasMerchantReturnPolicy: {
+              "@type": "MerchantReturnPolicy",
+              applicableCountry: "LB",
+              returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+              merchantReturnDays: 7,
+              returnMethod: "https://schema.org/ReturnByMail",
+              returnFees: "https://schema.org/FreeReturn",
+            },
+            shippingDetails: {
+              "@type": "OfferShippingDetails",
+              shippingRate: {
+                "@type": "MonetaryAmount",
+                value: "3.00",
+                currency: "USD",
+              },
+              shippingDestination: {
+                "@type": "DefinedRegion",
+                addressCountry: "LB",
+              },
+              deliveryTime: {
+                "@type": "ShippingDeliveryTime",
+                businessDays: {
+                  "@type": "OpeningHoursSpecification",
+                  dayOfWeek: [
+                    "https://schema.org/Monday",
+                    "https://schema.org/Tuesday",
+                    "https://schema.org/Wednesday",
+                    "https://schema.org/Thursday",
+                    "https://schema.org/Friday",
+                    "https://schema.org/Saturday",
+                  ],
+                },
+                handlingTime: {
+                  "@type": "QuantitativeValue",
+                  minValue: 1,
+                  maxValue: 3,
+                  unitCode: "DAY",
+                },
+                transitTime: {
+                  "@type": "QuantitativeValue",
+                  minValue: 1,
+                  maxValue: 3,
+                  unitCode: "DAY",
+                },
+              },
+            },
           },
-          handlingTime: {
-            "@type": "QuantitativeValue",
-            minValue: 1,
-            maxValue: 3,
-            unitCode: "DAY",
-          },
-          transitTime: {
-            "@type": "QuantitativeValue",
-            minValue: 1,
-            maxValue: 3,
-            unitCode: "DAY",
-          },
-        },
-      },
-    },
+        }
+      : {}),
   };
 
   const breadcrumbSchema = {
