@@ -8,6 +8,8 @@ import type { Product } from "../../data/products";
 import { getProducts } from "../../lib/products-db";
 import LikeIconButton from "../../components/LikeIconButton";
 import WishlistIconButton from "../../components/WishlistIconButton";
+import { SITE_URL } from "../../lib/site";
+import { slugify } from "../../lib/product-seo";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -21,10 +23,33 @@ export default async function Page() {
   const accessories = products.filter((p) => p.category === "accessories");
   const list = accessories;
 
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "3D Printed Accessories in Lebanon",
+    url: `${SITE_URL}/shop/accessories`,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: list
+        .filter((p) => p.slug)
+        .map((p, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: p.name,
+          url: `${SITE_URL}/shop/accessories/${encodeURIComponent(slugify(String(p.slug)))}`,
+        })),
+    },
+  };
+
   return (
     <div className="relative min-h-screen">
       <Background />
       <Navbar />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
 
       <main className="relative z-10 mx-auto max-w-7xl px-6 pt-28 pb-16">
         <Link
