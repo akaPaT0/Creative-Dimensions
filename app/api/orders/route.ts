@@ -1,15 +1,12 @@
-import { kv } from "@vercel/kv";
+import { loadPromos } from "@/app/lib/supabase/promo-store";
 import { NextResponse } from "next/server";
 import { getProducts } from "@/app/lib/products-db";
 import { telegramNotify, telegramSendDocument, telegramSendPhoto } from "@/app/lib/telegram";
 import { generateInvoicePdf } from "@/app/lib/invoicePdf";
 import { uploadPublicAsset } from "@/app/lib/supabase/storage";
 import {
-  PROMO_CODES_KEY,
   applyPromoRule,
   normalizePromoCode,
-  normalizePromoRecords,
-  withPromoDefaults,
 } from "@/app/lib/promocodes";
 import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/app/lib/supabase/admin";
@@ -129,51 +126,6 @@ function orderToRow(order: OrderRecord, userId: string) {
     items: order.items,
   };
 }
-
-// ─── KV counter helpers (with local-dev fallback) ──────────────────────────
-
-function orderCounterKey() {
-  return "orders:counter";
-}
-
-function invoiceCounterKey() {
-  return "invoices:counter";
-}
-
-/** Race a promise against a hard timeout so a dead KV doesn't stall the API */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`KV timeout after ${ms}ms`)), ms)
-    ),
-  ]);
-}
-
-async function generateOrderNumber() {
-  try {
-    const next = await withTimeout(kv.incr(orderCounterKey()), 2500);
-    const padded = String(next).padStart(7, "0");
-    return `CD-${padded}`;
-  } catch {
-    // KV unavailable or timed out — fall back to base-36 timestamp
-    const ts = Date.now().toString(36).toUpperCase().slice(-7).padStart(7, "0");
-    return `CD-${ts}`;
-  }
-}
-
-async function generateInvoiceNumber() {
-  try {
-    const next = await withTimeout(kv.incr(invoiceCounterKey()), 2500);
-    const padded = String(next).padStart(7, "0");
-    return `INV-${padded}`;
-  } catch {
-    const ts = (Date.now() + 1).toString(36).toUpperCase().slice(-7).padStart(7, "0");
-    return `INV-${ts}`;
-  }
-}
-
-// ─── Misc helpers ───────────────────────────────────────────────────────────
 
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -496,8 +448,14 @@ export async function POST(req: Request) {
   const subtotalUSD = resolvedItems.reduce((sum, x) => sum + x.lineTotalUSD, 0);
   const baseShippingUSD = subtotalUSD > 0 ? 5 : 0;
 
-  const promoRaw = await kv.get<unknown>(PROMO_CODES_KEY).catch(() => null);
-  const promoRecords = withPromoDefaults(normalizePromoRecords(promoRaw));
+  let promoRecords: Awaited<ReturnType<typeof loadPromos>> = [];
+  if (promoCode) {
+    try {
+      promoRecords = await loadPromos();
+    } catch {
+      return NextResponse.json({ error: "Promo codes are temporarily unavailable. Please try again." }, { status: 503 });
+    }
+  }
 
   let discountUSD = 0;
   let shippingUSD = baseShippingUSD;
@@ -522,8 +480,13 @@ export async function POST(req: Request) {
 
   const totalUSD = subtotalUSD - discountUSD + shippingUSD;
 
-  const orderNumber = await generateOrderNumber();
-  const invoiceNumber = await generateInvoiceNumber();
+  const { data: numbers, error: numberError } = await supabaseAdmin.rpc("cd_next_document_numbers");
+  if (numberError || !numbers?.orderNumber || !numbers?.invoiceNumber) {
+    console.error("Could not allocate order/invoice numbers:", numberError);
+    return NextResponse.json({ error: "Could not create order. Please try again." }, { status: 503 });
+  }
+  const orderNumber = String(numbers.orderNumber);
+  const invoiceNumber = String(numbers.invoiceNumber);
   const createdAt = new Date().toISOString();
 
   const finalizedItems = await Promise.all(
@@ -542,7 +505,7 @@ export async function POST(req: Request) {
   );
 
   const order: OrderRecord = {
-    id: `ORD-${Date.now()}`,
+    id: `ORD-${crypto.randomUUID()}`,
     orderNumber,
     userId,
     status: "pending",

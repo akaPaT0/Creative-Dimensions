@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
+import { loadFilamentItems } from "@/app/lib/supabase/filament-store";
 
-const FILAMENTS_KEY = "admin:filament-options";
 
 type FilamentItem = {
   id: string;
@@ -49,9 +48,7 @@ function normalizeItems(raw: unknown): FilamentItem[] {
 
 export async function GET() {
   try {
-    const raw = await kv.get<unknown>(FILAMENTS_KEY);
-    const data = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-    const items = normalizeItems(data.items);
+    const items = normalizeItems(await loadFilamentItems());
     return NextResponse.json({ ok: true, items });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load filaments";

@@ -19,35 +19,6 @@ export type PromoApplyResult = {
   appliedCode: string;
 };
 
-export const PROMO_CODES_KEY = "admin:promocodes";
-
-const DEFAULT_PROMOS: PromoCodeRecord[] = [
-  {
-    code: "CD10",
-    label: "10% Off",
-    description: "10% discount on subtotal (min $10).",
-    active: true,
-    type: "percent",
-    value: 10,
-    minSubtotal: 10,
-    maxDiscount: 0,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    code: "SAVE5",
-    label: "$5 Off",
-    description: "$5 discount on subtotal (min $20).",
-    active: true,
-    type: "fixed",
-    value: 5,
-    minSubtotal: 20,
-    maxDiscount: 0,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
-  },
-];
-
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -97,11 +68,6 @@ export function normalizePromoRecords(raw: unknown): PromoCodeRecord[] {
       };
     })
     .filter((x) => x.code);
-}
-
-export function withPromoDefaults(records: PromoCodeRecord[]) {
-  if (records.length > 0) return records;
-  return DEFAULT_PROMOS;
 }
 
 export function applyPromoRule({

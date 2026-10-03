@@ -1,5 +1,26 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Commerce storage
+
+Creative Dimensions uses Supabase project `ypevaawhxhupjxjgkwdp`. Apply
+`supabase-commerce-schema.sql` before deploying the commerce routes. It creates
+`cd_promo_codes`, `cd_filaments`, `cd_document_counters`, and the atomic
+`cd_next_document_numbers()` function. The migration was applied on 2026-10-03.
+
+Only server routes using `SUPABASE_SERVICE_ROLE_KEY` can access these tables;
+admin mutations additionally require the existing verified admin session. Public
+routes expose active promos and usable active filament colors. The app no longer
+uses Vercel KV/Redis. An empty promo table means no discounts; storage failures
+return errors and never reactivate hardcoded defaults. Orders without a promo
+do not depend on promo-table reads.
+
+The retired Upstash endpoint no longer resolves. Historical custom promos and
+filaments could not be recovered; do not seed guessed discounts. Recover from an
+owner-supplied backup or recreate explicitly through admin. Order and invoice
+counters start above existing numeric values; allocation can leave gaps after
+failed orders. Management credentials belong only in ignored local env files,
+never in client variables, Git, or Vercel deployment uploads.
+
 ## Getting Started
 
 First, run the development server:

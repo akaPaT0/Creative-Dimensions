@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
+import { loadFilamentItems, saveFilamentItem, deleteFilamentItem } from "@/app/lib/supabase/filament-store";
 import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
 
-const FILAMENTS_KEY = "admin:filament-options";
 const MAX_TEXT = 120;
 const MAX_NOTES = 280;
 
@@ -21,13 +20,6 @@ type FilamentItem = {
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
-}
-
-function asList(raw: unknown) {
-  if (!Array.isArray(raw)) return [] as string[];
-  return raw
-    .map((x) => (typeof x === "string" ? x.trim() : ""))
-    .filter(Boolean);
 }
 
 function cleanText(raw: unknown, maxLen = MAX_TEXT) {
@@ -93,74 +85,8 @@ function normalizeItems(raw: unknown): FilamentItem[] {
   return out.filter((x) => x.type || x.color);
 }
 
-function migrateFromLegacy(data: { types?: unknown; colors?: unknown }) {
-  const types = asList(data.types);
-  const colors = asList(data.colors);
-  const now = new Date().toISOString();
-  const created: FilamentItem[] = [];
-
-  if (types.length && colors.length) {
-    for (const type of types) {
-      for (const color of colors) {
-        created.push({
-          id: makeId(),
-          type,
-          color,
-          hex: "",
-          brand: "",
-          finish: "",
-          notes: "",
-          isActive: true,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-    }
-    return created;
-  }
-
-  for (const type of types) {
-    created.push({
-      id: makeId(),
-      type,
-      color: "",
-      hex: "",
-      brand: "",
-      finish: "",
-      notes: "",
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    });
-  }
-  for (const color of colors) {
-    created.push({
-      id: makeId(),
-      type: "",
-      color,
-      hex: "",
-      brand: "",
-      finish: "",
-      notes: "",
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    });
-  }
-  return created;
-}
-
 async function getFilamentState() {
-  const raw = await kv.get<unknown>(FILAMENTS_KEY);
-  const data = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-  const items = normalizeItems(data.items);
-  if (items.length > 0) return items;
-  return migrateFromLegacy({ types: data.types, colors: data.colors });
-}
-
-async function persistItems(items: FilamentItem[]) {
-  const updatedAt = new Date().toISOString();
-  await kv.set(FILAMENTS_KEY, { items, updatedAt });
+  return normalizeItems(await loadFilamentItems());
 }
 
 export async function GET(req: Request) {
@@ -215,7 +141,7 @@ export async function POST(req: Request) {
       updatedAt: now,
     };
     const next = [item, ...items];
-    await persistItems(next);
+    await saveFilamentItem(item, true);
 
     return json({ ok: true, item, items: next });
   } catch (error) {
@@ -265,7 +191,7 @@ export async function PUT(req: Request) {
 
     const next = [...items];
     next[idx] = nextItem;
-    await persistItems(next);
+    if (!(await saveFilamentItem(nextItem))) return json({ error: "Filament not found." }, 404);
 
     return json({ ok: true, item: nextItem, items: next });
   } catch (error) {
@@ -289,7 +215,7 @@ export async function DELETE(req: Request) {
       return json({ error: "Filament not found." }, 404);
     }
 
-    await persistItems(next);
+    if (!(await deleteFilamentItem(id))) return json({ error: "Filament not found." }, 404);
     return json({ ok: true, items: next });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete filament";
