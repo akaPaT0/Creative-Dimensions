@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getProductPath } from "@/app/lib/product-url";
 import Link from "next/link";
 import Image from "next/image";
 import { Filter, Search, X, ArrowUpDown, Grid3X3, LayoutGrid } from "lucide-react";
@@ -116,11 +117,7 @@ function getNumericPrice(p: Product) {
   return Number(p.priceUSD ?? p.price ?? 0) || 0;
 }
 
-function getProductHref(p: Product) {
-  if (p?.category && p?.slug) return `/shop/${p.category}/${p.slug}`;
-  if (p?.category) return `/shop/${p.category}`;
-  return "/shop";
-}
+const getProductHref = getProductPath;
 
 function getStableKey(p: Product) {
   return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;
@@ -379,7 +376,7 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
             setSubCategory(s);
           }}
           onPickProduct={(cat, slug) => {
-            window.location.href = `/shop/${cat}/${slug}`;
+            window.location.href = getProductPath({ category: cat, slug });
           }}
         />
 

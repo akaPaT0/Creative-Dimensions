@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { permanentRedirect } from "next/navigation";
+import { getProductPath } from "@/app/lib/product-url";
 import { ChevronLeft } from "lucide-react";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
@@ -96,6 +98,8 @@ export default async function DeskAddOnsSlugPage({
     );
   }
 
+  if (rawSlug !== slugify(p.slug)) permanentRedirect(getProductPath(p));
+
   const imgs = getImages(p);
   const total = 4;
   const sameSub = p.subCategory
@@ -125,6 +129,7 @@ export default async function DeskAddOnsSlugPage({
   const recommendedItems = similar.map((x) => ({
     id: x.id,
     slug: x.slug,
+    category: x.category,
     name: x.name,
     image: getCardImage(x),
   }));

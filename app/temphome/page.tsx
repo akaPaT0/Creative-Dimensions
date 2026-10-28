@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import { getProductPath } from "@/app/lib/product-url";
 import Background from "../components/Background";
 import Footer from "../components/Footer";
 import Link from "next/link";
@@ -39,11 +40,7 @@ function getPriceLabel(p: Product) {
   return "DM";
 }
 
-function getProductHref(p: Product) {
-  if (p?.category && p?.slug) return `/shop/${p.category}/${p.slug}`;
-  if (p?.category) return `/shop/${p.category}`;
-  return "/shop";
-}
+const getProductHref = getProductPath;
 
 function getStableKey(p: Product) {
   return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;

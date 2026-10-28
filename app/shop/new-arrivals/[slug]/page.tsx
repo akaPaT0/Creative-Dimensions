@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getProductPath } from "@/app/lib/product-url";
 import { redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import Navbar from "../../../components/Navbar";
@@ -55,7 +56,7 @@ export default async function Page({
                 {matches.map((p: any) => (
                   <Link
                     key={`${p.category}-${p.slug}-${p.id ?? "x"}`}
-                    href={`/shop/${p.category}/${encodeURIComponent(p.slug)}`}
+                    href={getProductPath(p)}
                     className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 hover:bg-white/10 transition"
                   >
                     <div className="text-white font-semibold">{p.name}</div>

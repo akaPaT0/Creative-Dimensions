@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getProductPath } from "@/app/lib/product-url";
 import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
 import Navbar from "../../components/Navbar";
@@ -15,11 +16,7 @@ function getCardImage(p: any) {
   return "/products/placeholder.jpg";
 }
 
-function getProductHref(p: any) {
-  // ✅ Send to the real product route you already use
-  if (p?.category && p?.slug) return `/shop/${p.category}/${encodeURIComponent(p.slug)}`;
-  return "/shop";
-}
+const getProductHref = getProductPath;
 
 export default async function Page() {
   const products = await getProducts();

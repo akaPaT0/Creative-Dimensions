@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { getProductPath } from "@/app/lib/product-url";
 import Image from "next/image";
 import { useMemo, useRef } from "react";
 
 type Item = {
   id?: string;
   slug: string;
+  category: string;
   name: string;
   image: string;
 };
@@ -61,7 +63,7 @@ export default function RecommendedRow({ items }: { items: Item[] }) {
           {items.map((x) => (
             <Link
               key={x.id ?? x.slug}
-              href={`/shop/keychains/${encodeURIComponent(x.slug)}`}
+              href={getProductPath(x)}
               className="
                 group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-2
                 shrink-0 snap-start

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { getProductPath } from "@/app/lib/product-url";
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "./ShopCatalogClient";
@@ -34,11 +35,7 @@ function getPriceLabel(p: Product) {
   return "DM";
 }
 
-function getProductHref(p: Product) {
-  if (p?.category && p?.slug) return `/shop/${p.category}/${p.slug}`;
-  if (p?.category) return `/shop/${p.category}`;
-  return "/shop";
-}
+const getProductHref = getProductPath;
 
 function getStableKey(p: Product) {
   return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;

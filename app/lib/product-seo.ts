@@ -2,13 +2,8 @@ import type { Metadata } from "next";
 import type { Product } from "@/app/data/products";
 import { SITE_URL } from "@/app/lib/site";
 
-export function slugify(s: string) {
-  try {
-    return decodeURIComponent(s).trim().toLowerCase().replace(/[\s_]+/g, "-");
-  } catch {
-    return s.trim().toLowerCase().replace(/[\s_]+/g, "-");
-  }
-}
+import { slugify } from "./product-url";
+export { slugify } from "./product-url";
 
 export const CATEGORY_LABELS: Record<string, string> = {
   keychains: "Keychains",

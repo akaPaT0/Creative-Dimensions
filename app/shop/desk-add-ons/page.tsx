@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getProductPath } from "@/app/lib/product-url";
 import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
 import Navbar from "../../components/Navbar";
@@ -69,7 +70,7 @@ export default async function Page() {
           {list.map((p) => (
             <Link
               key={p.id}
-              href={`/shop/desk-add-ons/${encodeURIComponent(p.slug)}`}
+              href={getProductPath(p)}
               className="group rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:bg-white/10 lg:hover:-translate-y-[2px] lg:hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/10 bg-white/5 transition lg:group-hover:scale-[1.02]">
