@@ -8,7 +8,9 @@
 - Search Console domain property is `sc-domain:creativedimensionslb.com`; the non-www URL-prefix property excludes the www production host. Indexing report dated Oct 23: 5 indexed pages, 32 discovered/unindexed, 3 redirected, 1 historical redirect error. Live sitemap: 37 URLs including 26 products. No indexing improvement has been claimed yet.
 - Crawl stats updated Oct 27: hosts report no problems; 489 requests in the last 90 days, 244 ms average response, discovery below 1%. Google has mainly refreshed existing URLs. A server outage is not established as the cause of the indexing backlog.
 - Direct indexing requests failed twice because Google's reCAPTCHA service could not connect. Retry through Search Console when verification works; do not record a submission without Google's success confirmation.
-- Local verification: production build including TypeScript, URL regression tests, focused ESLint, HTTP checks for legacy redirect, canonical fidget link, recommendation categories and custom-quote metadata passed. Production release/readback must be recorded in WORKLOG.md after deployment.
+- Released code: `e2bda8f` on main, verified READY production deployment `dpl_6kXE974AFCpdN9Xxgy3pWWpei2kE`. Production audit passed all 37 sitemap URLs, including all 26 products, with no observed canonical, status, noindex or JSON-LD parsing failures. The fidget product now has canonical links from two audited pages; all products have inbound links in the audited HTML.
+- Local verification: production build including TypeScript, 3 URL regression tests, focused ESLint and HTTP checks passed. Deployed HTTP checks also passed for old-slug 308, canonical fidget link, recommendation categories and custom-quote metadata.
+- Google confirmed successful resubmission of `https://www.creativedimensionslb.com/sitemap.xml` on Oct 28. This does not confirm indexing. Individual indexing requests remain blocked by reCAPTCHA connectivity; no automatic follow-up has been scheduled.
 
 ## Collaboration
 
