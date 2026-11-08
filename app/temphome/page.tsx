@@ -355,59 +355,21 @@ export default async function TempHomePage() {
           </div>
         </section>
 
-        {/* ── STORE GATEWAYS: CATALOG & CUSTOM ───────────────────────── */}
-        <section className="mt-16 sm:mt-24 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          {/* Card 1: Full Catalog Gateway */}
-          <Link
-            href="/shop"
-            className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-[#141417]/90 p-6 sm:p-8 hover:border-[#FF8B64]/50 transition-all duration-300 shadow-xl hover:-translate-y-0.5"
-          >
-            {/* Subtle background glow on hover */}
-            <div
-              className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-[#FF8B64]/10 blur-2xl rounded-full group-hover:bg-[#FF8B64]/20 transition-all duration-500"
-              aria-hidden="true"
-            />
-
-            <div className="relative">
-              <h3 className="text-xl sm:text-2xl font-bold text-white group-hover:text-[#FF8B64] transition-colors">
-                Browse Full Catalog
-              </h3>
-              <p className="mt-2 text-xs sm:text-sm text-white/60 leading-relaxed max-w-sm">
-                Search, filter, and explore all automotive keychains, desk accessories, and collectibles in one place.
+        {/* ── CUSTOM ORDER CTA ───────────────────────────────────────── */}
+        <section id="custom-order" className="mt-16 sm:mt-24">
+          <div className="flex flex-col items-start gap-5 rounded-3xl border border-white/10 bg-[#141417]/90 p-6 sm:p-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-xl">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                Got something in mind?
+              </h2>
+              <p className="mt-1.5 text-sm sm:text-base text-white/60">
+                Send us a photo, sketch or idea. We&rsquo;ll show you a preview and a price before we print.
               </p>
             </div>
-
-            <div className="relative mt-8">
-              <span className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3.5 sm:py-3 text-xs sm:text-sm font-bold text-white group-hover:bg-[#FF8B64] group-hover:text-[#0D0D0D] group-hover:border-[#FF8B64] transition-all duration-200 shadow-md">
-                <span>Explore Catalog</span>
-                <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
-              </span>
-            </div>
-          </Link>
-
-          {/* Card 2: Custom Request Studio */}
-          <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-[#141417]/90 p-6 sm:p-8 shadow-xl">
-            {/* Subtle background glow */}
-            <div
-              className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-[#FF8B64]/10 blur-2xl rounded-full"
-              aria-hidden="true"
+            <TemphomeCustomRequestCta
+              className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              buttonLabel="Get a Quote"
             />
-
-            <div className="relative">
-              <h3 className="text-xl sm:text-2xl font-bold text-white">
-                Custom 3D Printing
-              </h3>
-              <p className="mt-2 text-xs sm:text-sm text-white/60 leading-relaxed max-w-sm">
-                Have an STL file, reference photo, or custom lettering request? Send us your specs and we’ll print it to order.
-              </p>
-            </div>
-
-            <div className="relative mt-8">
-              <TemphomeCustomRequestCta
-                className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-6 py-3.5 sm:py-3 text-xs sm:text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-md hover:scale-[1.02] active:scale-[0.98]"
-                buttonLabel="Start Custom Order"
-              />
-            </div>
           </div>
         </section>
 
