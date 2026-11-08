@@ -14,6 +14,8 @@ export default function Footer() {
           <Link href="/custom-quote">Custom 3D Print</Link>
           <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
+          <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/terms">Terms of Service</Link>
         </div>
 
         <div className="flex flex-col gap-6 items-center text-center sm:text-left sm:flex-row sm:items-center sm:justify-between">
