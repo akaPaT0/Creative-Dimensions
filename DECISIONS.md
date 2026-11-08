@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-11-08 - Release password recovery without Google sign-in
+
+- Use a shop-specific Resend sender with Supabase recovery tokens and keep the shared Supabase mail configuration. Apply Turnstile only to the new reset request form. The reset link opens without consuming the token. Saving the new password consumes the token in a server-only session and returns the customer to the existing sign-in flow.
+- Continue unfinished Google sign-in work on codex/creative-dimensions-google-sign-in. Keep production on main.
+
 ## 2026-10-28 - Canonical product navigation
 
 - Keep www as the existing canonical production host. Use Vercel's permanent 308 apex-to-www redirect; preserve path and query.

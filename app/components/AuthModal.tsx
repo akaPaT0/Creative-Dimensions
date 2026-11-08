@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 import { X } from "lucide-react";
+import Turnstile from "@/app/components/Turnstile";
 import { useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 type Props = {
@@ -12,11 +13,16 @@ type Props = {
 
 export default function AuthModal({ open, mode = "sign-in", onClose }: Props) {
   const { signIn, signUp } = useSupabaseAuth();
-  const [authMode, setAuthMode] = useState(mode);
+  const [authMode, setAuthMode] = useState<NonNullable<Props["mode"]> | "forgot-password">(mode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [challengeAttempt, setChallengeAttempt] = useState(0);
+  const clearTurnstileToken = useCallback(() => setTurnstileToken(""), []);
+  const needsBotCheck = process.env.NODE_ENV === "production" || Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
   if (!open) return null;
 
@@ -24,6 +30,25 @@ export default function AuthModal({ open, mode = "sign-in", onClose }: Props) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+
+    if (authMode === "forgot-password") {
+      try {
+        const response = await fetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), turnstileToken }),
+        });
+        const body = await response.json();
+        setMessage(response.ok ? body.message : body.error);
+      } catch {
+        setMessage("Could not request a password reset. Please try again.");
+      } finally {
+        setLoading(false);
+        clearTurnstileToken();
+        setChallengeAttempt((attempt) => attempt + 1);
+      }
+      return;
+    }
 
     const result =
       authMode === "sign-up"
@@ -60,10 +85,10 @@ export default function AuthModal({ open, mode = "sign-in", onClose }: Props) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold">
-              {authMode === "sign-up" ? "Create account" : "Sign in"}
+              {authMode === "forgot-password" ? "Reset password" : authMode === "sign-up" ? "Create account" : "Sign in"}
             </h2>
             <p className="mt-1 text-sm text-white/60">
-              Use your Creative Dimensions account.
+              {authMode === "forgot-password" ? "Enter your email to get a reset link." : "Use your Creative Dimensions account."}
             </p>
           </div>
           <button
@@ -84,7 +109,7 @@ export default function AuthModal({ open, mode = "sign-in", onClose }: Props) {
             placeholder="Email"
             className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/35"
           />
-          <input
+          {authMode !== "forgot-password" && <input
             type="password"
             required
             minLength={6}
@@ -92,28 +117,43 @@ export default function AuthModal({ open, mode = "sign-in", onClose }: Props) {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Password"
             className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/35"
-          />
+          />}
         </div>
 
-        {message && <p className="mt-3 text-sm text-white/70">{message}</p>}
+        {authMode === "sign-in" && (
+          <button type="button" className="mt-3 text-sm text-[#FF8B64] hover:underline" onClick={() => {
+            setMessage("");
+            clearTurnstileToken();
+            setAuthMode("forgot-password");
+          }}>
+            Forgot password?
+          </button>
+        )}
+
+        {authMode === "forgot-password" && needsBotCheck && (
+          <Turnstile key={challengeAttempt} onVerify={setTurnstileToken} onExpire={clearTurnstileToken} />
+        )}
+
+        {message && <p role="status" className="mt-3 text-sm text-white/70">{message}</p>}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (authMode === "forgot-password" && needsBotCheck && !turnstileToken)}
           className="mt-5 w-full rounded-xl bg-[#FF8B64] px-4 py-3 font-medium text-black transition hover:opacity-90 disabled:opacity-60"
         >
-          {loading ? "Working..." : authMode === "sign-up" ? "Create account" : "Sign in"}
+          {loading ? "Working..." : authMode === "forgot-password" ? "Send reset link" : authMode === "sign-up" ? "Create account" : "Sign in"}
         </button>
 
         <button
           type="button"
           onClick={() => {
             setMessage("");
-            setAuthMode(authMode === "sign-up" ? "sign-in" : "sign-up");
+            clearTurnstileToken();
+            setAuthMode(authMode === "sign-in" ? "sign-up" : "sign-in");
           }}
           className="mt-3 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white/80 transition hover:bg-white/10"
         >
-          {authMode === "sign-up"
+          {authMode === "forgot-password" ? "Back to sign in" : authMode === "sign-up"
             ? "Already have an account? Sign in"
             : "Need an account? Create one"}
         </button>

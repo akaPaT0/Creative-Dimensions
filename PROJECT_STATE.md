@@ -1,5 +1,11 @@
 # Project state
 
+## Shop password recovery (2026-11-08)
+
+- The sign-in modal offers password recovery with email from Creative Dimensions <support@creativedimensionslb.com>. The shop uses its own domain-restricted Resend key and a production Cloudflare Turnstile widget. Vercel production needs CD_RESEND_API_KEY, TURNSTILE_SECRET_KEY, and NEXT_PUBLIC_TURNSTILE_SITE_KEY.
+- Recovery links point to the canonical shop and keep the one-time Supabase token in the fragment. The server consumes it when the customer submits the new password. Customers sign in again after success.
+- Google sign-in is being developed on codex/creative-dimensions-google-sign-in. Production continues to use the existing shop sign-in and account session.
+
 ## SEO and indexing (2026-10-28)
 
 - Canonical production origin: `https://www.creativedimensionslb.com`. Vercel apex-domain routing uses a permanent 308 redirect to www, verified by HTTP. Domain routing is hosted configuration, not a Next.js redirect rule.

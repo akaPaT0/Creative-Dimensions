@@ -1,5 +1,10 @@
 # Worklog
 
+## 2026-11-08 - Release shop password recovery separately
+
+- Owner requested committing and pushing the branded password reset, with Google sign-in excluded from production. Based the release on the latest main in codex/shop-password-reset and preserved existing sign-in, signup, and account sessions. Moved the original checkout with its pending work to codex/creative-dimensions-google-sign-in.
+- Updated the sign-in modal, reset page, recovery API routes, and password and bot checks. Configured the domain-restricted Resend key and shop Turnstile widget for Vercel production. The recovery route validates the one-time token when saving the new password and keeps the temporary session server-side.
+
 ## 2026-10-28 - Product indexing repair
 
 - Request: investigate poor product indexing, then perform the necessary fixes.
