@@ -1,5 +1,11 @@
 # Worklog
 
+## 2026-11-09 - Verify the production password reset release
+
+- Owner requested a commit and production push for shop password recovery, with Google sign-in kept on a branch. Main contains release commit `23a4e7a`. Git deployment `dpl_2cC8FETkFDLdjQ3JUf5ygPgNVNe6` was READY on www and apex when checked. Production sender and Turnstile variables are configured.
+- Production build, focused lint and three existing product URL tests passed. A disposable Supabase account confirmed password update, sign-in with the new password, and rejection of token reuse. The fixture was deleted. The staged endpoint rejected missing bot verification. The live form completed Turnstile, and Resend reported delivery from support@creativedimensionslb.com with the canonical reset link. Live /auth/google returned 404. The deployment error-log query returned no entries.
+- The original checkout is on `codex/creative-dimensions-google-sign-in`. Its unfinished auth/session and admin changes are separate from the production release.
+
 ## 2026-11-08 - Release shop password recovery separately
 
 - Owner requested committing and pushing the branded password reset, with Google sign-in excluded from production. Based the release on the latest main in codex/shop-password-reset and preserved existing sign-in, signup, and account sessions. Moved the original checkout with its pending work to codex/creative-dimensions-google-sign-in.

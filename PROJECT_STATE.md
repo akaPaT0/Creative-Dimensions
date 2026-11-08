@@ -2,7 +2,7 @@
 
 ## Shop password recovery (2026-11-08)
 
-- The sign-in modal offers password recovery with email from Creative Dimensions <support@creativedimensionslb.com>. The shop uses its own domain-restricted Resend key and a production Cloudflare Turnstile widget. Vercel production needs CD_RESEND_API_KEY, TURNSTILE_SECRET_KEY, and NEXT_PUBLIC_TURNSTILE_SITE_KEY.
+- Password recovery is live from code commit `23a4e7a`. Verified READY Git deployment `dpl_2cC8FETkFDLdjQ3JUf5ygPgNVNe6` serves www and apex. Production `CD_RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` are configured. The live bot check completed, and Resend confirmed delivery from Creative Dimensions <support@creativedimensionslb.com> with the canonical reset link.
 - Recovery links point to the canonical shop and keep the one-time Supabase token in the fragment. The server consumes it when the customer submits the new password. Customers sign in again after success.
 - Google sign-in is being developed on codex/creative-dimensions-google-sign-in. Production continues to use the existing shop sign-in and account session.
 
