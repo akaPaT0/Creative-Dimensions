@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import Background from "@/app/components/Background";
 import type { Product } from "@/app/data/products";
 import { getProducts } from "@/app/lib/products-db";
-import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
+import { requireSupabaseAdminFromCookies } from "@/app/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
 function formatDate(value: unknown) {
@@ -185,15 +185,10 @@ function formatPrice(p: Product) {
 }
 
 async function requireAdmin() {
-  const auth = await getSupabaseUserFromCookies();
-  if ("response" in auth) return { ok: false as const, reason: "unauthorized" as const };
-
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-
-  if (!adminEmail || auth.email !== adminEmail) {
-    return { ok: false as const, reason: "forbidden" as const };
+  const auth = await requireSupabaseAdminFromCookies();
+  if ("response" in auth) {
+    return { ok: false as const, reason: auth.response.status === 401 ? "unauthorized" as const : "forbidden" as const };
   }
-
   return { ok: true as const };
 }
 

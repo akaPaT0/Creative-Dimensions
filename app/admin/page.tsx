@@ -2,20 +2,15 @@ import { redirect } from "next/navigation";
 import Background from "../components/Background";
 import Link from "next/link";
 import AdminTabs from "./AdminTabs";
-import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
+import { requireSupabaseAdminFromCookies } from "@/app/lib/supabase/auth-server";
 
 export default async function AdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const auth = await getSupabaseUserFromCookies();
-  if ("response" in auth) redirect("/sign-in");
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const userEmail = auth.email;
-  const sp = await searchParams;
-
-  if (!adminEmail || userEmail !== adminEmail) {
+  const auth = await requireSupabaseAdminFromCookies();
+  if ("response" in auth) {
     return (
       <div className="relative min-h-screen">
         <Background />
@@ -23,11 +18,20 @@ export default async function AdminPage({
           <div className="w-full max-w-xl text-center">
             <h1 className="text-white text-2xl font-semibold">403</h1>
             <p className="text-white/70 mt-2">Not authorized.</p>
+            <Link
+              href="/sign-in"
+              className="mt-4 inline-block rounded-xl bg-[#FF8B64] px-4 py-2 text-sm font-medium text-black"
+            >
+              Sign in as Admin
+            </Link>
           </div>
         </main>
       </div>
     );
   }
+
+  const userEmail = auth.email;
+  const sp = await searchParams;
 
   return (
     <div className="relative min-h-screen">

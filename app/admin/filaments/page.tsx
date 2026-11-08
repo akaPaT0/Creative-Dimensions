@@ -2,15 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Background from "@/app/components/Background";
 import FilamentsManager from "./FilamentsManager";
-import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
+import { requireSupabaseAdminFromCookies } from "@/app/lib/supabase/auth-server";
 
 export default async function AdminFilamentsPage() {
-  const auth = await getSupabaseUserFromCookies();
-  if ("response" in auth) redirect("/sign-in");
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const userEmail = auth.email;
-
-  if (!adminEmail || userEmail !== adminEmail) redirect("/admin");
+  const auth = await requireSupabaseAdminFromCookies();
+  if ("response" in auth) redirect("/admin");
 
   return (
     <div className="relative min-h-screen">

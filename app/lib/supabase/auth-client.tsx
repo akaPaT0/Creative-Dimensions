@@ -12,15 +12,13 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/app/lib/supabase/clients";
 
-const TOKEN_COOKIE = "cd_supabase_token";
-
 type AuthContextValue = {
   user: User | null;
   session: Session | null;
   isLoaded: boolean;
   isSignedIn: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string, turnstileToken?: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, turnstileToken?: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
 };
@@ -29,19 +27,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
-}
-
-function syncTokenCookie(session: Session | null) {
-  if (typeof document === "undefined") return;
-
-  if (!session?.access_token) {
-    document.cookie = `${TOKEN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
-    return;
-  }
-
-  document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(
-    session.access_token
-  )}; Path=/; Max-Age=604800; SameSite=Lax`;
 }
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
@@ -54,7 +39,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       if (!alive) return;
       setSession(data.session ?? null);
-      syncTokenCookie(data.session ?? null);
       setIsLoaded(true);
     });
 
@@ -62,7 +46,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
-      syncTokenCookie(nextSession);
       setIsLoaded(true);
     });
 
@@ -72,15 +55,59 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error ? { error: error.message } : {};
-  }, []);
+  const signIn = useCallback(
+    async (email: string, password: string, turnstileToken?: string) => {
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, turnstileToken }),
+        });
 
-  const signUp = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return error ? { error: error.message } : {};
-  }, []);
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          return { error: data.error || "Failed to sign in." };
+        }
+
+        // Re-sync browser session from cookies set by the server
+        const { data: sessionData } = await supabase.auth.getSession();
+        setSession(sessionData.session ?? null);
+
+        return {};
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Failed to connect to authentication service.";
+        return { error: msg };
+      }
+    },
+    []
+  );
+
+  const signUp = useCallback(
+    async (email: string, password: string, turnstileToken?: string) => {
+      try {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, turnstileToken }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          return { error: data.error || "Failed to create account." };
+        }
+
+        return {};
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Failed to connect to registration service.";
+        return { error: msg };
+      }
+    },
+    []
+  );
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
