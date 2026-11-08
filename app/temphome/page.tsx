@@ -8,6 +8,7 @@ import { getProducts } from "../lib/products-db";
 import type { Product } from "../shop/ShopCatalogClient";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
 import FeaturedCarousel from "../components/FeaturedCarousel";
+import CustomOrderBand from "../components/CustomOrderBand";
 import { FileUp, Instagram, MessageCircle, Palette, Sparkles, Truck, Wrench } from "lucide-react";
 import { SITE_URL } from "../lib/site";
 import { slugify } from "../lib/product-seo";
@@ -272,6 +273,7 @@ export default async function TempHomePage() {
               }
               items={featured.slice(0, 10).map((p: Product) => ({
                 key: `f-${getStableKey(p)}`,
+                id: p.id ? String(p.id) : undefined,
                 href: getProductHref(p),
                 title: getTitle(p),
                 price: getPriceLabel(p),
@@ -356,22 +358,7 @@ export default async function TempHomePage() {
         </section>
 
         {/* ── CUSTOM ORDER CTA ───────────────────────────────────────── */}
-        <section id="custom-order" className="mt-16 sm:mt-24">
-          <div className="flex flex-col items-start gap-5 rounded-3xl border border-white/10 bg-[#141417]/90 p-6 sm:p-8 sm:flex-row sm:items-center sm:justify-between">
-            <div className="max-w-xl">
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                Got something in mind?
-              </h2>
-              <p className="mt-1.5 text-sm sm:text-base text-white/60">
-                Send us a photo, sketch or idea. We&rsquo;ll show you a preview and a price before we print.
-              </p>
-            </div>
-            <TemphomeCustomRequestCta
-              className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-              buttonLabel="Get a Quote"
-            />
-          </div>
-        </section>
+        <CustomOrderBand id="custom-order" className="mt-16 sm:mt-24" />
 
         {/* ── SOCIALS ────────────────────────────────────────────────── */}
         <section id="socials" className="mt-4 sm:mt-6 grid gap-4 sm:grid-cols-2">

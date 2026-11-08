@@ -63,7 +63,7 @@ function parseStoredCart(raw: unknown): StoredCartItem[] {
   return out;
 }
 
-function addToCart(productId: string) {
+export function addToCart(productId: string) {
   if (typeof window === "undefined") return;
   const id = String(productId);
 

@@ -91,6 +91,7 @@ export default function DynamicCategoryStage({
           }
           items={items.map((p) => ({
             key: `sig-${getStableKey(p)}`,
+            id: p.id ? String(p.id) : undefined,
             href: getProductHref(p),
             title: getTitle(p),
             price: getPriceLabel(p),

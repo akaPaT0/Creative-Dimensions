@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
+import ProductCard from "./ProductCard";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type FeaturedItem = {
   key: string;
+  /** Product id; enables like and add-to-cart buttons. */
+  id?: string;
   href: string;
   title: string;
   price: string;
@@ -102,50 +103,13 @@ export default function FeaturedCarousel({
         className="flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2"
       >
         {items.map((item) => (
-          <Link
+          <ProductCard
             key={item.key}
-            href={item.href}
-            className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 shrink-0 snap-start shadow-md w-[42%] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-4rem)/5)] lg:w-[calc((100%-5rem)/5)]"
-          >
-            <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5">
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                className={`object-cover transition-all duration-300 group-hover:scale-[1.04] ${
-                  item.hoverImage ? "group-hover:opacity-0" : ""
-                }`}
-                sizes="(max-width: 640px) 160px, (max-width: 1024px) 33vw, 20vw"
-              />
-              {item.hoverImage && (
-                <Image
-                  src={item.hoverImage}
-                  alt=""
-                  aria-hidden="true"
-                  fill
-                  className="object-cover opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-[1.04]"
-                  sizes="(max-width: 640px) 160px, (max-width: 1024px) 33vw, 20vw"
-                />
-              )}
-              {item.isNew && (
-                <span className="absolute left-2 top-2 rounded-full bg-[#FF8B64] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0D0D0D]">
-                  New
-                </span>
-              )}
-            </div>
-
-            <div className="mt-2.5 flex flex-1 flex-col">
-              <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-white/40">
-                {item.category}
-              </span>
-              <span className="mt-0.5 line-clamp-2 min-h-[2.5em] text-xs sm:text-sm font-semibold leading-tight text-white group-hover:text-[#FF8B64] transition-colors">
-                {item.title}
-              </span>
-              <span className="mt-auto pt-1.5 text-xs sm:text-sm font-bold text-[#FF8B64]">
-                {item.price}
-              </span>
-            </div>
-          </Link>
+            item={{ ...item, label: item.category }}
+            productId={item.id}
+            className="shrink-0 snap-start w-[42%] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-4rem)/5)] lg:w-[calc((100%-5rem)/5)]"
+            sizes="(max-width: 640px) 160px, (max-width: 1024px) 33vw, 20vw"
+          />
         ))}
         <div className="shrink-0 w-2 sm:hidden pointer-events-none" aria-hidden="true" />
       </div>

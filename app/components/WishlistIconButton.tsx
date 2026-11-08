@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Bookmark } from "lucide-react";
-import AuthModal from "./AuthModal";
+import DetachedAuthModal from "./DetachedAuthModal";
 import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 type Props = {
@@ -64,7 +64,7 @@ export default function WishlistIconButton({
 
   return (
     <div className={className}>
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <DetachedAuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <span
         role="button"
         tabIndex={0}

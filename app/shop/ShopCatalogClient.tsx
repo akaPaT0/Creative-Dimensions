@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getProductPath } from "@/app/lib/product-url";
 import Link from "next/link";
 import Image from "next/image";
+import LikeIconButton from "../components/LikeIconButton";
+import CartIconButton from "../components/CartIconButton";
 import { Filter, Search, X, ArrowUpDown, Grid3X3, LayoutGrid } from "lucide-react";
 
 export const ALL_CATEGORY_TABS = [
@@ -770,6 +772,12 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
                 className="object-cover group-hover:scale-[1.04] transition duration-300"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
+              {p.id && (
+                <>
+                  <LikeIconButton productId={String(p.id)} positionClass="bottom-2 right-10" />
+                  <CartIconButton productId={String(p.id)} productName={getTitle(p)} />
+                </>
+              )}
             </div>
 
             <div className="mt-2.5 flex flex-col flex-1 justify-between">

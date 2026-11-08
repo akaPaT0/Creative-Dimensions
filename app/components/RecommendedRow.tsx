@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getProductPath } from "@/app/lib/product-url";
 import Image from "next/image";
 import { useMemo, useRef } from "react";
+import LikeIconButton from "./LikeIconButton";
+import CartIconButton from "./CartIconButton";
 
 type Item = {
   id?: string;
@@ -82,6 +84,12 @@ export default function RecommendedRow({ items }: { items: Item[] }) {
                     sizes="200px"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  {x.id && (
+                    <>
+                      <LikeIconButton productId={String(x.id)} positionClass="bottom-1.5 right-9" />
+                      <CartIconButton productId={String(x.id)} productName={x.name} positionClass="bottom-1.5 right-1.5" />
+                    </>
+                  )}
                 </div>
               </div>
 
