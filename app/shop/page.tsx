@@ -58,7 +58,7 @@ export default async function Shop() {
               </span>
             </h1>
             <p className="mt-3 text-sm sm:text-base text-white/70 max-w-xl leading-relaxed">
-              Unique keychains, figurines &amp; accessories — printed on demand in Lebanon.
+              Ready-made prints you can order today, or send us your own idea and we&rsquo;ll make it.
             </p>
           </div>
 

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/app/lib/site";
-import BackgroundMusic from "@/app/components/BackgroundMusic";
 import { SupabaseAuthProvider } from "@/app/lib/supabase/auth-client";
+import BackToTop from "@/app/components/BackToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,13 +77,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SupabaseAuthProvider>
-          <BackgroundMusic />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
           />
           {children}
           {modal}
+          <BackToTop />
         </SupabaseAuthProvider>
       </body>
     </html>

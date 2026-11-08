@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { getProductPath } from "@/app/lib/product-url";
 import Link from "next/link";
-import Image from "next/image";
+import FeaturedCarousel from "../components/FeaturedCarousel";
 import type { Product } from "./ShopCatalogClient";
 
 function getCardImage(p: Product) {
@@ -37,6 +37,20 @@ function getPriceLabel(p: Product) {
 
 const getProductHref = getProductPath;
 
+const CATEGORY_LABELS: Record<string, string> = {
+  keychains: "Keychains",
+  accessories: "Accessories",
+  fanboys: "Fanboys",
+  "desk-add-ons": "Desk Add-Ons",
+  tools: "Tools",
+  "new-arrivals": "New Arrivals",
+};
+
+function getCategoryLabel(category?: string) {
+  if (!category) return "";
+  return CATEGORY_LABELS[category] ?? category.replace(/-/g, " ");
+}
+
 function getStableKey(p: Product) {
   return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;
 }
@@ -53,58 +67,43 @@ export default function DynamicCategoryStage({
 
   return (
     <section className="relative w-full min-w-0 max-w-full overflow-hidden">
-      {/* Stage Header */}
-      <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3 min-w-0 w-full">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
-            Signature Prints
-          </h2>
-          <p className="text-xs sm:text-sm text-white/50 mt-0.5 line-clamp-1">
-            Handpicked signature models and community favorites
-          </p>
-        </div>
-
-        <a
-          href="#all"
-          className="text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
-        >
-          <span>Browse all</span>
-          <span aria-hidden="true">↓</span>
-        </a>
-      </div>
-
       {/* Stage Carousel */}
       {items.length > 0 ? (
-        <div className="flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
-          {items.map((p) => (
-            <Link
-              key={`sig-${getStableKey(p)}`}
-              href={getProductHref(p)}
-              className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 w-[155px] sm:w-[190px] md:w-[210px] shrink-0 snap-start shadow-md"
-            >
-              <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5">
-                <Image
-                  src={getCardImage(p)}
-                  alt={getTitle(p)}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                  sizes="(max-width: 640px) 155px, 210px"
-                />
+        <FeaturedCarousel
+          header={
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
+                  Signature Prints
+                </h2>
+                <p className="text-xs sm:text-sm text-white/50 mt-0.5 line-clamp-1">
+                  Handpicked signature models and community favorites
+                </p>
               </div>
-
-              <div className="mt-2.5 flex flex-col flex-1 justify-between">
-                <div className="text-white text-xs sm:text-sm font-semibold line-clamp-2 min-h-[2.5rem] leading-snug group-hover:text-[#FF8B64] transition-colors">
-                  {getTitle(p)}
-                </div>
-                <div className="mt-1.5 text-xs sm:text-sm font-bold text-[#FF8B64]">
-                  {getPriceLabel(p)}
-                </div>
-              </div>
-            </Link>
-          ))}
-          <div className="shrink-0 w-2 sm:hidden pointer-events-none" aria-hidden="true" />
-        </div>
+              <a
+                href="#all"
+                className="text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap md:mr-2"
+              >
+                <span>Browse all</span>
+                <span aria-hidden="true">↓</span>
+              </a>
+            </div>
+          }
+          items={items.map((p) => ({
+            key: `sig-${getStableKey(p)}`,
+            href: getProductHref(p),
+            title: getTitle(p),
+            price: getPriceLabel(p),
+            category: getCategoryLabel(p.category),
+            image: getCardImage(p),
+            hoverImage:
+              Array.isArray(p.images) && p.images.length > 1 ? p.images[1] : undefined,
+            isNew: (p as { isNew?: boolean }).isNew === true,
+          }))}
+        />
       ) : (
+        <>
+        <h2 className="mb-4 text-xl sm:text-2xl font-bold tracking-tight text-white">Signature Prints</h2>
         <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center max-w-md mx-auto">
           <p className="text-white/70 text-sm font-medium">
             New prints are currently being prototyped for this collection.
@@ -119,6 +118,7 @@ export default function DynamicCategoryStage({
             Request a Custom 3D Print →
           </Link>
         </div>
+        </>
       )}
     </section>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type FeaturedItem = {
@@ -16,7 +16,14 @@ export type FeaturedItem = {
   isNew?: boolean;
 };
 
-export default function FeaturedCarousel({ items }: { items: FeaturedItem[] }) {
+export default function FeaturedCarousel({
+  items,
+  header,
+}: {
+  items: FeaturedItem[];
+  /** Section header; when given, the arrows sit in it instead of on the sides. */
+  header?: ReactNode;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -49,17 +56,46 @@ export default function FeaturedCarousel({ items }: { items: FeaturedItem[] }) {
   const arrowClass =
     "hidden md:flex absolute top-[38%] -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#161619]/95 text-white shadow-lg backdrop-blur transition hover:border-[#FF8B64]/60 hover:text-[#FF8B64] disabled:pointer-events-none disabled:opacity-0";
 
+  const headerArrowClass =
+    "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/80 transition hover:border-[#FF8B64]/60 hover:text-[#FF8B64] disabled:pointer-events-none disabled:opacity-30";
+
   return (
     <div className="relative">
-      <button
-        type="button"
-        aria-label="Previous featured products"
-        onClick={() => scrollByPage(-1)}
-        disabled={!canPrev}
-        className={`${arrowClass} -left-5`}
-      >
-        <ChevronLeft size={20} />
-      </button>
+      {header ? (
+        <div className="mb-4 sm:mb-6 flex items-end justify-between gap-3">
+          <div className="min-w-0 flex-1">{header}</div>
+          <div className="hidden md:flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label="Previous products"
+              onClick={() => scrollByPage(-1)}
+              disabled={!canPrev}
+              className={headerArrowClass}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next products"
+              onClick={() => scrollByPage(1)}
+              disabled={!canNext}
+              className={headerArrowClass}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          aria-label="Previous featured products"
+          onClick={() => scrollByPage(-1)}
+          disabled={!canPrev}
+          className={`${arrowClass} -left-5`}
+        >
+          <ChevronLeft size={20} />
+        </button>
+      )}
 
       <div
         ref={trackRef}
@@ -114,15 +150,17 @@ export default function FeaturedCarousel({ items }: { items: FeaturedItem[] }) {
         <div className="shrink-0 w-2 sm:hidden pointer-events-none" aria-hidden="true" />
       </div>
 
-      <button
-        type="button"
-        aria-label="Next featured products"
-        onClick={() => scrollByPage(1)}
-        disabled={!canNext}
-        className={`${arrowClass} -right-5`}
-      >
-        <ChevronRight size={20} />
-      </button>
+      {!header && (
+        <button
+          type="button"
+          aria-label="Next featured products"
+          onClick={() => scrollByPage(1)}
+          disabled={!canNext}
+          className={`${arrowClass} -right-5`}
+        >
+          <ChevronRight size={20} />
+        </button>
+      )}
     </div>
   );
 }

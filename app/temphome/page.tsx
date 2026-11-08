@@ -8,7 +8,7 @@ import { getProducts } from "../lib/products-db";
 import type { Product } from "../shop/ShopCatalogClient";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
 import FeaturedCarousel from "../components/FeaturedCarousel";
-import { FileUp, Palette, Sparkles, Truck, Wrench } from "lucide-react";
+import { FileUp, Instagram, MessageCircle, Palette, Sparkles, Truck, Wrench } from "lucide-react";
 import { SITE_URL } from "../lib/site";
 import { slugify } from "../lib/product-seo";
 
@@ -250,26 +250,26 @@ export default async function TempHomePage() {
             id="featured"
             className="mt-20 sm:mt-24 lg:mt-28"
           >
-            <div className="mb-3.5 sm:mb-5 flex items-end justify-between gap-4">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                  Featured
-                </h2>
-                <p className="text-xs sm:text-sm text-white/50 mt-0.5">
-                  Our most-loved prints right now
-                </p>
-              </div>
-
-              <Link
-                href="/shop"
-                className="shrink-0 text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1"
-              >
-                <span>See all</span>
-                <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-
             <FeaturedCarousel
+              header={
+                <div className="flex items-end justify-between gap-4">
+                  <div className="min-w-0">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                      Featured
+                    </h2>
+                    <p className="text-xs sm:text-sm text-white/50 mt-0.5">
+                      Our most-loved prints right now
+                    </p>
+                  </div>
+                  <Link
+                    href="/shop"
+                    className="shrink-0 text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1 md:mr-2"
+                  >
+                    <span>See all</span>
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              }
               items={featured.slice(0, 10).map((p: Product) => ({
                 key: `f-${getStableKey(p)}`,
                 href: getProductHref(p),
@@ -371,6 +371,45 @@ export default async function TempHomePage() {
               buttonLabel="Get a Quote"
             />
           </div>
+        </section>
+
+        {/* ── SOCIALS ────────────────────────────────────────────────── */}
+        <section id="socials" className="mt-4 sm:mt-6 grid gap-4 sm:grid-cols-2">
+          <a
+            href="https://instagram.com/creativedimensions.lb"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4 rounded-3xl border border-white/10 bg-[#141417]/90 p-5 sm:p-6 transition hover:border-[#E1306C]/50"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white">
+              <Instagram size={22} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-semibold text-white">@creativedimensions.lb</span>
+              <span className="block text-sm text-white/55">New prints and work in progress</span>
+            </span>
+            <span className="shrink-0 text-sm font-semibold text-white/40 transition group-hover:text-white" aria-hidden="true">
+              Follow →
+            </span>
+          </a>
+
+          <a
+            href="https://wa.me/96170304007"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4 rounded-3xl border border-white/10 bg-[#141417]/90 p-5 sm:p-6 transition hover:border-[#25D366]/50"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#25D366] text-[#0B2A17]">
+              <MessageCircle size={22} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-semibold text-white">+961 70 304 007</span>
+              <span className="block text-sm text-white/55">Questions? Message us on WhatsApp</span>
+            </span>
+            <span className="shrink-0 text-sm font-semibold text-white/40 transition group-hover:text-white" aria-hidden="true">
+              Chat →
+            </span>
+          </a>
         </section>
 
         {/* ── FOOTER ─────────────────────────────────────────────────── */}
