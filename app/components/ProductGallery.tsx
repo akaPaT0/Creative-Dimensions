@@ -1,238 +1,293 @@
 "use client";
 
-import { type MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 
-export default function ProductGallery({
-  images,
-  name,
-}: {
-  images: string[];
-  name: string;
-}) {
+const PLACEHOLDER = "/products/placeholder.jpg";
+
+/** Index of the slide closest to the scroller's current position. */
+function slideIndex(el: HTMLDivElement) {
+  return el.clientWidth ? Math.round(el.scrollLeft / el.clientWidth) : 0;
+}
+
+function scrollToSlide(el: HTMLDivElement | null, index: number, smooth = true) {
+  if (!el) return;
+  el.scrollTo({ left: index * el.clientWidth, behavior: smooth ? "smooth" : "auto" });
+}
+
+const arrowBase =
+  "inline-flex items-center justify-center rounded-full border border-white/15 bg-[#0D0D0D]/70 text-white backdrop-blur transition hover:border-[#FF8B64]/70 hover:text-[#FF8B64] disabled:pointer-events-none disabled:opacity-0";
+
+export default function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const imgs = useMemo(
-    () =>
-      Array.isArray(images) && images.length
-        ? images
-        : ["/products/placeholder.jpg"],
+    () => (Array.isArray(images) && images.length ? images : [PLACEHOLDER]),
     [images]
   );
+  const count = imgs.length;
+  const multiple = count > 1;
 
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const lightboxRef = useRef<HTMLDivElement | null>(null);
   const thumbsRef = useRef<HTMLDivElement | null>(null);
-  const modalThumbsRef = useRef<HTMLDivElement | null>(null);
 
-  const current =
-    imgs[Math.min(Math.max(active, 0), imgs.length - 1)] ||
-    "/products/placeholder.jpg";
+  const goTo = useCallback(
+    (index: number) => {
+      const next = Math.min(Math.max(index, 0), count - 1);
+      setActive(next);
+      scrollToSlide(stageRef.current, next);
+      scrollToSlide(lightboxRef.current, next);
+    },
+    [count]
+  );
 
-  useEffect(() => setMounted(true), []);
+  // Keep the active index in sync when the user swipes.
+  const onStageScroll = () => {
+    if (stageRef.current) setActive(slideIndex(stageRef.current));
+  };
+  const onLightboxScroll = () => {
+    if (lightboxRef.current) setActive(slideIndex(lightboxRef.current));
+  };
 
-  // Esc + arrows
+  // Keep the active thumbnail visible.
   useEffect(() => {
-    if (!open) return;
+    const thumb = thumbsRef.current?.children[active] as HTMLElement | undefined;
+    thumb?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [active]);
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-      if (e.key === "ArrowRight")
-        setActive((i) => Math.min(i + 1, imgs.length - 1));
-      if (e.key === "ArrowLeft") setActive((i) => Math.max(i - 1, 0));
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, imgs.length]);
-
-  // Lock body scroll
+  const activeRef = useRef(active);
   useEffect(() => {
-    if (!open) return;
+    activeRef.current = active;
+  }, [active]);
+
+  // Lightbox open/close: jump to the current image and lock page scroll;
+  // on close, line the main stage up with the image viewed last.
+  useEffect(() => {
+    if (!open) {
+      scrollToSlide(stageRef.current, activeRef.current, false);
+      return;
+    }
+    const frame = requestAnimationFrame(() =>
+      scrollToSlide(lightboxRef.current, activeRef.current, false)
+    );
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      cancelAnimationFrame(frame);
       document.body.style.overflow = prev;
     };
   }, [open]);
 
-  const scrollThumbs = (
-    ref: MutableRefObject<HTMLDivElement | null>,
-    direction: "left" | "right"
-  ) => {
-    const el = ref.current;
-    if (!el) return;
-    const amount = Math.max(120, Math.floor(el.clientWidth * 0.6));
-    el.scrollBy({
-      left: direction === "left" ? -amount : amount,
-      behavior: "smooth",
-    });
-  };
+  // Lightbox keyboard controls.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      if (e.key === "ArrowRight") goTo(activeRef.current + 1);
+      if (e.key === "ArrowLeft") goTo(activeRef.current - 1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, goTo]);
 
-  const modal = open ? (
-    <div className="fixed inset-0 z-[999999] pointer-events-none">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+  const counter = (
+    <span className="rounded-full bg-[#0D0D0D]/70 px-2.5 py-1 text-xs font-semibold tabular-nums text-white/90 backdrop-blur">
+      {active + 1} / {count}
+    </span>
+  );
 
-      <div
-        className="absolute inset-0 pointer-events-auto"
-        onMouseDown={(e) => {
-          if (e.target === e.currentTarget) setOpen(false);
-        }}
-      >
-        <div className="mx-auto h-full w-full max-w-6xl px-4 py-6 flex flex-col">
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0D0D0D]/55 backdrop-blur-xl px-4 py-3">
-            <div className="text-white/85 text-sm truncate">{name}</div>
-
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="rounded-xl border border-white/20 bg-black/80 px-3 py-2 text-white hover:bg-black/90 transition"
-              aria-label="Close preview"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="mt-4 flex-1 rounded-2xl border border-white/10 bg-[#0D0D0D]/45 backdrop-blur-xl overflow-hidden relative">
-            <Image
-              src={current}
-              alt={name}
-              fill
-              className="object-contain"
-              sizes="100vw"
-              priority
-            />
-          </div>
-
-          {imgs.length > 1 && (
-            <div className="mt-4 rounded-2xl border border-white/10 bg-[#0D0D0D]/40 backdrop-blur-xl p-3">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => scrollThumbs(modalThumbsRef, "left")}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
-                  aria-label="Scroll thumbnails left"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <div
-                  ref={modalThumbsRef}
-                  className="flex flex-1 gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                  {imgs.map((src, i) => (
-                    <button
-                      key={`modal-${src}-${i}`}
-                      type="button"
-                      onClick={() => setActive(i)}
-                      className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border transition ${
-                        i === active
-                          ? "border-white/40"
-                          : "border-white/10 hover:border-white/20"
-                      }`}
-                      aria-label={`View image ${i + 1}`}
-                    >
-                      <Image
-                        src={src}
-                        alt={`${name} ${i + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => scrollThumbs(modalThumbsRef, "right")}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
-                  aria-label="Scroll thumbnails right"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-          )}
+  const lightbox = open ? (
+    <div
+      className="fixed inset-0 z-[999999] flex flex-col bg-[#0B0B0C]/95 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${name} images`}
+    >
+      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <span className="min-w-0 truncate text-sm font-medium text-white/80">{name}</span>
+        <div className="flex items-center gap-3">
+          {multiple && counter}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10 transition"
+          >
+            <X size={18} />
+          </button>
         </div>
       </div>
+
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={lightboxRef}
+          onScroll={onLightboxScroll}
+          className="flex h-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {imgs.map((src, i) => (
+            <div key={`lb-${src}-${i}`} className="relative h-full w-full shrink-0 snap-center">
+              <Image
+                src={src}
+                alt={`${name} ${i + 1}`}
+                fill
+                className="object-contain p-2 sm:p-8"
+                sizes="100vw"
+                priority={i === active}
+              />
+            </div>
+          ))}
+        </div>
+        {multiple && (
+          <>
+            <button
+              type="button"
+              onClick={() => goTo(active - 1)}
+              disabled={active === 0}
+              aria-label="Previous image"
+              className={`${arrowBase} absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 sm:left-6`}
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo(active + 1)}
+              disabled={active === count - 1}
+              aria-label="Next image"
+              className={`${arrowBase} absolute right-3 top-1/2 h-12 w-12 -translate-y-1/2 sm:right-6`}
+            >
+              <ChevronRight size={22} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {multiple && (
+        <div className="flex justify-center gap-2 overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {imgs.map((src, i) => (
+            <button
+              key={`lbt-${src}-${i}`}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`View image ${i + 1}`}
+              aria-current={i === active}
+              className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg transition ${
+                i === active ? "ring-2 ring-[#FF8B64] opacity-100" : "opacity-50 hover:opacity-90"
+              }`}
+            >
+              <Image src={src} alt="" fill className="object-cover" sizes="56px" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   ) : null;
 
   return (
-    <>
-      <div className="w-full m-0 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl backdrop-saturate-150 p-4">
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="relative w-full aspect-square overflow-hidden rounded-2xl border border-white/10 bg-black/20 focus:outline-none"
-          aria-label="Open image preview"
+    <div className="w-full">
+      <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-black/40">
+        <div
+          ref={stageRef}
+          onScroll={onStageScroll}
+          className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <Image
-            src={current}
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            priority
-          />
+          {imgs.map((src, i) => (
+            <button
+              key={`${src}-${i}`}
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-label={`Open image ${i + 1} full screen`}
+              className="relative aspect-square w-full shrink-0 snap-center cursor-zoom-in focus:outline-none"
+            >
+              <Image
+                src={src}
+                alt={i === 0 ? name : `${name} ${i + 1}`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority={i === 0}
+              />
+            </button>
+          ))}
+        </div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        {/* Overlays */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-3">
+          {multiple ? counter : <span />}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="View full screen"
+            className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-[#0D0D0D]/70 text-white/90 backdrop-blur transition hover:text-[#FF8B64]"
+          >
+            <Expand size={16} />
+          </button>
+        </div>
 
-          {/* ✅ Zoom icon instead of "Tap to zoom" */}
-          <div className="absolute bottom-3 right-3 inline-flex items-center justify-center rounded-xl border border-white/15 bg-black/55 p-2 text-white/90 backdrop-blur">
-            <ZoomIn size={18} />
-          </div>
-        </button>
-
-        {imgs.length > 1 && (
-          <div className="mt-3 flex items-center gap-2 pb-1">
+        {multiple && (
+          <>
             <button
               type="button"
-              onClick={() => scrollThumbs(thumbsRef, "left")}
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
-              aria-label="Scroll thumbnails left"
+              onClick={() => goTo(active - 1)}
+              disabled={active === 0}
+              aria-label="Previous image"
+              className={`${arrowBase} absolute left-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 opacity-0 group-hover:opacity-100 md:inline-flex`}
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={20} />
             </button>
-            <div
-              ref={thumbsRef}
-              className="flex flex-1 gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            <button
+              type="button"
+              onClick={() => goTo(active + 1)}
+              disabled={active === count - 1}
+              aria-label="Next image"
+              className={`${arrowBase} absolute right-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 opacity-0 group-hover:opacity-100 md:inline-flex`}
             >
-              {imgs.map((src, i) => (
-                <button
-                  key={`${src}-${i}`}
-                  type="button"
-                  onClick={() => setActive(i)}
-                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border transition ${
-                    i === active
-                      ? "border-white/40"
-                      : "border-white/10 hover:border-white/20"
+              <ChevronRight size={20} />
+            </button>
+
+            {/* Dots (mobile) */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5 md:hidden">
+              {imgs.map((_, i) => (
+                <span
+                  key={`dot-${i}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === active ? "w-5 bg-[#FF8B64]" : "w-1.5 bg-white/40"
                   }`}
-                  aria-label={`View image ${i + 1}`}
-                >
-                  <Image
-                    src={src}
-                    alt={`${name} ${i + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="64px"
-                  />
-                </button>
+                />
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => scrollThumbs(thumbsRef, "right")}
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 text-white/90 hover:bg-black/50 transition"
-              aria-label="Scroll thumbnails right"
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
+          </>
         )}
       </div>
 
-      {mounted && modal ? createPortal(modal, document.body) : null}
-    </>
+      {multiple && (
+        <div
+          ref={thumbsRef}
+          className="mt-3 hidden gap-2.5 overflow-x-auto pb-1 md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {imgs.map((src, i) => (
+            <button
+              key={`thumb-${src}-${i}`}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`View image ${i + 1}`}
+              aria-current={i === active}
+              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border transition ${
+                i === active
+                  ? "border-[#FF8B64] ring-1 ring-[#FF8B64]"
+                  : "border-white/10 opacity-60 hover:opacity-100 hover:border-white/25"
+              }`}
+            >
+              <Image src={src} alt="" fill className="object-cover" sizes="80px" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {lightbox ? createPortal(lightbox, document.body) : null}
+    </div>
   );
 }
