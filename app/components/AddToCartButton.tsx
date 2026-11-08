@@ -2,84 +2,72 @@
 
 import { useState } from "react";
 
-type StoredCartItem = {
-  productId: string;
-  quantity: number;
-  customization?: {
-    summary: string;
-    slots: Array<{
-      slot: string;
-      label: string;
-      filamentId: string;
-      filamentLabel: string;
-      colorValue: string;
-    }>;
-  };
+type CartCustomization = {
+  summary: string;
+  slots: Array<{
+    slot: string;
+    label: string;
+    filamentId: string;
+    filamentLabel: string;
+    colorValue: string;
+  }>;
+};
+
+export type AddToCartOptions = {
+  /** e.g. the chosen colour; items with different customization stay separate lines. */
+  customization?: CartCustomization;
+  /** Image shown for this line in the cart and order. */
+  previewImageUrl?: string;
 };
 
 const STORAGE_KEY = "cd_cart_v1";
 const CART_UPDATED_EVENT = "cd-cart-updated";
 
-function parseStoredCart(raw: unknown): StoredCartItem[] {
-  if (!Array.isArray(raw)) return [];
-  const out: StoredCartItem[] = [];
-  for (const entry of raw) {
-    if (!entry || typeof entry !== "object") continue;
-    const row = entry as Record<string, unknown>;
-    const productId = typeof row.productId === "string" ? row.productId : "";
-    const quantity =
-      typeof row.quantity === "number" && Number.isFinite(row.quantity)
-        ? Math.max(1, Math.floor(row.quantity))
-        : 1;
-    if (!productId) continue;
-    const customizationRaw =
-      row.customization && typeof row.customization === "object"
-        ? (row.customization as Record<string, unknown>)
-        : null;
-    const slots = Array.isArray(customizationRaw?.slots)
-      ? customizationRaw.slots
-          .map((slot) => {
-            if (!slot || typeof slot !== "object") return null;
-            const s = slot as Record<string, unknown>;
-            const filamentId = typeof s.filamentId === "string" ? s.filamentId : "";
-            if (!filamentId) return null;
-            return {
-              slot: typeof s.slot === "string" ? s.slot : "",
-              label: typeof s.label === "string" ? s.label : "",
-              filamentId,
-              filamentLabel: typeof s.filamentLabel === "string" ? s.filamentLabel : "",
-              colorValue: typeof s.colorValue === "string" ? s.colorValue : "",
-            };
-          })
-          .filter((x): x is NonNullable<typeof x> => Boolean(x))
-      : [];
-    const summary = typeof customizationRaw?.summary === "string" ? customizationRaw.summary : "";
-    out.push({
-      productId,
-      quantity,
-      customization: slots.length ? { summary, slots } : undefined,
-    });
-  }
-  return out;
-}
-
-export function addToCart(productId: string) {
-  if (typeof window === "undefined") return;
-  const id = String(productId);
-
-  let current: StoredCartItem[] = [];
+function readRawCart(): Array<Record<string, unknown>> {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    current = raw ? parseStoredCart(JSON.parse(raw)) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((x): x is Record<string, unknown> => !!x && typeof x === "object")
+      : [];
   } catch {
-    current = [];
+    return [];
   }
+}
 
-  const index = current.findIndex((x) => x.productId === id && !x.customization?.slots?.length);
+function customizationKey(value: unknown) {
+  if (!value || typeof value !== "object") return "";
+  const summary = (value as { summary?: unknown }).summary;
+  return typeof summary === "string" ? summary : "";
+}
+
+/**
+ * Add one unit to the cart. Existing entries keep all their fields (e.g. custom
+ * preview images); a matching line (same product and customization) is incremented.
+ */
+export function addToCart(productId: string, options: AddToCartOptions = {}) {
+  if (typeof window === "undefined") return;
+  const id = String(productId);
+  const key = customizationKey(options.customization);
+  const current = readRawCart();
+
+  const index = current.findIndex(
+    (x) => String(x.productId) === id && customizationKey(x.customization) === key
+  );
+
   if (index >= 0) {
-    current[index] = { ...current[index], quantity: current[index].quantity + 1 };
+    const qty = Number(current[index].quantity);
+    current[index] = {
+      ...current[index],
+      quantity: (Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1) + 1,
+    };
   } else {
-    current.push({ productId: id, quantity: 1 });
+    current.push({
+      productId: id,
+      quantity: 1,
+      ...(options.customization ? { customization: options.customization } : {}),
+      ...(options.previewImageUrl ? { previewImageUrl: options.previewImageUrl } : {}),
+    });
   }
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
@@ -89,9 +77,12 @@ export function addToCart(productId: string) {
 export default function AddToCartButton({
   productId,
   className,
+  getOptions,
 }: {
   productId: string;
   className?: string;
+  /** Return options for this add, or null to cancel (e.g. no colour chosen yet). */
+  getOptions?: () => AddToCartOptions | null;
 }) {
   const [added, setAdded] = useState(false);
 
@@ -99,7 +90,9 @@ export default function AddToCartButton({
     <button
       type="button"
       onClick={() => {
-        addToCart(productId);
+        const options = getOptions ? getOptions() : {};
+        if (options === null) return;
+        addToCart(productId, options);
         setAdded(true);
         window.setTimeout(() => setAdded(false), 1200);
       }}

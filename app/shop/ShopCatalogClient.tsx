@@ -775,7 +775,11 @@ export default function ShopCatalogClient({ products }: { products: Product[] })
               {p.id && (
                 <>
                   <LikeIconButton productId={String(p.id)} positionClass="bottom-2 right-10" />
-                  <CartIconButton productId={String(p.id)} productName={getTitle(p)} />
+                  <CartIconButton
+                    productId={String(p.id)}
+                    productName={getTitle(p)}
+                    needsChoice={!!(p as { variants?: unknown[] }).variants?.length}
+                  />
                 </>
               )}
             </div>

@@ -1,8 +1,18 @@
 import type { Product } from "@/app/data/products";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { supabase } from "@/app/lib/supabase/clients";
+import { normalizeVariants } from "@/app/lib/product-variants";
 
 const TABLE = "products";
+
+/**
+ * Writes need the service-role client: the products table only allows public
+ * reads (RLS). Loaded lazily so read-only pages never depend on the admin key.
+ */
+async function writeClient() {
+  const { supabaseAdmin } = await import("@/app/lib/supabase/admin");
+  return supabaseAdmin;
+}
 
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -81,12 +91,15 @@ function normalizeProduct(input: unknown): Product | null {
         }
       : undefined;
 
+  const variants = normalizeVariants(row.variants, images);
+
   return {
     id,
     name,
     slug,
     category,
     subCategory: subCategory || undefined,
+    variants: variants.length ? variants : undefined,
     priceUSD,
     description,
     isNew: asBool(row.isNew) || undefined,
@@ -125,6 +138,10 @@ function toDbRow(product: Product) {
     isNew: product.isNew ?? false,
     featured: product.featured ?? false,
     images: JSON.stringify(product.images ?? []),
+    // Only write variants when set, so saves that don't know about them keep the stored value.
+    ...(product.variants !== undefined
+      ? { variants: product.variants.length ? product.variants : null }
+      : {}),
   };
 }
 
@@ -154,7 +171,7 @@ export async function saveProducts(products: Product[]) {
     .filter((id) => !incomingIds.has(id));
 
   if (idsToDelete.length) {
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (await writeClient())
       .from(TABLE)
       .delete()
       .in("SKU", idsToDelete);
@@ -164,33 +181,42 @@ export async function saveProducts(products: Product[]) {
     }
   }
 
-  if (!products.length) {
-    (revalidateTag as Function)("products");
-    return;
+  // The table's primary key spans many columns (not just SKU), so ON CONFLICT
+  // upserts don't work. Update existing rows by SKU (only when changed) and
+  // insert new ones.
+  const currentRows = new Map(current.map((p) => [p.id, JSON.stringify(toDbRow(p))]));
+  const client = await writeClient();
+
+  for (const product of products) {
+    const row = toDbRow(product);
+    const existing = currentRows.get(product.id);
+    if (existing === JSON.stringify(row)) continue;
+
+    const { error } = existing
+      ? await client.from(TABLE).update(row).eq("SKU", product.id)
+      : await client.from(TABLE).insert(row);
+    if (error) throw error;
   }
 
-  const rows = products.map(toDbRow);
-
-  const { error: upsertError } = await supabase
-    .from(TABLE)
-    .upsert(rows, { onConflict: "SKU" });
-
-  if (upsertError) {
-    throw upsertError;
-  }
   (revalidateTag as Function)("products");
 }
 
 export async function upsertProduct(product: Product) {
   const row = toDbRow(product);
+  const client = await writeClient();
 
-  const { error } = await supabase
+  const { data: existing, error: lookupError } = await client
     .from(TABLE)
-    .upsert(row, { onConflict: "SKU" });
+    .select("SKU")
+    .eq("SKU", product.id)
+    .maybeSingle();
+  if (lookupError) throw lookupError;
 
-  if (error) {
-    throw error;
-  }
+  const { error } = existing
+    ? await client.from(TABLE).update(row).eq("SKU", product.id)
+    : await client.from(TABLE).insert(row);
+  if (error) throw error;
+
   (revalidateTag as Function)("products");
   return product;
 }
@@ -199,7 +225,7 @@ export async function removeProduct(productId: string) {
   const all = await getProductsFromDb(); // bypass cache for accurate lookup
   const target = all.find((x) => x.id === productId) || null;
 
-  const { error } = await supabase.from(TABLE).delete().eq("SKU", productId);
+  const { error } = await (await writeClient()).from(TABLE).delete().eq("SKU", productId);
 
   if (error) {
     throw error;

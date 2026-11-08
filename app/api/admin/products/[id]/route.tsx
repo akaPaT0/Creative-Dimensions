@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { getProducts, saveProducts } from "@/app/lib/products-db";
+import { getProductsFromDb, saveProducts } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 import { deletePublicAssetByUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
 import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
+import { normalizeVariants } from "@/app/lib/product-variants";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -83,6 +84,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const imagesOrderRaw = String(form.get("imagesOrder") || "").trim();
     const imageFiles = form.getAll("images") as File[];
     const model = form.get("model");
+    const variantsRaw = form.get("variants");
     const modelFile = model instanceof File && model.size > 0 ? model : null;
 
     if (!name || !categoryRaw || !subCategoryRaw || !priceUSDStr || !description) {
@@ -98,7 +100,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const subCategory = slugifyFolder(subCategoryRaw);
     const modelBase = safeModelBaseName(slug, id);
 
-    const products = await getProducts();
+    const products = await getProductsFromDb(); // fresh read: saving deletes anything missing from this list
     const idx = products.findIndex((p) => p.id === id);
     if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
 
@@ -153,8 +155,18 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       };
     }
 
+    // Colours point at image URLs. New uploads replace every image, so old
+    // colour links no longer apply unless the form sends fresh ones.
+    const nextVariants =
+      typeof variantsRaw === "string"
+        ? normalizeVariants(variantsRaw, nextImages)
+        : imageFiles.length > 0
+          ? []
+          : normalizeVariants(prev.variants ?? [], nextImages);
+
     const updated: Product = {
       ...prev,
+      variants: nextVariants,
       id,
       name,
       slug,
@@ -174,7 +186,11 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 
     return json({ ok: true, product: updated });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error
+        ? error.message
+        : error && typeof error === "object" && "message" in error
+          ? String((error as { message: unknown }).message)
+          : "Unknown error";
     return json({ error: message }, 500);
   }
 }
@@ -185,7 +201,7 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     if ("response" in admin) return admin.response;
     const { id } = await ctx.params;
 
-    const products = await getProducts();
+    const products = await getProductsFromDb(); // fresh read: saving deletes anything missing from this list
     const idx = products.findIndex((p) => p.id === id);
     if (idx === -1) return json({ error: `Product not found: ${id}` }, 404);
 
@@ -199,7 +215,11 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
 
     return json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error
+        ? error.message
+        : error && typeof error === "object" && "message" in error
+          ? String((error as { message: unknown }).message)
+          : "Unknown error";
     return json({ error: message }, 500);
   }
 }

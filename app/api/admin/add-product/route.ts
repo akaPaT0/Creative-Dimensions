@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProducts, saveProducts } from "@/app/lib/products-db";
+import { getProductsFromDb, saveProducts } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 import { uploadPublicAsset } from "@/app/lib/supabase/storage";
 import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     const priceUSD = Number(priceUSDStr);
     if (!Number.isFinite(priceUSD)) return json({ error: "priceUSD must be a number" }, 400);
 
-    const existing = await getProducts();
+    const existing = await getProductsFromDb(); // fresh read: saving deletes anything missing from this list
     if (existing.some((p) => p.id === id)) {
       return json({ error: `Product id already exists: ${id}` }, 409);
     }
@@ -133,7 +133,11 @@ export async function POST(req: Request) {
 
     return json({ ok: true, product });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error
+        ? error.message
+        : error && typeof error === "object" && "message" in error
+          ? String((error as { message: unknown }).message)
+          : "Unknown error";
     return json({ error: message }, 500);
   }
 }

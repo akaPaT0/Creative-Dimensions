@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Heart, ShoppingCart } from "lucide-react";
 import AuthModal from "./AuthModal";
 import { addToCart } from "./AddToCartButton";
+import { useVariantCartOptions } from "./ProductSelection";
 import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 /** Like and quick add-to-cart buttons for the product page header. */
@@ -15,6 +16,7 @@ export default function LikeCartRow({ productId, className = "" }: { productId: 
   const [authOpen, setAuthOpen] = useState(false);
   const [added, setAdded] = useState(false);
   const timer = useRef<number | null>(null);
+  const getCartOptions = useVariantCartOptions();
 
   useEffect(() => {
     let alive = true;
@@ -59,7 +61,9 @@ export default function LikeCartRow({ productId, className = "" }: { productId: 
   }
 
   function add() {
-    addToCart(id);
+    const options = getCartOptions();
+    if (options === null) return;
+    addToCart(id, options);
     setAdded(true);
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setAdded(false), 1400);

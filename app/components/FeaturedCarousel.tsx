@@ -15,6 +15,7 @@ export type FeaturedItem = {
   image: string;
   hoverImage?: string;
   isNew?: boolean;
+  hasVariants?: boolean;
 };
 
 export default function FeaturedCarousel({

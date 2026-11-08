@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ImageSorter from "./components/ImageSorter";
+import VariantEditor, { type VariantDraft } from "./components/VariantEditor";
+import { suggestSwatch } from "@/app/lib/product-variants";
 
 type Product = {
   id: string;
@@ -15,6 +17,7 @@ type Product = {
   featured?: boolean;
   image?: string;
   images?: string[];
+  variants?: { label: string; hex: string; hex2?: string; image: string }[];
   customizeColors?: {
     modelUrl: string;
     defaultHexes: string[];
@@ -323,6 +326,20 @@ function EditModal({
 
   // Optional: uploading new files replaces old images (backend handles deletion)
   const [images, setImages] = useState<File[]>([]);
+  // Colour per existing photo, keyed by image URL.
+  const [variantDrafts, setVariantDrafts] = useState<Record<string, VariantDraft>>(() =>
+    Object.fromEntries(
+      (product.variants ?? []).map((v) => {
+        // Swatches left on the default white were never picked: fill them from the name.
+        const untouched = !v.hex2 && (v.hex === "#ffffff" || v.hex === "#fff");
+        const suggestion = untouched ? suggestSwatch(v.label) : null;
+        const draft: VariantDraft = suggestion
+          ? { label: v.label, hex: suggestion.hex, hex2: suggestion.hex2 }
+          : { label: v.label, hex: v.hex, hex2: v.hex2, manual: !untouched };
+        return [v.image, draft];
+      })
+    )
+  );
   const [modelFile, setModelFile] = useState<File | null>(null);
   const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
   const targetModelPath = useMemo(() => {
@@ -368,6 +385,19 @@ function EditModal({
       const currentImagesOrderStr = JSON.stringify(existingImages);
       if (currentImagesOrderStr !== initialImagesOrderStr) {
         fd.set("imagesOrder", currentImagesOrderStr);
+      }
+
+      // Colours follow the current photo order; replacing photos clears them server-side.
+      if (images.length === 0) {
+        const variants = existingImages
+          .filter((url) => variantDrafts[url]?.label.trim())
+          .map((url) => ({
+            label: variantDrafts[url].label.trim(),
+            hex: variantDrafts[url].hex,
+            ...(variantDrafts[url].hex2 ? { hex2: variantDrafts[url].hex2 } : {}),
+            image: url,
+          }));
+        fd.set("variants", JSON.stringify(variants));
       }
 
       // Optional: replace images by uploading new files
@@ -511,6 +541,13 @@ function EditModal({
           <ImageSorter images={existingImages} onChange={setExistingImages} />
           <p className="text-white/40 text-xs">Reorder/remove existing images, then Save.</p>
         </div>
+
+        <VariantEditor
+          images={existingImages}
+          value={variantDrafts}
+          onChange={setVariantDrafts}
+          disabled={images.length > 0}
+        />
 
         {/* Replace images (optional) */}
         <div>

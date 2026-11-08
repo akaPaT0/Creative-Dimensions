@@ -282,6 +282,7 @@ export default async function TempHomePage() {
                 hoverImage:
                   Array.isArray(p.images) && p.images.length > 1 ? p.images[1] : undefined,
                 isNew: (p as { isNew?: boolean }).isNew === true,
+                hasVariants: !!(p as { variants?: unknown[] }).variants?.length,
               }))}
             />
           </section>

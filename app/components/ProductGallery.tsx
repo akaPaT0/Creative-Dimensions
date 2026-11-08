@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
+import { useProductSelection } from "./ProductSelection";
 
 const PLACEHOLDER = "/products/placeholder.jpg";
 
@@ -34,16 +35,33 @@ export default function ProductGallery({ images, name }: { images: string[]; nam
   const stageRef = useRef<HTMLDivElement | null>(null);
   const lightboxRef = useRef<HTMLDivElement | null>(null);
   const thumbsRef = useRef<HTMLDivElement | null>(null);
+  const lightboxThumbsRef = useRef<HTMLDivElement | null>(null);
 
   const goTo = useCallback(
-    (index: number) => {
+    (index: number, opts?: { instant?: boolean }) => {
       const next = Math.min(Math.max(index, 0), count - 1);
+      const from = stageRef.current ? slideIndex(stageRef.current) : next;
+      // Neighbouring photo: slide. Further away: jump straight there instead of
+      // scrolling past every photo in between.
+      const smooth = !opts?.instant && Math.abs(next - from) <= 1;
       setActive(next);
-      scrollToSlide(stageRef.current, next);
-      scrollToSlide(lightboxRef.current, next);
+      scrollToSlide(stageRef.current, next, smooth);
+      scrollToSlide(lightboxRef.current, next, smooth);
     },
     [count]
   );
+
+  // Optional link with colour swatches on the product page.
+  const selection = useProductSelection();
+  const reportIndex = selection?.reportIndex;
+  useEffect(() => {
+    reportIndex?.(active);
+  }, [active, reportIndex]);
+  const registerGallery = selection?.registerGallery;
+  useEffect(() => {
+    registerGallery?.(goTo);
+    return () => registerGallery?.(null);
+  }, [registerGallery, goTo]);
 
   // Keep the active index in sync when the user swipes.
   const onStageScroll = () => {
@@ -53,11 +71,13 @@ export default function ProductGallery({ images, name }: { images: string[]; nam
     if (lightboxRef.current) setActive(slideIndex(lightboxRef.current));
   };
 
-  // Keep the active thumbnail visible.
+  // Keep the active thumbnail visible (page strip and full-screen strip).
   useEffect(() => {
-    const thumb = thumbsRef.current?.children[active] as HTMLElement | undefined;
-    thumb?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-  }, [active]);
+    for (const strip of [thumbsRef.current, lightboxThumbsRef.current]) {
+      const thumb = strip?.children[active] as HTMLElement | undefined;
+      thumb?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+    }
+  }, [active, open]);
 
   const activeRef = useRef(active);
   useEffect(() => {
@@ -166,21 +186,24 @@ export default function ProductGallery({ images, name }: { images: string[]; nam
       </div>
 
       {multiple && (
-        <div className="flex justify-center gap-2 overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {imgs.map((src, i) => (
-            <button
-              key={`lbt-${src}-${i}`}
-              type="button"
-              onClick={() => goTo(i)}
-              aria-label={`View image ${i + 1}`}
-              aria-current={i === active}
-              className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg transition ${
-                i === active ? "ring-2 ring-[#FF8B64] opacity-100" : "opacity-50 hover:opacity-90"
-              }`}
-            >
-              <Image src={src} alt="" fill className="object-cover" sizes="56px" />
-            </button>
-          ))}
+        <div className="overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* w-max + mx-auto: centred when it fits, scrollable from the first thumb when it doesn't. */}
+          <div ref={lightboxThumbsRef} className="mx-auto flex w-max gap-2 p-1">
+            {imgs.map((src, i) => (
+              <button
+                key={`lbt-${src}-${i}`}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={`View image ${i + 1}`}
+                aria-current={i === active}
+                className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                  i === active ? "border-[#FF8B64] opacity-100" : "border-transparent opacity-50 hover:opacity-90"
+                }`}
+              >
+                <Image src={src} alt="" fill className="object-cover" sizes="56px" />
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -209,6 +232,8 @@ export default function ProductGallery({ images, name }: { images: string[]; nam
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 priority={i === 0}
+                // Load every slide up front so swatch jumps show the photo instantly.
+                loading={i === 0 ? undefined : "eager"}
               />
             </button>
           ))}

@@ -13,6 +13,8 @@ export type ProductCardData = {
   image: string;
   hoverImage?: string;
   isNew?: boolean;
+  /** Has colour options; the cart icon opens the product page instead. */
+  hasVariants?: boolean;
 };
 
 export default function ProductCard({
@@ -63,7 +65,7 @@ export default function ProductCard({
         {productId && (
           <>
             <LikeIconButton productId={productId} positionClass="bottom-2 right-10" />
-            <CartIconButton productId={productId} productName={item.title} />
+            <CartIconButton productId={productId} productName={item.title} needsChoice={item.hasVariants} />
           </>
         )}
         {actions}

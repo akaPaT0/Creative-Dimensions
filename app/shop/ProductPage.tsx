@@ -9,7 +9,9 @@ import ProductGallery from "../components/ProductGallery";
 import FeaturedCarousel from "../components/FeaturedCarousel";
 import ShareButton from "../components/ShareButton";
 import LikeCartRow from "../components/LikeCartRow";
-import AddToCartButton from "../components/AddToCartButton";
+import ProductAddToCart from "../components/ProductAddToCart";
+import { ProductSelectionProvider } from "../components/ProductSelection";
+import VariantSwatches from "../components/VariantSwatches";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
 import ProductCustomizeColorsAction from "../components/ProductCustomizeColorsAction";
 import type { Product } from "../data/products";
@@ -22,6 +24,7 @@ import {
   slugify,
   getProductImages,
 } from "../lib/product-seo";
+import { groupColours } from "../lib/product-variants";
 
 /** Short labels used in the breadcrumb and above the product name. */
 const CATEGORY_NAMES: Record<string, string> = {
@@ -159,6 +162,7 @@ export default async function ProductPage({
 
       <Breadcrumb category={category} name={p.name} />
 
+      <ProductSelectionProvider images={images} variants={groupColours(p.variants ?? [], images)}>
       <div className="mt-4 sm:mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-10">
         <div className="min-w-0">
           <ProductGallery images={images} name={p.name} />
@@ -195,6 +199,8 @@ export default async function ProductPage({
             </div>
           </div>
 
+          <VariantSwatches />
+
           {p.description && (
             <p className="mt-5 whitespace-pre-line text-sm sm:text-base leading-relaxed text-white/70">
               {p.description}
@@ -202,7 +208,7 @@ export default async function ProductPage({
           )}
 
           <div className="mt-7 grid gap-3">
-            <AddToCartButton
+            <ProductAddToCart
               productId={String(p.id)}
               className="w-full rounded-2xl bg-[#FF8B64] px-6 py-3.5 text-center text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg active:scale-[0.99]"
             />
@@ -226,6 +232,7 @@ export default async function ProductPage({
           </p>
         </div>
       </div>
+      </ProductSelectionProvider>
 
       {similar.length > 0 && (
         <section className="mt-14 sm:mt-20">
@@ -253,6 +260,7 @@ export default async function ProductPage({
                 image: imgs[0] || "/products/placeholder.jpg",
                 hoverImage: imgs[1],
                 isNew: x.isNew === true,
+                hasVariants: !!x.variants?.length,
               };
             })}
           />

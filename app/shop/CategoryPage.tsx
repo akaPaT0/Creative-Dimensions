@@ -78,6 +78,7 @@ export default async function CategoryPage({
       image: getCardImage(p),
       hoverImage: Array.isArray(p.images) && p.images.length > 1 ? p.images[1] : undefined,
       isNew: labelByCategory ? false : p.isNew === true,
+      hasVariants: !!p.variants?.length,
       group,
       groupLabel: labelFor(group),
     };

@@ -1,3 +1,5 @@
+import type { ProductVariantEntry } from "@/app/lib/product-variants";
+
 export type Category = string;
 
 export type SubCategory = string;
@@ -14,6 +16,8 @@ export type Product = {
   featured?: boolean;
   image?: string;
   images?: string[];
+  /** Optional colour options, each linked to one of the images. */
+  variants?: ProductVariantEntry[];
   customizeColors?: {
     modelUrl: string;
     defaultHexes: string[];
