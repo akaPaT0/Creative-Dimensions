@@ -7,6 +7,8 @@ import Image from "next/image";
 import { getProducts } from "../lib/products-db";
 import type { Product } from "../shop/ShopCatalogClient";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
+import FeaturedCarousel from "../components/FeaturedCarousel";
+import { FileUp, Palette, Sparkles, Truck, Wrench } from "lucide-react";
 import { SITE_URL } from "../lib/site";
 import { slugify } from "../lib/product-seo";
 
@@ -42,6 +44,20 @@ function getPriceLabel(p: Product) {
 
 const getProductHref = getProductPath;
 
+const CATEGORY_LABELS: Record<string, string> = {
+  keychains: "Keychains",
+  accessories: "Accessories",
+  fanboys: "Fanboys",
+  "desk-add-ons": "Desk Add-Ons",
+  tools: "Tools",
+  "new-arrivals": "New Arrivals",
+};
+
+function getCategoryLabel(category?: string) {
+  if (!category) return "";
+  return CATEGORY_LABELS[category] ?? category.replace(/-/g, " ");
+}
+
 function getStableKey(p: Product) {
   return `${p.category ?? "x"}-${p.slug ?? "no-slug"}-${p.id ?? "no-id"}`;
 }
@@ -49,6 +65,68 @@ function getStableKey(p: Product) {
 export default async function TempHomePage() {
   const products = await getProducts();
   const featured = products.filter((p) => p.featured === true);
+
+  const heroSlugs = ["full-scale-retractable-katana", "minecraft-armor-stand", "qr-payment-stand"];
+  const heroProducts = [
+    ...heroSlugs
+      .flatMap((slug) => {
+        const match = products.find((p) => p.slug === slug);
+        return match ? [match] : [];
+      }),
+    ...featured.filter((p) => !heroSlugs.includes(String(p.slug))),
+  ].slice(0, 3);
+  const coverFor = (category: string, preferredSlug: string) => {
+    const inCategory = products.filter((p) => p.category === category);
+    const pick = inCategory.find((p) => p.slug === preferredSlug) ?? inCategory[0];
+    return pick ? getCardImage(pick) : undefined;
+  };
+
+  const collections: {
+    title: string;
+    desc: string;
+    href: string;
+    image?: string;
+    icon?: "sparkles" | "wrench";
+    comingSoon?: boolean;
+  }[] = [
+    {
+      title: "Keychains",
+      desc: "Cars, cute & custom rings",
+      href: "/shop/keychains",
+      image: coverFor("keychains", "bmw-m4-f82-gront-keychain"),
+    },
+    {
+      title: "Accessories",
+      desc: "Lighter cases & pocket gear",
+      href: "/shop/accessories",
+      image: coverFor("accessories", "dragon-themed-bic-lighter-covers"),
+    },
+    {
+      title: "Desk Add-Ons",
+      desc: "Stands, holders & setups",
+      href: "/shop/desk-add-ons",
+      image: coverFor("desk-add-ons", "desk-note-holder"),
+    },
+    {
+      title: "Fanboys",
+      desc: "Figurines & fandom prints",
+      href: "/shop/fanboys",
+      image: coverFor("fanboys", "full-scale-retractable-katana"),
+    },
+    {
+      title: "New Arrivals",
+      desc: "Fresh drops across every category",
+      href: "/shop/new-arrivals",
+      icon: "sparkles",
+    },
+    {
+      title: "Tools",
+      desc: "Maker gear & utilities",
+      href: "/shop/tools",
+      icon: "wrench",
+      comingSoon: true,
+    },
+  ];
 
   const homeJsonLd = {
     "@context": "https://schema.org",
@@ -72,41 +150,98 @@ export default async function TempHomePage() {
       <Background />
       <Navbar />
 
-      <section className="relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-14 pt-36 sm:pt-44 lg:pt-48 pb-20">
+      <section className="relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-14 pt-32 sm:pt-40 lg:pt-36 pb-20">
 
         {/* ── HERO ────────────────────────────────────────────────────── */}
-        <section className="relative text-center max-w-3xl mx-auto">
-          {/* Subtle warm glow behind headline */}
-          <div
-            className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-80 h-48 bg-[#FF8B64]/12 blur-3xl rounded-full"
-            aria-hidden="true"
-          />
-
-          <h1 className="relative text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
-            Custom 3D Prints
-            <span className="block mt-1 sm:mt-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FF8B64] via-[#ffa282] to-[#ffd0b5]">
-              Made Different
-            </span>
-          </h1>
-
-          <p className="relative mt-4 sm:mt-5 text-white/70 text-sm sm:text-base lg:text-lg max-w-md mx-auto leading-relaxed">
-            Unique keychains, figurines &amp; accessories —
-            <br className="hidden sm:inline" /> printed on demand in Lebanon.
-          </p>
-
-          <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3.5 sm:gap-4">
-            <Link
-              href="/shop"
-              className="rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Shop All
-            </Link>
-
-            <TemphomeCustomRequestCta
-              className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-[#232326] px-8 py-3.5 text-sm sm:text-base font-semibold text-[#FF8B64] hover:bg-[#2c2c30] transition hover:scale-[1.02] active:scale-[0.98]"
-              buttonLabel="Custom Request"
+        <section className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
+          {/* Text column */}
+          <div className="relative text-center lg:text-left">
+            <div
+              className="pointer-events-none absolute -top-12 left-1/2 lg:left-24 -translate-x-1/2 w-80 h-48 bg-[#FF8B64]/12 blur-3xl rounded-full"
+              aria-hidden="true"
             />
+
+            <h1 className="relative text-4xl sm:text-5xl lg:text-[3.4rem] xl:text-6xl 2xl:text-7xl font-extrabold tracking-tight text-white leading-[1.08]">
+              <span className="whitespace-nowrap">Custom 3D Prints</span>
+              <span className="block mt-1 sm:mt-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FF8B64] via-[#ffa282] to-[#ffd0b5]">
+                Made Different
+              </span>
+            </h1>
+
+            <p className="relative mt-4 sm:mt-5 text-white/70 text-sm sm:text-base lg:text-lg max-w-md mx-auto lg:mx-0 leading-relaxed">
+              Custom parts, prototypes, props and business pieces, designed and printed
+              in-house in Lebanon. Send us your idea or file and we&rsquo;ll quote it.
+            </p>
+
+            <div className="relative mt-8 sm:mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-3.5 sm:gap-4">
+              <TemphomeCustomRequestCta
+                className="rounded-2xl bg-[#FF8B64] px-8 py-3.5 text-sm sm:text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                buttonLabel="Get a Quote"
+              />
+
+              <Link
+                href="/shop"
+                className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-[#232326] px-8 py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[#2c2c30] transition hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Browse Shop
+              </Link>
+            </div>
+
+            <ul className="relative mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2.5 text-xs sm:text-sm text-white/60">
+              <li className="flex items-center gap-2">
+                <FileUp size={16} className="text-[#FF8B64]" aria-hidden="true" />
+                Send a file, photo or sketch
+              </li>
+              <li className="flex items-center gap-2">
+                <Palette size={16} className="text-[#FF8B64]" aria-hidden="true" />
+                Pick your colours
+              </li>
+              <li className="flex items-center gap-2">
+                <Truck size={16} className="text-[#FF8B64]" aria-hidden="true" />
+                Delivery across Lebanon
+              </li>
+            </ul>
           </div>
+
+          {/* Product collage */}
+          {heroProducts.length > 0 && (
+            <div className="relative mx-auto h-[300px] w-full max-w-[380px] sm:h-[380px] sm:max-w-[460px] lg:h-[460px] lg:max-w-[520px]">
+              <div
+                className="pointer-events-none absolute inset-10 rounded-full bg-[#FF8B64]/15 blur-3xl"
+                aria-hidden="true"
+              />
+              {heroProducts.map((p, i) => {
+                const layout = [
+                  "left-[46%] top-1/2 z-20 w-[52%] -translate-x-1/2 -translate-y-1/2 -rotate-2",
+                  "right-0 top-4 z-10 w-[38%] rotate-6",
+                  "left-0 bottom-2 z-10 w-[38%] -rotate-6",
+                ][i];
+                return (
+                  <Link
+                    key={`hero-${getStableKey(p)}`}
+                    href={getProductHref(p)}
+                    className={`group absolute ${layout} rounded-3xl border border-white/10 bg-[#161619]/95 p-2 sm:p-2.5 shadow-2xl transition duration-300 hover:z-30 hover:rotate-0 hover:border-[#FF8B64]/50`}
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-black/40">
+                      <Image
+                        src={getCardImage(p)}
+                        alt={getTitle(p)}
+                        fill
+                        priority={i === 0}
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                        sizes="(max-width: 640px) 220px, (max-width: 1024px) 260px, 300px"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 px-1 pt-2 pb-0.5">
+                      <span className="truncate text-[11px] sm:text-xs font-semibold text-white/90 group-hover:text-[#FF8B64] transition-colors">
+                        {getTitle(p)}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* ── FEATURED SECTION ────────────────────────────────────────── */}
@@ -115,69 +250,56 @@ export default async function TempHomePage() {
             id="featured"
             className="mt-20 sm:mt-24 lg:mt-28"
           >
-            {/* Clean Section Header */}
-            <div className="mb-3.5 sm:mb-5 flex items-baseline justify-between">
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-                Featured
-              </h2>
+            <div className="mb-3.5 sm:mb-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  Featured
+                </h2>
+                <p className="text-xs sm:text-sm text-white/50 mt-0.5">
+                  Our most-loved prints right now
+                </p>
+              </div>
 
               <Link
                 href="/shop"
-                className="text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1"
+                className="shrink-0 text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1"
               >
                 <span>See all</span>
                 <span aria-hidden="true">→</span>
               </Link>
             </div>
 
-            {/* Cards: Clean carousel on mobile, 5-col grid on desktop */}
-            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
-              {featured.slice(0, 5).map((p: Product) => (
-                <Link
-                  key={`f-${getStableKey(p)}`}
-                  href={getProductHref(p)}
-                  className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 w-[145px] sm:w-auto shrink-0 snap-start shadow-md"
-                >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5">
-                    <Image
-                      src={getCardImage(p)}
-                      alt={getTitle(p)}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                      sizes="(max-width: 640px) 150px, (max-width: 1024px) 33vw, 20vw"
-                    />
-                  </div>
-
-                  <div className="mt-2.5 flex flex-col flex-1 justify-between">
-                    <div className="text-white text-xs sm:text-sm font-semibold truncate group-hover:text-[#FF8B64] transition-colors">
-                      {getTitle(p)}
-                    </div>
-                    <div className="mt-1 text-xs sm:text-sm font-bold text-[#FF8B64]">
-                      {getPriceLabel(p)}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-              <div className="shrink-0 w-2 sm:hidden pointer-events-none" aria-hidden="true" />
-            </div>
+            <FeaturedCarousel
+              items={featured.slice(0, 10).map((p: Product) => ({
+                key: `f-${getStableKey(p)}`,
+                href: getProductHref(p),
+                title: getTitle(p),
+                price: getPriceLabel(p),
+                category: getCategoryLabel(p.category),
+                image: getCardImage(p),
+                hoverImage:
+                  Array.isArray(p.images) && p.images.length > 1 ? p.images[1] : undefined,
+                isNew: (p as { isNew?: boolean }).isNew === true,
+              }))}
+            />
           </section>
         )}
 
         {/* ── EXPLORE COLLECTIONS ────────────────────────────────────── */}
         <section id="categories" className="mt-14 sm:mt-20">
-          <div className="mb-4 sm:mb-6 flex items-baseline justify-between">
+          <div className="mb-4 sm:mb-6 flex items-end justify-between gap-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
                 Explore Collections
               </h2>
               <p className="text-xs sm:text-sm text-white/50 mt-0.5">
-                Handcrafted 3D prints organized by category
+                3D prints organized by category
               </p>
             </div>
 
             <Link
               href="/shop"
-              className="text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1"
+              className="shrink-0 text-xs sm:text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282] transition-colors flex items-center gap-1"
             >
               <span>View all shop</span>
               <span aria-hidden="true">→</span>
@@ -185,65 +307,45 @@ export default async function TempHomePage() {
           </div>
 
           <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2 sm:pb-0">
-            {[
-              {
-                title: "Keychains",
-                desc: "Cars, cute & custom rings",
-                href: "/shop/keychains",
-                sample: products.find((p) => p.category === "keychains"),
-              },
-              {
-                title: "New Arrivals",
-                desc: "Fresh drops & latest prints",
-                href: "/shop/new-arrivals",
-                sample: products.find((p) => (p as any).isNew === true) || products[0],
-              },
-              {
-                title: "Fanboys",
-                desc: "Figurines & fandom prints",
-                href: "/shop/fanboys",
-                sample: products.find((p) => p.category === "fanboys") || products[1],
-              },
-              {
-                title: "Accessories",
-                desc: "Lighter cases & pocket gear",
-                href: "/shop/accessories",
-                sample: products.find((p) => p.category === "accessories") || products[2],
-              },
-              {
-                title: "Desk Add-Ons",
-                desc: "Stands, trays & setups",
-                href: "/shop/desk-add-ons",
-                sample: products.find((p) => p.category === "desk-add-ons") || products[3],
-              },
-              {
-                title: "Tools",
-                desc: "Maker gear & utilities",
-                href: "/shop/tools",
-                sample: products.find((p) => p.category === "tools") || products[4],
-              },
-            ].map((cat) => (
+            {collections.map((cat) => (
               <Link
                 key={cat.title}
                 href={cat.href}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 hover:border-[#FF8B64]/40 transition-all duration-200 p-2.5 sm:p-3 w-[145px] sm:w-auto shrink-0 snap-start shadow-md"
+                className={`group flex flex-col rounded-2xl border border-white/10 bg-[#161619]/90 transition-all duration-200 p-2.5 sm:p-3 w-[42%] sm:w-auto shrink-0 snap-start shadow-md ${
+                  cat.comingSoon ? "opacity-70 hover:opacity-100" : "hover:border-[#FF8B64]/40"
+                }`}
               >
                 <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black/40 border border-white/5">
-                  <Image
-                    src={getCardImage(cat.sample || ({} as Product))}
-                    alt={cat.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                    sizes="(max-width: 640px) 150px, (max-width: 1024px) 33vw, 16vw"
-                  />
+                  {cat.image ? (
+                    <Image
+                      src={cat.image}
+                      alt={cat.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                      sizes="(max-width: 640px) 160px, (max-width: 1024px) 33vw, 16vw"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_50%_45%,rgba(255,139,100,0.22),transparent_65%)]">
+                      {cat.icon === "sparkles" ? (
+                        <Sparkles className="h-12 w-12 sm:h-14 sm:w-14 text-[#FF8B64] transition-transform duration-300 group-hover:scale-110" strokeWidth={1.5} />
+                      ) : (
+                        <Wrench className="h-12 w-12 sm:h-14 sm:w-14 text-white/35 transition-transform duration-300 group-hover:scale-110" strokeWidth={1.5} />
+                      )}
+                    </div>
+                  )}
+                  {cat.comingSoon && (
+                    <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/80">
+                      Coming soon
+                    </span>
+                  )}
                 </div>
 
-                <div className="mt-2.5 flex flex-col flex-1 justify-between">
-                  <div className="flex items-center justify-between gap-1 text-white text-xs sm:text-sm font-semibold truncate group-hover:text-[#FF8B64] transition-colors">
-                    <span className="truncate">{cat.title}</span>
+                <div className="mt-2.5 flex flex-col flex-1">
+                  <div className="flex items-start justify-between gap-1 text-white text-xs sm:text-sm font-semibold leading-tight group-hover:text-[#FF8B64] transition-colors">
+                    <span>{cat.title}</span>
                     <span className="text-xs text-white/40 group-hover:text-[#FF8B64] transition-colors shrink-0">→</span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-white/50 truncate">
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/50">
                     {cat.desc}
                   </p>
                 </div>
