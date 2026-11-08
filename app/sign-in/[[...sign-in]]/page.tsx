@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 import Link from "next/link";
 import AuthModal from "@/app/components/AuthModal";
 
 export default function Page() {
   const [open, setOpen] = useState(true);
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useSupabaseAuth();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) router.replace("/user");
+  }, [isLoaded, isSignedIn, router]);
 
   return (
     <main className="min-h-screen bg-[#0D0D0D] px-4 py-24 text-white">

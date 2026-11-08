@@ -1,5 +1,10 @@
 # Worklog
 
+## 2026-11-09 - Redirect successful sign-in to the account
+
+- Owner reported staying on the sign-in landing page after the form closed. Added auth-state navigation to `/user` in the standalone sign-in and sign-up pages. Applied the same two-file fix to the localhost:3002 checkout.
+- TypeScript, focused ESLint and route-component checks passed for authenticated, signed-out, loading and manual-close cases. Local browser automation is disabled in Work settings, so a real interactive login was not exercised for this change.
+
 ## 2026-11-09 - Verify the production password reset release
 
 - Owner requested a commit and production push for shop password recovery, with Google sign-in kept on a branch. Main contains release commit `23a4e7a`. Git deployment `dpl_2cC8FETkFDLdjQ3JUf5ygPgNVNe6` was READY on www and apex when checked. Production sender and Turnstile variables are configured.

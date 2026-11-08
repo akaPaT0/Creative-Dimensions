@@ -1,5 +1,9 @@
 # Project state
 
+## Sign-in navigation (2026-11-09)
+
+- Standalone sign-in and sign-up pages send authenticated users to `/user` after the auth provider finishes loading. A successful login no longer leaves the closed form on the sign-in landing page.
+
 ## Shop password recovery (2026-11-08)
 
 - Password recovery is live from code commit `23a4e7a`. Verified READY Git deployment `dpl_2cC8FETkFDLdjQ3JUf5ygPgNVNe6` serves www and apex. Production `CD_RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` are configured. The live bot check completed, and Resend confirmed delivery from Creative Dimensions <support@creativedimensionslb.com> with the canonical reset link.
