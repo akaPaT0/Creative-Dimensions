@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 const DEFAULT_CATEGORIES = [
+  "halloween",
   "new-arrivals",
   "keychains",
   "tools",

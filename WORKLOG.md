@@ -1,5 +1,11 @@
 # Worklog
 
+## 2026-11-09 - Publish the prepared Halloween product batch
+
+- Owner requested all prepared products in production and proposed Halloween as the category. Added category, product and metadata routes using the shared storefront components, plus Halloween in the shop tabs, footer, admin category choices and sitemap. Kept unfinished Google work separate by starting codex/halloween-release from main 8c94b4e.
+- Prepared the public catalog manifest and scripts/publish-halloween.mjs. Converted all 22 approved original-photo-v2 exports to lossless WebP and verified pixel equality and upload hashes. Backed up the catalog locally, atomically inserted HA001–HA008 and verified readback: eight listings, three coffin choices at $11 each, correct other prices/colours, 34 total products and all 26 prior rows unchanged.
+- Production build/TypeScript, three existing URL tests and image-linked variant/cart mapping checks passed. Local HTTP checks passed for all eight product pages, category, canonical URLs, prices, gallery references, lantern options, refreshed sitemap, existing pages and Next image optimization. Focused lint passed for new files and clean touched files. Existing any-type violations remain in ShopCatalogClient and AdminProductForm; lint with that existing rule disabled reports two existing warnings. No auth, checkout or schema changes. Git-based deployment and live readback are the remaining release steps at this entry.
+
 ## 2026-11-09 - Redirect successful sign-in to the account
 
 - Owner reported staying on the sign-in landing page after the form closed. Added auth-state navigation to `/user` in the standalone sign-in and sign-up pages. Applied the same two-file fix to the localhost:3002 checkout.

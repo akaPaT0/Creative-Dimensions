@@ -6,6 +6,7 @@ import { slugify } from "./product-url";
 export { slugify } from "./product-url";
 
 export const CATEGORY_LABELS: Record<string, string> = {
+  halloween: "Halloween",
   keychains: "Keychains",
   "desk-add-ons": "Desk Add-ons",
   accessories: "Everyday Accessories",

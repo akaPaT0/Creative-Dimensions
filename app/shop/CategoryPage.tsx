@@ -11,6 +11,7 @@ import { SITE_URL } from "../lib/site";
 import CategoryGrid, { type CategoryGridItem } from "./CategoryGrid";
 
 const LABELS: Record<string, string> = {
+  halloween: "Halloween",
   keychains: "Keychains",
   accessories: "Accessories",
   fanboys: "Fanboys",

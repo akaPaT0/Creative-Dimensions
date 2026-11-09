@@ -1,5 +1,13 @@
 # Project state
 
+## Halloween collection (2026-11-09)
+
+- Owner authorized production publication of eight prepared products under `/shop/halloween`: Ghost Candy Bowl $20, Stitched Skull Candy Bowl $20, Pumpkin Candy Bowl $15, Skull Pot $13, Screaming Ghost Candy Bowl $22, Flexi Skeleton $7, Bat Wall Decor Pack $5 per pack, and Halloween Coffin Lantern $11 each. Coffin variants are Green Bats, Orange Ghosts and Red Spiderweb, using the existing image-linked selection/cart flow. Other products retain their single approved colour.
+- Published eight new Supabase rows HA001–HA008 and 22 public lossless WebP images under product_images/halloween. Readback verified the 26 existing product rows were unchanged (34 total). Every uploaded hash matches a pixel-identical conversion of the approved original-photo-v2 export over the exact original 2.png background.
+- Category/product routes reuse CategoryPage and ProductPage. Halloween is included in shop filters, footer, admin category choices, metadata labels and sitemap. `catalog/halloween-2026.json` records the public rows, assets and hashes; scripts/publish-halloween.mjs is an insert-only dry-run-by-default publisher, and scripts/verify-halloween.mjs audits storefront routes and variant mapping.
+- Local source photos, layered artwork and draft JSON remain under C:/Users/Patrick/Desktop/CreativeDimensions/Creative-Dimensions/product-drafts. Unconfirmed dimensions, bat count beyond four designs, mounting supplies, sweets and lantern light/power details are omitted from product claims. Google sign-in remains outside this release.
+- Release code is prepared on codex/halloween-release from origin/main 8c94b4e. Production build/TypeScript, existing URL tests and manifest variant/cart checks passed. Local HTTP verification passed for all eight product pages, category, prices, canonical URLs, gallery references, lantern options, sitemap, existing pages and Next image optimization. New/clean touched files pass lint; two existing files retain pre-existing any-type lint errors (category edits add one line each). Live route verification follows deployment.
+
 ## Sign-in navigation (2026-11-09)
 
 - Standalone sign-in and sign-up pages send authenticated users to `/user` after the auth provider finishes loading. A successful login no longer leaves the closed form on the sign-in landing page.

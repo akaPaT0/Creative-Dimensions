@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-11-09 - Publish the Halloween collection
+
+- Owner authorized publishing all eight prepared listings under the top-level category `halloween` (display label Halloween). Group them into candy-bowls, pots, figurines, wall-decor and lanterns. Retain the existing category/product page components, image-linked variant/cart behavior and canonical URL pattern.
+- Prices: Ghost Bowl $20, Stitched Skull Bowl $20, Pumpkin Bowl $15, Skull Pot $13, Screaming Ghost Bowl $22, Flexi Skeleton $7, Bat Wall Decor Pack $5 per pack, Coffin Lantern $11 each with Green Bats, Orange Ghosts and Red Spiderweb options. The bat listing promises four designs; do not invent extra quantity, dimensions, mounting supplies, sweets or lantern power/light inclusion details.
+- Preserve the owner's exact `2.png` composition and original product photo layers. Publish the 22 approved exports as pixel-identical lossless WebP files in the existing public Supabase product_images bucket. The public catalog manifest is `catalog/halloween-2026.json`; source photos and editable artwork remain in the original checkout's local product-drafts directory.
+- Publish only these new rows; never replace the full products table. `scripts/publish-halloween.mjs` defaults to dry run, backs up the existing catalog under ignored .vercel, verifies asset hashes and existing rows, and inserts the batch atomically. Keep unfinished Google sign-in off production.
+
 ## 2026-11-08 - Release password recovery without Google sign-in
 
 - Use a shop-specific Resend sender with Supabase recovery tokens and keep the shared Supabase mail configuration. Apply Turnstile only to the new reset request form. The reset link opens without consuming the token. Saving the new password consumes the token in a server-only session and returns the customer to the existing sign-in flow.

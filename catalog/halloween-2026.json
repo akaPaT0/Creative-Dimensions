@@ -1,0 +1,369 @@
+{
+  "category": "halloween",
+  "categoryLabel": "Halloween",
+  "products": [
+    {
+      "SKU": "HA001",
+      "Name": "Ghost Candy Bowl",
+      "slug": "ghost-candy-bowl",
+      "category": "halloween",
+      "subCategory": "candy-bowls",
+      "priceUSD": 20,
+      "description": "A friendly ghost holding a bowl for your Halloween treats. Its flowing white folds and bold black eyes make it a playful centerpiece for your desk, entryway, or party table. Fill it with wrapped sweets and let your ghost welcome the guests. Available in white with black details only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-002.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-003.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-004.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-001.webp"
+        },
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-002.webp"
+        },
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-003.webp"
+        },
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/ghost-candy-bowl-004.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "HA002",
+      "Name": "Stitched Skull Candy Bowl",
+      "slug": "stitched-skull-candy-bowl",
+      "category": "halloween",
+      "subCategory": "candy-bowls",
+      "priceUSD": 20,
+      "description": "A round white candy bowl with expressive black eyes, a tiny skull nose and a stitched smile. Fill it with wrapped sweets to give your desk, entryway or Halloween party table a little spooky character. Available in white with black details only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/stitched-skull-candy-bowl-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/stitched-skull-candy-bowl-002.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/stitched-skull-candy-bowl-003.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "White & Black",
+          "hex": "#f5f5f5",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/stitched-skull-candy-bowl-001.webp"
+        },
+        {
+          "label": "White & Black",
+          "hex": "#f5f5f5",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/stitched-skull-candy-bowl-002.webp"
+        },
+        {
+          "label": "White & Black",
+          "hex": "#f5f5f5",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/stitched-skull-candy-bowl-003.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "HA003",
+      "Name": "Pumpkin Candy Bowl",
+      "slug": "pumpkin-candy-bowl",
+      "category": "halloween",
+      "subCategory": "candy-bowls",
+      "priceUSD": 15,
+      "description": "An orange pumpkin-shaped candy bowl with triangular eyes and a jagged jack-o'-lantern grin. Fill it with wrapped sweets for trick-or-treat visitors, Halloween parties, or a seasonal display. Available in orange only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/pumpkin-candy-bowl-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/pumpkin-candy-bowl-002.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/pumpkin-candy-bowl-003.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "Orange",
+          "hex": "#f2802f",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/pumpkin-candy-bowl-001.webp"
+        },
+        {
+          "label": "Orange",
+          "hex": "#f2802f",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/pumpkin-candy-bowl-002.webp"
+        },
+        {
+          "label": "Orange",
+          "hex": "#f2802f",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/pumpkin-candy-bowl-003.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "HA004",
+      "Name": "Skull Pot",
+      "slug": "skull-pot",
+      "category": "halloween",
+      "subCategory": "pots",
+      "priceUSD": 13,
+      "description": "A detailed skull-shaped pot with deep eye sockets, sculpted teeth and a jagged open rim. A bold addition to your Halloween display or a desk for small items. Available in white only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/pots/skull-pot-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/pots/skull-pot-002.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/pots/skull-pot-001.webp"
+        },
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/pots/skull-pot-002.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "HA005",
+      "Name": "Screaming Ghost Candy Bowl",
+      "slug": "screaming-ghost-candy-bowl",
+      "category": "halloween",
+      "subCategory": "candy-bowls",
+      "priceUSD": 22,
+      "description": "A hooded horror figure with a screaming white mask, a raised prop knife and a bowl held between its draped sleeves. Fill the bowl with wrapped sweets for a Halloween party table or a horror-themed display. Available in black & white only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/screaming-ghost-candy-bowl-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/screaming-ghost-candy-bowl-002.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "Black & White",
+          "hex": "#111111",
+          "hex2": "#f5f5f5",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/screaming-ghost-candy-bowl-001.webp"
+        },
+        {
+          "label": "Black & White",
+          "hex": "#111111",
+          "hex2": "#f5f5f5",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/candy-bowls/screaming-ghost-candy-bowl-002.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "HA006",
+      "Name": "Flexi Skeleton",
+      "slug": "flexi-skeleton",
+      "category": "halloween",
+      "subCategory": "figurines",
+      "priceUSD": 7,
+      "description": "A small articulated skeleton with an oversized skull and movable arms and legs. Pose it on your desk or add a little spooky character to your Halloween display. Available in white only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/figurines/flexi-skeleton-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/figurines/flexi-skeleton-002.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/figurines/flexi-skeleton-001.webp"
+        },
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/figurines/flexi-skeleton-002.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "HA007",
+      "Name": "Bat Wall Decor Pack",
+      "slug": "bat-wall-decor-pack",
+      "category": "halloween",
+      "subCategory": "wall-decor",
+      "priceUSD": 5,
+      "description": "A four-design pack of black bat decorations for Halloween walls, doors and party backdrops. Mix the wing shapes into a flying arrangement or spread them around your seasonal display. Available in black only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/wall-decor/bat-wall-decor-pack-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/wall-decor/bat-wall-decor-pack-002.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "Black",
+          "hex": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/wall-decor/bat-wall-decor-pack-001.webp"
+        },
+        {
+          "label": "Black",
+          "hex": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/wall-decor/bat-wall-decor-pack-002.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "HA008",
+      "Name": "Halloween Coffin Lantern",
+      "slug": "halloween-coffin-lantern",
+      "category": "halloween",
+      "subCategory": "lanterns",
+      "priceUSD": 11,
+      "description": "A coffin-shaped decorative lantern with a black silhouette front and a colourful translucent panel. Choose green bats and a crescent moon, orange ghosts, or a red spiderweb design for your Halloween display. Sold individually at $11 each; select your design.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-002.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-003.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-004.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "Green Bats",
+          "hex": "#6edb18",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-001.webp"
+        },
+        {
+          "label": "Orange Ghosts",
+          "hex": "#f2802f",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-002.webp"
+        },
+        {
+          "label": "Red Spiderweb",
+          "hex": "#dc244b",
+          "hex2": "#111111",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-003.webp"
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "file": "ghost-candy-bowl-001.webp",
+      "storagePath": "halloween/candy-bowls/ghost-candy-bowl-001.webp",
+      "sha256": "4c9340438c8c836a0defdd149ee85b0d7501d3c0b615a2d07dc40a845bfedf44",
+      "bytes": 2160120
+    },
+    {
+      "file": "ghost-candy-bowl-002.webp",
+      "storagePath": "halloween/candy-bowls/ghost-candy-bowl-002.webp",
+      "sha256": "593e402118c83e1de146775a95c135c74ed7a862ef0b1019ddb80c656222215f",
+      "bytes": 1929952
+    },
+    {
+      "file": "ghost-candy-bowl-003.webp",
+      "storagePath": "halloween/candy-bowls/ghost-candy-bowl-003.webp",
+      "sha256": "c1ac1855690a6c4cda00d6f83de3bc94b15be886ee95f1b1f07befecd8f47a83",
+      "bytes": 1934566
+    },
+    {
+      "file": "ghost-candy-bowl-004.webp",
+      "storagePath": "halloween/candy-bowls/ghost-candy-bowl-004.webp",
+      "sha256": "a91da08c233eaf8e885af760e691cf32d1cb2889254e0998f6e0a5893365e333",
+      "bytes": 1962068
+    },
+    {
+      "file": "stitched-skull-candy-bowl-001.webp",
+      "storagePath": "halloween/candy-bowls/stitched-skull-candy-bowl-001.webp",
+      "sha256": "bcb986fe047c71d9ce1695c5264dc81285772ae271b3ef1308570bb3cbd4a8a9",
+      "bytes": 1659080
+    },
+    {
+      "file": "stitched-skull-candy-bowl-002.webp",
+      "storagePath": "halloween/candy-bowls/stitched-skull-candy-bowl-002.webp",
+      "sha256": "f2bb7509afd3a663e1b2f4145b33933bb50b246cad973a352da3a2ec09619ee6",
+      "bytes": 1576424
+    },
+    {
+      "file": "stitched-skull-candy-bowl-003.webp",
+      "storagePath": "halloween/candy-bowls/stitched-skull-candy-bowl-003.webp",
+      "sha256": "3036cde3ec272a468bb762b935ebe42b040ff75b481224fb32859be9f6d79906",
+      "bytes": 1518860
+    },
+    {
+      "file": "pumpkin-candy-bowl-001.webp",
+      "storagePath": "halloween/candy-bowls/pumpkin-candy-bowl-001.webp",
+      "sha256": "61ff1ce8abd06d74d68666606f753dd83b44a54800b09cc73bfae0347abfb310",
+      "bytes": 2493736
+    },
+    {
+      "file": "pumpkin-candy-bowl-002.webp",
+      "storagePath": "halloween/candy-bowls/pumpkin-candy-bowl-002.webp",
+      "sha256": "b8e525d15ab08745ac067acdabf059edbe2a3567faa3cfb3a6c9da88a5c77633",
+      "bytes": 1665966
+    },
+    {
+      "file": "pumpkin-candy-bowl-003.webp",
+      "storagePath": "halloween/candy-bowls/pumpkin-candy-bowl-003.webp",
+      "sha256": "f59b015d6408bb8e3f7f4e68f87c7d1179d753e7b871f6f1e84d76f7a7828923",
+      "bytes": 1653628
+    },
+    {
+      "file": "skull-pot-001.webp",
+      "storagePath": "halloween/pots/skull-pot-001.webp",
+      "sha256": "504e042dd5131803fb6615b44946f31da1ea9462aeca9b0389df5f76088f1e41",
+      "bytes": 1747656
+    },
+    {
+      "file": "skull-pot-002.webp",
+      "storagePath": "halloween/pots/skull-pot-002.webp",
+      "sha256": "1b0a2dec1aa02545a115900adaaa17b82acdc33bbae0ebde2f7e22dfa409deb2",
+      "bytes": 1607250
+    },
+    {
+      "file": "screaming-ghost-candy-bowl-001.webp",
+      "storagePath": "halloween/candy-bowls/screaming-ghost-candy-bowl-001.webp",
+      "sha256": "6b9c6262437521979b96fea9dfa6cedba0b204e394954a611ce6ae74ad420b88",
+      "bytes": 2271066
+    },
+    {
+      "file": "screaming-ghost-candy-bowl-002.webp",
+      "storagePath": "halloween/candy-bowls/screaming-ghost-candy-bowl-002.webp",
+      "sha256": "b2282bc653293c41526cd70c1ddb9e1e81923a77378221ca7834a8e0658abbf7",
+      "bytes": 2373340
+    },
+    {
+      "file": "flexi-skeleton-001.webp",
+      "storagePath": "halloween/figurines/flexi-skeleton-001.webp",
+      "sha256": "0e0bf1f3390e9d98ec4fe03af4e0a4556580e30b8510b9edf4cb127c1ef26ee8",
+      "bytes": 2085790
+    },
+    {
+      "file": "flexi-skeleton-002.webp",
+      "storagePath": "halloween/figurines/flexi-skeleton-002.webp",
+      "sha256": "0d68c1aeb15e6c7f772aefc90fad7e691b5ff80ebfb7dfd4af0578d41e088816",
+      "bytes": 1990460
+    },
+    {
+      "file": "bat-wall-decor-pack-001.webp",
+      "storagePath": "halloween/wall-decor/bat-wall-decor-pack-001.webp",
+      "sha256": "9d8c49f2dce2a8942db43586fcfd72eb0ace18a26286d9b00c81d405af4a27d4",
+      "bytes": 1951142
+    },
+    {
+      "file": "bat-wall-decor-pack-002.webp",
+      "storagePath": "halloween/wall-decor/bat-wall-decor-pack-002.webp",
+      "sha256": "5f8a024271289d2fb8715383844fbdd366c0a91d1244e2920a89de63814460bb",
+      "bytes": 1951828
+    },
+    {
+      "file": "halloween-coffin-lantern-001.webp",
+      "storagePath": "halloween/lanterns/halloween-coffin-lantern-001.webp",
+      "sha256": "5d7c3d559f077138322545b62c2a6fd889cc25b5a594b423d6dae6001260ef57",
+      "bytes": 1890296
+    },
+    {
+      "file": "halloween-coffin-lantern-002.webp",
+      "storagePath": "halloween/lanterns/halloween-coffin-lantern-002.webp",
+      "sha256": "7ffe20faeefdeb38a563cc788ed73ab0720a1a1ca53a6b33cc1607431de666aa",
+      "bytes": 1903118
+    },
+    {
+      "file": "halloween-coffin-lantern-003.webp",
+      "storagePath": "halloween/lanterns/halloween-coffin-lantern-003.webp",
+      "sha256": "7e996dad105149d76764c53b45ce4315dc6e9c2931218f3788f6e1aa7bc4c3ac",
+      "bytes": 1898398
+    },
+    {
+      "file": "halloween-coffin-lantern-004.webp",
+      "storagePath": "halloween/lanterns/halloween-coffin-lantern-004.webp",
+      "sha256": "5c1c6e974c4061ca308ad6b87ec2b931323f80a36eff5d31e6ffa11c462d2981",
+      "bytes": 2117090
+    }
+  ]
+}

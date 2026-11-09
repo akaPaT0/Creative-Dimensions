@@ -10,6 +10,7 @@ import { Filter, Search, X, ArrowUpDown, Grid3X3, LayoutGrid } from "lucide-reac
 
 export const ALL_CATEGORY_TABS = [
   { id: "all", label: "All Prints" },
+  { id: "halloween", label: "Halloween" },
   { id: "keychains", label: "Keychains" },
   { id: "desk-add-ons", label: "Desk Add-Ons" },
   { id: "accessories", label: "Accessories" },

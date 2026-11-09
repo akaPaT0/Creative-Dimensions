@@ -28,6 +28,7 @@ import { groupColours } from "../lib/product-variants";
 
 /** Short labels used in the breadcrumb and above the product name. */
 const CATEGORY_NAMES: Record<string, string> = {
+  halloween: "Halloween",
   keychains: "Keychains",
   accessories: "Accessories",
   "desk-add-ons": "Desk Add-Ons",
