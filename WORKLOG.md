@@ -1,5 +1,10 @@
 # Worklog
 
+## 2026-11-09 - Improve the coffin lantern product layers
+
+- Owner reported low resolution in the lantern layers. Rebuilt three individual unlit front views from the more detailed second source photograph using directly traced masks and mild photographic sharpening. Kept original source RGB in editable layers and the exact original 2.png background; no AI reconstruction. Retained the four lit/comparison images as additional views.
+- Uploaded three immutable, lossless WebP assets and updated only HA008 images/variant links, with an optimistic old-gallery condition. Verified pixel equality, centered bounds, upload hashes, seven image links, three $11 choices and every other catalog field/product unchanged. Original artwork, script and receipt are under product-drafts/halloween-coffin-lantern/ in the original checkout. Added the public gallery override manifest and updated storefront verification to include it. Collection now has 25 images. Final live readback follows cache refresh/deployment.
+
 ## 2026-11-09 - Publish the prepared Halloween product batch
 
 - Owner requested all prepared products in production and proposed Halloween as the category. Added category, product and metadata routes using the shared storefront components, plus Halloween in the shop tabs, footer, admin category choices and sitemap. Kept unfinished Google work separate by starting codex/halloween-release from main 8c94b4e.

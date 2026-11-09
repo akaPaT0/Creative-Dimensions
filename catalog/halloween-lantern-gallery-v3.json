@@ -1,0 +1,65 @@
+{
+  "SKU": "HA008",
+  "name": "Halloween Coffin Lantern",
+  "priceUSD": 11,
+  "reason": "Sharper unlit front-panel photographs from the larger second source photo. Existing lit photos retained. Exact original background unchanged.",
+  "beforeImages": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-002.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-003.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-004.webp\"]",
+  "assets": [
+    {
+      "file": "01-green-bats-unlit.webp",
+      "storagePath": "halloween/lanterns/halloween-coffin-lantern-detail-v3-001.webp",
+      "sha256": "7bd46b240b3456a77061cc3800ace40e411dd115c47217d4345446f91e08ecfd"
+    },
+    {
+      "file": "02-orange-ghosts-unlit.webp",
+      "storagePath": "halloween/lanterns/halloween-coffin-lantern-detail-v3-002.webp",
+      "sha256": "3439ec1531c0f3970758d2ad525a4111d85c819298a6333844ac38e58e29825d"
+    },
+    {
+      "file": "03-red-spiderweb-unlit.webp",
+      "storagePath": "halloween/lanterns/halloween-coffin-lantern-detail-v3-003.webp",
+      "sha256": "471602bfa693a0ee59744358ffb24aa50adc96186f5f4f25514575cbd0daf140"
+    }
+  ],
+  "patch": {
+    "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-detail-v3-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-detail-v3-002.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-detail-v3-003.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-001.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-002.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-003.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-004.webp\"]",
+    "variants": [
+      {
+        "hex": "#6edb18",
+        "hex2": "#111111",
+        "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-detail-v3-001.webp",
+        "label": "Green Bats"
+      },
+      {
+        "hex": "#f2802f",
+        "hex2": "#111111",
+        "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-detail-v3-002.webp",
+        "label": "Orange Ghosts"
+      },
+      {
+        "hex": "#dc244b",
+        "hex2": "#111111",
+        "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-detail-v3-003.webp",
+        "label": "Red Spiderweb"
+      },
+      {
+        "hex": "#6edb18",
+        "hex2": "#111111",
+        "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-001.webp",
+        "label": "Green Bats"
+      },
+      {
+        "hex": "#f2802f",
+        "hex2": "#111111",
+        "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-002.webp",
+        "label": "Orange Ghosts"
+      },
+      {
+        "hex": "#dc244b",
+        "hex2": "#111111",
+        "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/lanterns/halloween-coffin-lantern-003.webp",
+        "label": "Red Spiderweb"
+      }
+    ]
+  }
+}

@@ -5,6 +5,8 @@ import { normalizeVariants, groupColours, variantCustomization } from "../app/li
 const base = process.argv[2] || "http://localhost:3015";
 const canonicalBase = "https://www.creativedimensionslb.com";
 const manifest = JSON.parse(await readFile(new URL("../catalog/halloween-2026.json", import.meta.url), "utf8"));
+const lanternGallery = JSON.parse(await readFile(new URL("../catalog/halloween-lantern-gallery-v3.json", import.meta.url), "utf8"));
+Object.assign(manifest.products.find((p) => p.SKU === lanternGallery.SKU), lanternGallery.patch);
 
 async function html(path) {
   const response = await fetch(base + path);
@@ -50,4 +52,5 @@ const image = manifest.products[0].variants[0].image;
 const optimized = await fetch(`${base}/_next/image?url=${encodeURIComponent(image)}&w=640&q=75`);
 assert.equal(optimized.status, 200, "Next image optimization");
 assert(optimized.headers.get("content-type").startsWith("image/"));
-console.log("PASS: 8 products, category, canonical URLs, prices, 22 image references, variant/cart mapping, sitemap, existing pages and image optimization.");
+const imageCount = manifest.products.reduce((count, p) => count + JSON.parse(p.images).length, 0);
+console.log(`PASS: 8 products, category, canonical URLs, prices, ${imageCount} image references, variant/cart mapping, sitemap, existing pages and image optimization.`);
