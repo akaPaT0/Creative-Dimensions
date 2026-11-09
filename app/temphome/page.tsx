@@ -12,6 +12,8 @@ import CustomOrderBand from "../components/CustomOrderBand";
 import { FileUp, Instagram, MessageCircle, Palette, Sparkles, Truck, Wrench } from "lucide-react";
 import { SITE_URL } from "../lib/site";
 import { slugify } from "../lib/product-seo";
+import HeroEventDrop from "../components/HeroEventDrop";
+import { HOME_EVENT } from "../lib/home-event";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -76,6 +78,27 @@ export default async function TempHomePage() {
       }),
     ...featured.filter((p) => !heroSlugs.includes(String(p.slug))),
   ].slice(0, 3);
+  const eventProducts = HOME_EVENT.enabled
+    ? products.filter((p) => p.category === HOME_EVENT.category)
+    : [];
+  const eventHeroItems = [
+    ...HOME_EVENT.slugs.flatMap((slug) => {
+      const match = eventProducts.find((p) => p.slug === slug);
+      return match ? [match] : [];
+    }),
+    ...eventProducts.filter((p) => !HOME_EVENT.slugs.includes(String(p.slug))),
+  ]
+    .slice(0, 5)
+    .map((p) => ({
+      key: `ev-${getStableKey(p)}`,
+      href: getProductHref(p),
+      slug: String(p.slug ?? ""),
+      title: getTitle(p),
+      image: getCardImage(p),
+      price: getPriceLabel(p),
+    }));
+  const showEvent = eventHeroItems.length > 0;
+
   const coverFor = (category: string, preferredSlug: string) => {
     const inCategory = products.filter((p) => p.category === category);
     const pick = inCategory.find((p) => p.slug === preferredSlug) ?? inCategory[0];
@@ -151,18 +174,30 @@ export default async function TempHomePage() {
       <Background />
       <Navbar />
 
-      <section className="relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-14 pt-32 sm:pt-40 lg:pt-36 pb-20">
+      <section className={`relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-14 pt-32 sm:pt-40 lg:pt-36 pb-20`}>
 
         {/* ── HERO ────────────────────────────────────────────────────── */}
-        <section className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
-          {/* Text column */}
-          <div className="relative text-center lg:text-left">
+        <section
+          className={`relative grid items-center gap-12 lg:gap-10 ${
+            showEvent ? "lg:grid-cols-1" : "lg:grid-cols-[1.05fr_1fr]"
+          }`}
+        >
+          {/* Text column (split into two columns under the seasonal drop) */}
+          <div
+            className={`relative text-center lg:text-left ${
+              showEvent ? "lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-x-14" : ""
+            }`}
+          >
             <div
               className="pointer-events-none absolute -top-12 left-1/2 lg:left-24 -translate-x-1/2 w-80 h-48 bg-[#FF8B64]/12 blur-3xl rounded-full"
               aria-hidden="true"
             />
 
-            <h1 className="relative text-4xl sm:text-5xl lg:text-[3.4rem] xl:text-6xl 2xl:text-7xl font-extrabold tracking-tight text-white leading-[1.08]">
+            <h1 className={`relative ${showEvent ? "lg:row-span-3" : ""} ${
+                showEvent
+                  ? "text-4xl sm:text-6xl lg:text-[4.6rem] xl:text-[5.4rem] 2xl:text-[6rem]"
+                  : "text-4xl sm:text-5xl lg:text-[3.4rem] xl:text-6xl 2xl:text-7xl"
+              } font-extrabold tracking-tight text-white leading-[1.08]`}>
               <span className="whitespace-nowrap">Custom 3D Prints</span>
               <span className="block mt-1 sm:mt-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FF8B64] via-[#ffa282] to-[#ffd0b5]">
                 Made Different
@@ -205,7 +240,7 @@ export default async function TempHomePage() {
           </div>
 
           {/* Product collage */}
-          {heroProducts.length > 0 && (
+          {!showEvent && heroProducts.length > 0 && (
             <div className="relative mx-auto h-[300px] w-full max-w-[380px] sm:h-[380px] sm:max-w-[460px] lg:h-[460px] lg:max-w-[520px]">
               <div
                 className="pointer-events-none absolute inset-10 rounded-full bg-[#FF8B64]/15 blur-3xl"
@@ -244,6 +279,21 @@ export default async function TempHomePage() {
             </div>
           )}
         </section>
+
+        {/* ── SEASONAL DROP ───────────────────────────────────────────── */}
+        {showEvent && (
+          <div className="mt-14 sm:mt-20">
+          <HeroEventDrop
+            word={HOME_EVENT.word}
+            eyebrow={HOME_EVENT.eyebrow}
+            blurb={HOME_EVENT.blurb}
+            href={HOME_EVENT.href}
+            ctaLabel={HOME_EVENT.ctaLabel}
+            items={eventHeroItems}
+          />
+          </div>
+        )}
+
 
         {/* ── FEATURED SECTION ────────────────────────────────────────── */}
         {featured.length > 0 && (

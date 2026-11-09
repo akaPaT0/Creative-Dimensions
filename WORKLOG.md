@@ -1,5 +1,11 @@
 # Worklog
 
+## 2026-11-09 - Add a Halloween drop scene to the home page
+
+- Owner asked to feature the Halloween drop on the home page instead of the three hero product photos. A first card-style version was rejected as generic. Shipped a full-width scene: a large HALLOWEEN word with five drop pieces lined up in front on one dark stage (the product photos share the same background), name and price labels, a flickering lantern glow and one Shop the Halloween drop button. It sits directly under the custom-work hero, which stays first with a larger headline, per owner agreement that custom work should lead and Halloween season has passed.
+- Config is `app/lib/home-event.ts` (word, copy, featured slugs, `enabled`). Setting `enabled: false` restores the previous hero with the product collage. Component is `app/components/HeroEventDrop.tsx` (server component, Anton display font). Home SEO metadata and JSON-LD are unchanged.
+- Production build, TypeScript and three URL tests passed; checked at 375px, 800px and 1440px in a local browser with no console errors.
+
 ## 2026-11-09 - Improve the coffin lantern product layers
 
 - Owner reported low resolution in the lantern layers. Rebuilt three individual unlit front views from the more detailed second source photograph using directly traced masks and mild photographic sharpening. Kept original source RGB in editable layers and the exact original 2.png background; no AI reconstruction. Retained the four lit/comparison images as additional views.
