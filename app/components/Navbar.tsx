@@ -142,10 +142,7 @@ export default function Navbar() {
               hover:from-[#3BC7C4] hover:to-[#FF8B64]
               bg-clip-text text-transparent transition px-1 py-0.5 inline-flex items-center`}
           >
-            Creative Dimensions{" "}
-            <span className="text-white text-[12px] font-semibold tracking-wide ml-1.5">
-              beta
-            </span>
+            Creative Dimensions
           </Link>
 
           <div className="ml-auto flex items-center gap-8 text-sm">
@@ -207,10 +204,7 @@ export default function Navbar() {
               bg-gradient-to-r from-[#FF8B64] to-[#3BC7C4]
               bg-clip-text text-transparent transition text-base sm:text-lg truncate shrink min-w-0 px-1 py-0.5 inline-flex items-center`}
           >
-            Creative Dimensions{" "}
-            <span className="text-white text-[10px] sm:text-[11px] font-semibold tracking-wide ml-1">
-              beta
-            </span>
+            Creative Dimensions
           </Link>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -273,8 +267,9 @@ function MobileMenuContent({
   const { user, isLoaded, isSignedIn, signOut } = useSupabaseAuth();
 
   const name =
-    (typeof user?.user_metadata?.first_name === "string" && user.user_metadata.first_name) ||
-    (typeof user?.user_metadata?.name === "string" && user.user_metadata.name) ||
+    (typeof user?.user_metadata?.username === "string" && user.user_metadata.username.trim()) ||
+    (typeof user?.user_metadata?.first_name === "string" && user.user_metadata.first_name.trim()) ||
+    (typeof user?.user_metadata?.name === "string" && user.user_metadata.name.trim()) ||
     user?.email?.split("@")[0] ||
     "Account";
   const avatar = typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : "";
@@ -425,8 +420,9 @@ function AuthButtons({ onSignIn }: { onSignIn: () => void }) {
     process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
 
   const name =
-    (typeof user?.user_metadata?.first_name === "string" && user.user_metadata.first_name) ||
-    (typeof user?.user_metadata?.name === "string" && user.user_metadata.name) ||
+    (typeof user?.user_metadata?.username === "string" && user.user_metadata.username.trim()) ||
+    (typeof user?.user_metadata?.first_name === "string" && user.user_metadata.first_name.trim()) ||
+    (typeof user?.user_metadata?.name === "string" && user.user_metadata.name.trim()) ||
     user?.email?.split("@")[0] ||
     "Account";
   const avatar = isLoaded && typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : "";

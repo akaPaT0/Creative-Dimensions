@@ -23,6 +23,8 @@ type AuthContextValue = {
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
+  /** Re-read the signed-in user (e.g. after profile changes). */
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -86,6 +88,16 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    // A refreshed session carries the latest user metadata; the auth listener
+    // picks it up and updates everything that reads the user.
+    const { data } = await supabase.auth.refreshSession();
+    if (data.session) {
+      setSession(data.session);
+      syncTokenCookie(data.session);
+    }
+  }, []);
+
   const getAccessToken = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession();
     if (error) throw new Error(error.message);
@@ -102,8 +114,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       getAccessToken,
+      refreshUser,
     }),
-    [getAccessToken, isLoaded, session, signIn, signOut, signUp]
+    [getAccessToken, isLoaded, refreshUser, session, signIn, signOut, signUp]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

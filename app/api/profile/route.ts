@@ -149,6 +149,20 @@ export async function PUT(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // Mirror into the auth user's metadata: the navbar and menus read the name
+  // and photo from the signed-in user. Not fatal if it fails.
+  await supabaseAdmin.auth.admin
+    .updateUserById(auth.userId, {
+      user_metadata: {
+        ...(auth.user.user_metadata || {}),
+        first_name: firstName,
+        last_name: lastName,
+        username,
+        avatar_url: avatarUrl,
+      },
+    })
+    .catch(() => null);
+
   return NextResponse.json({
     ok: true,
     profile: toClient(data as Record<string, unknown>, auth.email),
