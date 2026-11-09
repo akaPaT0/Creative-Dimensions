@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { ArrowRight, Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
+import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
+import { getProductPath } from "../lib/product-url";
 import type { Product } from "../data/products";
 
 type StoredCartItem = {
@@ -43,10 +45,6 @@ function getProductImage(product: Product) {
   }
   if (product.image) return product.image;
   return "/products/placeholder.jpg";
-}
-
-function getProductHref(product: Product) {
-  return `/shop/${product.category}/${product.slug}`;
 }
 
 function formatMoney(value: number) {
@@ -130,6 +128,7 @@ function saveCartToStorage(items: StoredCartItem[]) {
 
 export default function CartPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const [cartItems, setCartItems] = useState<StoredCartItem[]>(() =>
     readCartFromStorage()
   );
@@ -141,6 +140,7 @@ export default function CartPage() {
       const data = (await res.json().catch(() => ({}))) as { products?: Product[] };
       if (!alive) return;
       if (res.ok && Array.isArray(data.products)) setProducts(data.products);
+      setProductsLoaded(true);
     }
     void loadProducts();
     return () => {
@@ -199,199 +199,217 @@ export default function CartPage() {
     setCartItems([]);
   }
 
+  // The cart lives in localStorage, which the server can't read: show the
+  // loading state until mounted so server and first client render match.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const loading = !mounted || (!productsLoaded && cartItems.length > 0);
+  const skeletonRows = mounted ? Math.min(3, Math.max(1, cartItems.length)) : 2;
+
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen text-white">
       <Background />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-semibold text-white">Your Cart</h1>
-              <p className="mt-2 text-white/70">
-                Review your selected items before checkout.
-              </p>
-            </div>
-            <div className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-3 text-sm text-white/90">
-              <ShoppingCart size={16} className="shrink-0" />
-              <span className="whitespace-nowrap font-medium">
-                {itemCount} {itemCount === 1 ? "item" : "items"}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {cartLines.length === 0 ? (
-          <section className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-10 text-center">
-            <h2 className="text-2xl font-semibold text-white">Your cart is empty</h2>
-            <p className="mt-2 text-white/70">
-              Add products from the shop to see them here.
+      <main className="relative z-10 mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-32 lg:pb-16">
+        <header className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Your cart</h1>
+            <p className="mt-1 text-sm text-white/55">
+              {loading
+                ? "Loading your items…"
+                : itemCount > 0
+                  ? `${itemCount} ${itemCount === 1 ? "item" : "items"}`
+                  : "Nothing here yet"}
             </p>
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          </div>
+          {!loading && cartLines.length > 0 && (
+            <button
+              type="button"
+              onClick={clearCart}
+              className="text-xs sm:text-sm text-white/45 hover:text-red-300 transition"
+            >
+              Clear cart
+            </button>
+          )}
+        </header>
+
+        {loading ? (
+          <div className="mt-6 space-y-3" aria-hidden="true">
+            {Array.from({ length: skeletonRows }, (_, i) => (
+              <div key={i} className="h-28 animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]" />
+            ))}
+          </div>
+        ) : cartLines.length === 0 ? (
+          <section className="mt-6 rounded-3xl border border-white/10 bg-[#141417]/90 px-6 py-14 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FF8B64]/12 text-[#FF8B64]">
+              <ShoppingCart size={24} aria-hidden="true" />
+            </span>
+            <h2 className="mt-4 text-xl sm:text-2xl font-bold">Your cart is empty</h2>
+            <p className="mt-1.5 text-sm text-white/55">Find something in the shop, or tell us what you want made.</p>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/shop"
-                className="w-full sm:w-auto rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
+                className="w-full sm:w-auto rounded-2xl bg-[#FF8B64] px-7 py-3 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
               >
-                Browse products
+                Browse the shop
               </Link>
-              <Link
-                href="/user"
-                className="w-full sm:w-auto rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-white/90 hover:bg-white/10 transition"
-              >
-                Go to account
-              </Link>
+              <TemphomeCustomRequestCta
+                buttonLabel="Get a Quote"
+                className="w-full sm:w-auto rounded-2xl border border-white/15 bg-white/[0.04] px-7 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
+              />
             </div>
           </section>
         ) : (
-          <section className="mt-5 grid gap-5 lg:grid-cols-12">
-            <div className="lg:col-span-8 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-xl font-semibold text-white">Items</h2>
-                <button
-                  type="button"
-                  onClick={clearCart}
-                  className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-100 hover:bg-red-500/20 transition"
-                >
-                  Clear cart
-                </button>
-              </div>
-
-              <div className="mt-4 space-y-3">
-                {cartLines.map((line) => (
-                  <article
+          <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+            <ul className="space-y-3">
+              {cartLines.map((line) => {
+                const swatch = line.customization?.slots?.[0]?.colorValue;
+                return (
+                  <li
                     key={line.key}
-                    className="rounded-xl border border-white/10 bg-black/20 p-3"
+                    className="flex gap-3 sm:gap-4 rounded-2xl border border-white/10 bg-[#161619]/90 p-3 sm:p-4"
                   >
-                    <div className="flex gap-3">
-                      <Link
-                        href={getProductHref(line.product)}
-                        className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5"
-                      >
-                        {(line.previewImageUrl || "").startsWith("data:") ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={line.previewImageUrl}
-                            alt={line.product.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <Image
-                            src={line.previewImageUrl || getProductImage(line.product)}
-                            alt={line.product.name}
-                            fill
-                            className="object-cover"
-                            sizes="80px"
-                          />
-                        )}
-                      </Link>
+                    <Link
+                      href={getProductPath(line.product)}
+                      className="relative h-24 w-24 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-xl border border-white/5 bg-black/40"
+                    >
+                      {(line.previewImageUrl || "").startsWith("data:") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={line.previewImageUrl} alt={line.product.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <Image
+                          src={line.previewImageUrl || getProductImage(line.product)}
+                          alt={line.product.name}
+                          fill
+                          className="object-cover"
+                          sizes="112px"
+                        />
+                      )}
+                    </Link>
 
-                      <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex items-start justify-between gap-2">
                         <Link
-                          href={getProductHref(line.product)}
-                          className="line-clamp-1 text-white font-medium hover:underline underline-offset-4"
+                          href={getProductPath(line.product)}
+                          className="line-clamp-2 text-sm sm:text-base font-semibold leading-snug hover:text-[#FF8B64] transition-colors"
                         >
                           {line.product.name}
                         </Link>
-                        <p className="mt-1 text-sm text-white/75">
-                          {formatMoney(line.product.priceUSD)} each
+                        <button
+                          type="button"
+                          aria-label={`Remove ${line.product.name}`}
+                          onClick={() => removeItem(line.key)}
+                          className="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/40 hover:bg-red-500/10 hover:text-red-300 transition"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+
+                      {line.customization?.slots?.length ? (
+                        <p className="mt-1 flex items-center gap-1.5 text-xs text-white/60">
+                          {swatch && (
+                            <span
+                              className="h-3 w-3 rounded-full border border-white/30"
+                              style={{ backgroundColor: swatch }}
+                              aria-hidden="true"
+                            />
+                          )}
+                          {line.customization.summary || "Custom colours selected"}
                         </p>
-                        {line.customization?.slots?.length ? (
-                          <p className="mt-1 text-xs text-[#FFB9A3]">
-                            {line.customization.summary || "Custom colors selected"}
-                          </p>
-                        ) : null}
+                      ) : null}
 
-                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                          <div className="inline-flex items-center rounded-lg border border-white/15 bg-white/5">
-                            <button
-                              type="button"
-                              aria-label="Decrease quantity"
-                              onClick={() =>
-                                setQuantity(line.key, line.quantity - 1)
-                              }
-                              className="inline-flex h-8 w-8 items-center justify-center text-white/85 hover:bg-white/10 transition"
-                            >
-                              <Minus size={14} />
-                            </button>
-                            <span className="inline-flex min-w-10 items-center justify-center px-2 text-sm text-white">
-                              {line.quantity}
-                            </span>
-                            <button
-                              type="button"
-                              aria-label="Increase quantity"
-                              onClick={() =>
-                                setQuantity(line.key, line.quantity + 1)
-                              }
-                              className="inline-flex h-8 w-8 items-center justify-center text-white/85 hover:bg-white/10 transition"
-                            >
-                              <Plus size={14} />
-                            </button>
-                          </div>
+                      <p className="mt-1 text-xs text-white/45">{formatMoney(line.product.priceUSD)} each</p>
 
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-white/90">
-                              {formatMoney(line.product.priceUSD * line.quantity)}
-                            </span>
-                            <button
-                              type="button"
-                              aria-label={`Remove ${line.product.name}`}
-                              onClick={() => removeItem(line.key)}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20 transition"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
+                      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                        <div className="inline-flex items-center rounded-xl border border-white/15 bg-white/[0.04]">
+                          <button
+                            type="button"
+                            aria-label="Decrease quantity"
+                            onClick={() =>
+                              line.quantity > 1 ? setQuantity(line.key, line.quantity - 1) : removeItem(line.key)
+                            }
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-l-xl text-white/80 hover:bg-white/10 transition"
+                          >
+                            {line.quantity > 1 ? <Minus size={14} /> : <Trash2 size={13} />}
+                          </button>
+                          <span className="min-w-8 text-center text-sm font-semibold tabular-nums">{line.quantity}</span>
+                          <button
+                            type="button"
+                            aria-label="Increase quantity"
+                            onClick={() => setQuantity(line.key, line.quantity + 1)}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-r-xl text-white/80 hover:bg-white/10 transition"
+                          >
+                            <Plus size={14} />
+                          </button>
                         </div>
+                        <span className="text-base font-bold text-[#FF8B64] tabular-nums">
+                          {formatMoney(line.product.priceUSD * line.quantity)}
+                        </span>
                       </div>
                     </div>
-                  </article>
-                ))}
-              </div>
-            </div>
+                  </li>
+                );
+              })}
+            </ul>
 
-            <aside className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
-              <h2 className="text-xl font-semibold text-white">Order Summary</h2>
-
-              <div className="mt-4 space-y-2 text-sm">
-                <div className="flex items-center justify-between text-white/75">
-                  <span>Subtotal</span>
-                  <span>{formatMoney(subtotal)}</span>
+            <aside className="rounded-3xl border border-white/10 bg-[#141417]/90 p-5 sm:p-6 lg:sticky lg:top-28">
+              <h2 className="text-lg font-bold">Order summary</h2>
+              <dl className="mt-4 space-y-2.5 text-sm">
+                <div className="flex justify-between text-white/65">
+                  <dt>Subtotal</dt>
+                  <dd className="tabular-nums">{formatMoney(subtotal)}</dd>
                 </div>
-                <div className="flex items-center justify-between text-white/75">
-                  <span>Shipping (Lebanon)</span>
-                  <span>{formatMoney(estimatedShipping)}</span>
+                <div className="flex justify-between text-white/65">
+                  <dt>Delivery (Lebanon)</dt>
+                  <dd className="tabular-nums">{formatMoney(estimatedShipping)}</dd>
                 </div>
-                <div className="my-2 h-px bg-white/10" />
-                <div className="flex items-center justify-between text-white">
-                  <span className="font-medium">Total</span>
-                  <span className="text-lg font-semibold">{formatMoney(total)}</span>
+                <div className="flex justify-between border-t border-white/10 pt-3 text-white">
+                  <dt className="font-semibold">Total</dt>
+                  <dd className="text-xl font-extrabold tabular-nums">{formatMoney(total)}</dd>
                 </div>
-              </div>
+              </dl>
+              <p className="mt-2 text-xs text-white/40">Promo codes and final delivery are applied at checkout.</p>
 
               <Link
                 href="/checkout"
-                className="mt-5 block w-full rounded-xl bg-[#FF8B64] px-5 py-2.5 text-center font-medium text-black hover:opacity-90 transition"
+                className="mt-5 hidden lg:flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FF8B64] px-5 py-3.5 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
               >
-                Proceed to checkout
+                Checkout <ArrowRight size={16} aria-hidden="true" />
               </Link>
-
               <Link
                 href="/shop"
-                className="mt-2 block w-full rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-center text-white/90 hover:bg-white/10 transition"
+                className="mt-3 block text-center text-sm text-white/55 hover:text-white transition"
               >
                 Continue shopping
               </Link>
-
-              <p className="mt-3 text-xs text-white/55">
-                Taxes and final shipping are calculated during checkout.
-              </p>
             </aside>
           </section>
         )}
 
         <Footer />
       </main>
+
+      {/* Mobile checkout bar */}
+      {!loading && cartLines.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0D0D0D]/95 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur-md lg:hidden">
+          <div className="mx-auto flex max-w-[1200px] items-center gap-4">
+            <div className="min-w-0">
+              <div className="text-[11px] uppercase tracking-wider text-white/45">Total</div>
+              <div className="text-lg font-extrabold tabular-nums">{formatMoney(total)}</div>
+            </div>
+            <Link
+              href="/checkout"
+              className="ml-auto flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#FF8B64] px-5 py-3.5 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
+            >
+              Checkout <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

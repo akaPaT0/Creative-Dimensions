@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Printer } from "lucide-react";
+import { ChevronRight, Lock, Package, Printer } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
 import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 import AuthModal from "../components/AuthModal";
+import { OrderStatusBadge } from "../components/OrderStatus";
 import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 type OrderRecord = {
@@ -15,50 +16,25 @@ type OrderRecord = {
   orderNumber?: string;
   status: string;
   createdAt: string;
-  subtotalUSD: number;
-  shippingUSD: number;
   totalUSD: number;
   items: Array<{
     productId: string;
     name: string;
     quantity: number;
-    unitPriceUSD: number;
     lineTotalUSD: number;
     customizationSummary?: string;
   }>;
-  address?: {
-    fullName?: string;
-    line1?: string;
-    city?: string;
-    state?: string;
-  };
-  invoice?: {
-    invoiceNumber?: string;
-    issuedAt?: string;
-    paymentStatus?: string;
-  };
-  trackingHistory?: Array<{
-    status?: string;
-    at?: string;
-    note?: string;
-  }>;
+  invoice?: { invoiceNumber?: string };
 };
 
 function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  }).format(value);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
 }
 
 function formatDate(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(d);
+  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(d);
 }
 
 export default function OrdersPage() {
@@ -84,141 +60,96 @@ export default function OrdersPage() {
     };
   }, [isLoaded, isSignedIn]);
 
+  const showSkeleton = !isLoaded || (isSignedIn && loading);
+
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen text-white">
       <Background />
       <Navbar />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
 
-      <main className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
-        {!isSignedIn ? (
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-10 text-center">
-            <h1 className="text-3xl font-semibold text-white">My Orders</h1>
-            <p className="mt-2 text-white/70">Sign in to view your orders.</p>
-            <div className="mt-6 flex justify-center">
-              <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
-              >
-                Sign in
-              </button>
-            </div>
+      <main className="relative z-10 mx-auto w-full max-w-[900px] px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-16">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">My orders</h1>
+        <p className="mt-1 text-sm text-white/55">Track your orders and get your invoices.</p>
+
+        {showSkeleton ? (
+          <div className="mt-6 space-y-3" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-36 animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]" />
+            ))}
+          </div>
+        ) : !isSignedIn ? (
+          <section className="mt-6 rounded-3xl border border-white/10 bg-[#141417]/90 p-6 text-center sm:p-10">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FF8B64]/12 text-[#FF8B64]">
+              <Lock size={22} aria-hidden="true" />
+            </span>
+            <h2 className="mt-4 text-xl font-bold">Sign in to see your orders</h2>
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="mt-5 rounded-2xl bg-[#FF8B64] px-7 py-3 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
+            >
+              Sign in
+            </button>
+          </section>
+        ) : orders.length === 0 ? (
+          <section className="mt-6 rounded-3xl border border-white/10 bg-[#141417]/90 p-6 text-center sm:p-10">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FF8B64]/12 text-[#FF8B64]">
+              <Package size={22} aria-hidden="true" />
+            </span>
+            <h2 className="mt-4 text-xl font-bold">No orders yet</h2>
+            <p className="mt-1 text-sm text-white/55">When you place an order, you&rsquo;ll be able to track it here.</p>
+            <Link
+              href="/shop"
+              className="mt-5 inline-flex rounded-2xl bg-[#FF8B64] px-7 py-3 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
+            >
+              Browse the shop
+            </Link>
           </section>
         ) : (
-
-        <>
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-            <h1 className="text-3xl font-semibold text-white">My Orders</h1>
-            <p className="mt-2 text-white/70">Track your recent checkout activity.</p>
-          </section>
-
-          {loading ? (
-            <section className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-6 text-white/70">
-              Loading orders...
-            </section>
-          ) : orders.length === 0 ? (
-            <section className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-              <p className="text-white/70">No orders yet.</p>
-              <Link
-                href="/shop"
-                className="mt-4 inline-flex rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 transition"
-              >
-                Start shopping
-              </Link>
-            </section>
-          ) : (
-            <section className="mt-5 space-y-3">
-              {orders.map((order) => (
-                <article
-                  key={order.id}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-white font-semibold">
-                        {order.orderNumber || order.id}
-                      </p>
-                      <p className="text-xs text-white/60">{formatDate(order.createdAt)}</p>
-                    </div>
-                    <div className="rounded-full border border-white/15 px-2 py-1 text-xs text-white/75">
-                      {order.status}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 text-sm text-white/80 space-y-1">
-                    {order.items.map((item) => (
-                      <div key={`${order.id}-${item.productId}`} className="flex justify-between gap-2">
-                        <span className="truncate">
-                          {item.name} x{item.quantity}
-                          {item.customizationSummary ? (
-                            <span className="block text-[11px] text-[#FFB9A3]">
-                              {item.customizationSummary}
-                            </span>
-                          ) : null}
-                        </span>
-                        <span>{formatMoney(item.lineTotalUSD)}</span>
+          <ul className="mt-6 space-y-3">
+            {orders.map((order) => {
+              const count = order.items.reduce((sum, item) => sum + item.quantity, 0);
+              return (
+                <li key={order.id} className="rounded-2xl border border-white/10 bg-[#161619]/90 transition hover:border-white/20">
+                  <Link href={`/orders/${encodeURIComponent(order.id)}`} className="block p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-bold">{order.orderNumber || order.id}</p>
+                        <p className="mt-0.5 text-xs text-white/50">
+                          {formatDate(order.createdAt)} · {count} {count === 1 ? "item" : "items"}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-3 h-px bg-white/10" />
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-white/80">
-                    <div>
-                      <span>Total: </span>
-                      <span className="font-semibold text-white">{formatMoney(order.totalUSD)}</span>
+                      <OrderStatusBadge status={order.status} />
                     </div>
-                    <div className="inline-flex items-center gap-2 text-xs text-white/65">
-                      <span>Invoice: {order.invoice?.invoiceNumber || "Pending"}</span>
-                      <button
-                        type="button"
-                        aria-label="Print invoice"
-                        onClick={() =>
-                          openInvoiceWindow(`/invoice/${encodeURIComponent(order.id)}`)
-                        }
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10 transition"
-                      >
-                        <Printer size={12} />
-                      </button>
-                    </div>
-                  </div>
 
-                  {Array.isArray(order.trackingHistory) && order.trackingHistory.length > 0 && (
-                    <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
-                      <div className="text-xs text-white/60">Tracking</div>
-                      <div className="mt-2 text-xs text-white/75 space-y-1">
-                        {[...order.trackingHistory]
-                          .slice(-3)
-                          .reverse()
-                          .map((event, index) => (
-                            <div key={`${order.id}-track-${index}`} className="flex items-center justify-between gap-2">
-                              <span className="capitalize">{event.status || "update"}</span>
-                              <span>{event.at ? formatDate(event.at) : "N/A"}</span>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
+                    <p className="mt-3 line-clamp-2 text-sm text-white/70">
+                      {order.items
+                        .map((item) => `${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ""}`)
+                        .join(", ")}
+                    </p>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Link
-                      href={`/orders/${order.id}`}
-                      className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <span className="text-lg font-extrabold text-[#FF8B64] tabular-nums">{formatMoney(order.totalUSD)}</span>
+                      <span className="flex items-center gap-1 text-sm font-semibold text-white/70">
+                        Track order <ChevronRight size={16} aria-hidden="true" />
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="flex items-center justify-between gap-3 border-t border-white/[0.07] px-4 py-2.5 sm:px-5">
+                    <span className="text-xs text-white/45">Invoice {order.invoice?.invoiceNumber || "pending"}</span>
+                    <button
+                      type="button"
+                      onClick={() => openInvoiceWindow(`/invoice/${encodeURIComponent(order.id)}`)}
+                      className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-white/70 hover:bg-white/[0.06] hover:text-white transition"
                     >
-                      View invoice
-                    </Link>
-                    <Link
-                      href={`/orders/${order.id}`}
-                      className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
-                    >
-                      Track order
-                    </Link>
+                      <Printer size={13} aria-hidden="true" /> Print invoice
+                    </button>
                   </div>
-                </article>
-              ))}
-            </section>
-          )}
-        </>
+                </li>
+              );
+            })}
+          </ul>
         )}
 
         <Footer />

@@ -1,94 +1,59 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import CustomRequestModal from "../../components/CustomRequestModal";
+import { X } from "lucide-react";
+import ContactOptions from "../../components/ContactOptions";
 
 export default function ContactModalRoute() {
   const router = useRouter();
 
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      // Let the custom request popup handle Escape when it's open on top.
+      if (e.key === "Escape" && !document.querySelector('[role="dialog"][aria-label="Custom request"]')) {
+        router.back();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [router]);
+
   return (
-    <div className="fixed inset-0 z-[999]">
-      {/* Backdrop */}
+    <div
+      className="fixed inset-0 z-[999] flex items-end justify-center sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Contact"
+    >
       <button
         aria-label="Close contact"
         onClick={() => router.back()}
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
       />
 
-      {/* Modal */}
-      <div className="relative mx-auto mt-24 w-[92%] max-w-xl">
-        <div className="rounded-3xl border border-white/10 bg-[#0D0D0D]/70 backdrop-blur-xl backdrop-saturate-150 shadow-[0_0_60px_rgba(0,0,0,0.55)] p-6 sm:p-7">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-white text-2xl sm:text-3xl font-semibold">
-                Contact
-              </h1>
-              <p className="text-white/70 mt-1">
-                Message us anytime, we reply ASAP.
-              </p>
-            </div>
-
-            <button
-              onClick={() => router.back()}
-              className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/80 hover:bg-white/10"
-            >
-              Close
-            </button>
+      <div className="relative max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-white/10 bg-[#111113]/95 p-5 text-white shadow-2xl backdrop-blur-xl sm:max-w-lg sm:rounded-3xl sm:p-6">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Get in touch</h1>
+            <p className="mt-0.5 text-sm text-white/55">Questions, custom pieces or business orders.</p>
           </div>
-
-          <div className="mt-6 space-y-3">
-            {/* Custom request */}
-            <CustomRequestModal
-              productName="Custom Order"
-              productUrl="https://creativedimensionslb.com/contact"
-              buttonLabel="Custom Request"
-              className="block w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left text-white hover:bg-white/10 transition"
-            />
-
-            {/* WhatsApp */}
-            <a
-              className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"
-              href="https://wa.me/96170304007?text=Hi%20Creative%20Dimensions%2C%20I%20want%20to%20ask%20about..."
-              target="_blank"
-              rel="noreferrer"
-            >
-              WhatsApp: <span className="text-white/80">+961 70 304 007</span>
-              <div className="mt-1 text-white/60 text-sm">
-                Tap to chat with a prefilled message.
-              </div>
-            </a>
-
-            {/* Call */}
-            <a
-              className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"
-              href="tel:+96170304007"
-            >
-              Call: <span className="text-white/80">+961 70 304 007</span>
-              <div className="mt-1 text-white/60 text-sm">
-                Direct phone call from your device.
-              </div>
-            </a>
-
-            {/* Instagram */}
-            <a
-              className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"
-              href="https://instagram.com/creativedimensions.lb"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Instagram:{" "}
-              <span className="text-white/80">@creativedimensions.lb</span>
-            </a>
-
-            {/* Shop */}
-            <a
-              className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-white hover:bg-white/10 transition"
-              href="/shop"
-            >
-              Browse shop
-            </a>
-          </div>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Close"
+            className="shrink-0 rounded-xl border border-white/12 bg-white/5 p-2 text-white/70 hover:bg-white/10 hover:text-white transition"
+          >
+            <X size={18} />
+          </button>
         </div>
+
+        <ContactOptions />
       </div>
     </div>
   );

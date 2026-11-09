@@ -2,7 +2,20 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Menu, ShoppingCart, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import {
+  ChevronRight,
+  Instagram,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageCircle,
+  Package,
+  ShoppingCart,
+  Sparkles,
+  UserRound,
+  X,
+} from "lucide-react";
 import { Ubuntu } from "next/font/google";
 
 import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
@@ -47,6 +60,29 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [authOpen, setAuthOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close the mobile menu on navigation.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
+
+  // Lock page scroll and allow Escape while the mobile menu is open.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   useEffect(() => {
     let last = false;
@@ -138,10 +174,20 @@ export default function Navbar() {
               )}
             </Link>
 
-            <AuthButtons
-              cartCount={cartCount}
-              onSignIn={() => setAuthOpen(true)}
-            />
+            <button
+              type="button"
+              onClick={() =>
+                openCustomRequest({
+                  productName: "Custom Order",
+                  productUrl: "https://creativedimensionslb.com",
+                })
+              }
+              className="rounded-xl bg-[#FF8B64] px-4 py-2 font-semibold text-[#0D0D0D] hover:bg-[#ffa282] transition"
+            >
+              Get a Quote
+            </button>
+
+            <AuthButtons onSignIn={() => setAuthOpen(true)} />
           </div>
         </div>
       </nav>
@@ -186,6 +232,7 @@ export default function Navbar() {
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
               aria-controls="mobile-menu"
+              aria-label={open ? "Close menu" : "Open menu"}
               suppressHydrationWarning
               className="text-white p-2 rounded-lg border border-white/10 hover:border-white/20 transition shrink-0"
             >
@@ -194,15 +241,12 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu dropdown */}
-        <div id="mobile-menu" className={open ? "block" : "hidden"}>
-          <div className="px-4 pt-3 pb-4 border-t border-white/10">
-            <MobileMenuContent
-              cartCount={cartCount}
-              onClose={() => setOpen(false)}
-              onSignIn={() => setAuthOpen(true)}
-            />
-          </div>
+        {/* Mobile menu: full-height sheet under the header */}
+        <div
+          id="mobile-menu"
+          className={`${open ? "block" : "hidden"} h-[calc(100dvh-64px)] overflow-y-auto overscroll-contain border-t border-white/10 bg-[#0D0D0D]`}
+        >
+          <MobileMenuContent onClose={() => setOpen(false)} onSignIn={() => setAuthOpen(true)} />
         </div>
       </nav>
 
@@ -211,12 +255,18 @@ export default function Navbar() {
   );
 }
 
+const MENU_CATEGORIES = [
+  { label: "Keychains", href: "/shop/keychains" },
+  { label: "Accessories", href: "/shop/accessories" },
+  { label: "Desk Add-Ons", href: "/shop/desk-add-ons" },
+  { label: "Fanboys", href: "/shop/fanboys" },
+  { label: "New Arrivals", href: "/shop/new-arrivals" },
+];
+
 function MobileMenuContent({
-  cartCount,
   onClose,
   onSignIn,
 }: {
-  cartCount: number;
   onClose?: () => void;
   onSignIn: () => void;
 }) {
@@ -227,173 +277,159 @@ function MobileMenuContent({
     (typeof user?.user_metadata?.name === "string" && user.user_metadata.name) ||
     user?.email?.split("@")[0] ||
     "Account";
+  const avatar = typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : "";
 
   const isAdmin =
     user?.email?.trim().toLowerCase() ===
     process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
 
-  // Slightly thinner than full width, centered
-  const groupWrapClass = "mx-auto w-full max-w-[320px]";
-
-  // Unified "menu pill" style for ALL items (My account -> Contact)
-  const itemClass =
-    "w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 hover:bg-white/10 hover:border-white/25 transition text-center";
-
-  // More visible divider (still subtle)
-  const dividerClass = "my-3 h-px w-full bg-white/20";
+  const row =
+    "flex items-center justify-between gap-3 rounded-xl px-3 py-3 text-[15px] font-medium text-white/90 hover:bg-white/[0.06] transition";
+  const sectionLabel = "px-3 text-[11px] font-semibold uppercase tracking-wider text-white/35";
 
   return (
-    <div className={groupWrapClass}>
-      {/* Avatar + name row */}
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full border border-white/15 bg-white/5 overflow-hidden flex items-center justify-center">
-          {isLoaded && typeof user?.user_metadata?.avatar_url === "string" ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.user_metadata.avatar_url}
-              alt="Account"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="h-full w-full rounded-full bg-white/10" />
-          )}
+    <div className="mx-auto flex min-h-full w-full max-w-md flex-col gap-6 px-4 pb-8 pt-4">
+      {/* Shop */}
+      <section>
+        <Link href="/shop" onClick={onClose} className={`${row} text-lg font-bold text-white`}>
+          Shop all
+          <ChevronRight size={18} className="text-white/40" aria-hidden="true" />
+        </Link>
+        <div className="mt-2 flex flex-wrap gap-2 px-3">
+          {MENU_CATEGORIES.map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              onClick={onClose}
+              className="rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-sm text-white/80 hover:border-white/25 hover:text-white transition"
+            >
+              {c.label}
+            </Link>
+          ))}
         </div>
+      </section>
 
-        <div className="flex flex-col">
-          <span className="text-white text-sm font-medium leading-tight">
-            {isSignedIn ? name : "Guest"}
-          </span>
-          <span className="text-white/60 text-xs leading-tight">
-            {isSignedIn ? "Signed in" : "Sign in to access your account"}
-          </span>
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={() => {
+          onClose?.();
+          openCustomRequest({
+            productName: "Custom Order",
+            productUrl: "https://creativedimensionslb.com",
+          });
+        }}
+        className="w-full rounded-2xl bg-[#FF8B64] px-5 py-3.5 text-center text-base font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition active:scale-[0.99]"
+      >
+        Get a Quote
+      </button>
 
-      {/* Everything same gap + same shape */}
-      <div className="mt-3 flex flex-col gap-2">
-        {!isSignedIn && (
+      <section className="flex flex-col">
+        <Link href="/about" onClick={onClose} className={row}>
+          About
+          <ChevronRight size={16} className="text-white/30" aria-hidden="true" />
+        </Link>
+        <Link href="/contact" onClick={onClose} className={row}>
+          Contact
+          <ChevronRight size={16} className="text-white/30" aria-hidden="true" />
+        </Link>
+      </section>
+
+      {/* Account */}
+      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-2">
+        <div className={`${sectionLabel} pt-2 pb-1`}>Account</div>
+        {isSignedIn ? (
           <>
+            <Link href="/user" onClick={onClose} className={`${row} justify-start`}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FF8B64]/15 text-sm font-bold text-[#FF8B64]">
+                {isLoaded && avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  name.charAt(0).toUpperCase()
+                )}
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate text-sm font-semibold text-white">{name}</span>
+                <span className="text-xs font-normal text-white/50">My account</span>
+              </span>
+            </Link>
+            <Link href="/orders" onClick={onClose} className={`${row} justify-start`}>
+              <Package size={18} className="text-white/50" aria-hidden="true" />
+              Track orders
+            </Link>
+            {isAdmin && (
+              <Link href="/admin" onClick={onClose} className={`${row} justify-start`}>
+                <LayoutDashboard size={18} className="text-white/50" aria-hidden="true" />
+                Admin
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                onClose?.();
+                void signOut();
+              }}
+              className={`${row} w-full justify-start text-white/60`}
+            >
+              <LogOut size={18} className="text-white/40" aria-hidden="true" />
+              Sign out
+            </button>
+          </>
+        ) : (
+          <div className="p-2">
+            <p className="text-sm text-white/55">Sign in to track orders and save favourites.</p>
             <button
               type="button"
               onClick={() => {
                 onClose?.();
                 onSignIn();
               }}
-              className={itemClass}
+              className="mt-3 w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
             >
-              Sign in
+              Sign in or create account
             </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                onClose?.();
-                openCustomRequest({
-                  productName: "Custom Order",
-                  productUrl: "https://creativedimensionslb.com",
-                });
-              }}
-              className={itemClass}
-            >
-              Request custom
-            </button>
-
-            <div className={dividerClass} />
-
-            <Link href="/about" onClick={onClose} className={itemClass}>
-              About
-            </Link>
-            <Link href="/shop" onClick={onClose} className={itemClass}>
-              Shop
-            </Link>
-            <Link href="/contact" onClick={onClose} className={itemClass}>
-              Contact
-            </Link>
-          </>
+          </div>
         )}
+      </section>
 
-        {isSignedIn && (
-            <>
-              <Link href="/user" onClick={onClose} className={itemClass}>
-                My account
-              </Link>
-              <Link
-                href="/cart"
-                onClick={onClose}
-                className={`${itemClass} relative`}
-              >
-                <span className="inline-block w-full text-center">Cart</span>
-                {cartCount > 0 && (
-                  <span className="absolute right-3 top-1/2 inline-flex min-w-[20px] -translate-y-1/2 items-center justify-center rounded-full bg-[#FF8B64] px-1.5 text-xs font-semibold text-black">
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </span>
-                )}
-              </Link>
-              <Link href="/orders" onClick={onClose} className={itemClass}>
-                Track orders
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => {
-                  onClose?.();
-                  openCustomRequest({
-                    productName: "Custom Order",
-                    productUrl: "https://creativedimensionslb.com",
-                  });
-                }}
-                className={itemClass}
-              >
-                Request custom
-              </button>
-
-              {isAdmin && (
-                <Link href="/admin" onClick={onClose} className={itemClass}>
-                  Admin
-                </Link>
-              )}
-
-              <div className={dividerClass} />
-
-              <Link href="/about" onClick={onClose} className={itemClass}>
-                About
-              </Link>
-              <Link href="/shop" onClick={onClose} className={itemClass}>
-                Shop
-              </Link>
-              <Link href="/contact" onClick={onClose} className={itemClass}>
-                Contact
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => {
-                  onClose?.();
-                  void signOut();
-                }}
-                className={itemClass}
-              >
-                Sign out
-              </button>
-            </>
-        )}
+      {/* Socials */}
+      <div className="mt-auto flex items-center justify-center gap-3 pt-2">
+        <a
+          href="https://instagram.com/creativedimensions.lb"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/80 hover:text-white transition"
+        >
+          <Instagram size={18} />
+        </a>
+        <a
+          href="https://wa.me/96170304007"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="WhatsApp"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/80 hover:text-white transition"
+        >
+          <MessageCircle size={18} />
+        </a>
       </div>
     </div>
   );
 }
 
-function AuthButtons({
-  cartCount,
-  onSignIn,
-}: {
-  cartCount: number;
-  onSignIn: () => void;
-}) {
+function AuthButtons({ onSignIn }: { onSignIn: () => void }) {
   const { signOut, user, isLoaded, isSignedIn } = useSupabaseAuth();
 
   const isAdmin =
     user?.email?.trim().toLowerCase() ===
     process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
+
+  const name =
+    (typeof user?.user_metadata?.first_name === "string" && user.user_metadata.first_name) ||
+    (typeof user?.user_metadata?.name === "string" && user.user_metadata.name) ||
+    user?.email?.split("@")[0] ||
+    "Account";
+  const avatar = isLoaded && typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : "";
 
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -421,6 +457,15 @@ function AuthButtons({
 
   const close = () => setMenuOpen(false);
 
+  const initial = (
+    <span className="flex h-full w-full items-center justify-center bg-[#FF8B64]/15 text-sm font-bold text-[#FF8B64]">
+      {name.charAt(0).toUpperCase()}
+    </span>
+  );
+
+  const item =
+    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-white/85 hover:bg-white/[0.06] hover:text-white transition";
+
   return (
     <div className="flex items-center gap-3">
       {!isSignedIn && (
@@ -439,53 +484,56 @@ function AuthButtons({
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
+            aria-haspopup="menu"
             aria-label="Account menu"
-            className="h-10 w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition overflow-hidden flex items-center justify-center"
+            className={`h-10 w-10 overflow-hidden rounded-full border transition ${
+              menuOpen ? "border-[#FF8B64]" : "border-white/15 hover:border-white/30"
+            }`}
           >
-            {isLoaded && typeof user?.user_metadata?.avatar_url === "string" ? (
+            {avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.user_metadata.avatar_url}
-                alt="Account"
-                className="h-full w-full object-cover"
-              />
+              <img src={avatar} alt="" className="h-full w-full object-cover" />
             ) : (
-              <span className="h-full w-full rounded-full bg-white/10" />
+              initial
             )}
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
+            <div
+              role="menu"
+              className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#111113]/95 p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+            >
               <Link
                 href="/user"
                 onClick={close}
-                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                role="menuitem"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-white/[0.06] transition"
               >
-                My account
-              </Link>
-              <Link
-                href="/cart"
-                onClick={close}
-                className="relative block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-              >
-                <span>Cart</span>
-                {cartCount > 0 && (
-                  <span className="absolute right-3 top-1/2 inline-flex min-w-[20px] -translate-y-1/2 items-center justify-center rounded-full bg-[#FF8B64] px-1.5 text-xs font-semibold text-black">
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                href="/orders"
-                onClick={close}
-                className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-              >
-                Track orders
+                <span className="h-9 w-9 shrink-0 overflow-hidden rounded-full">
+                  {avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    initial
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-white">{name}</span>
+                  <span className="block truncate text-xs text-white/45">{user?.email}</span>
+                </span>
               </Link>
 
+              <div className="my-1 h-px bg-white/[0.08]" />
+
+              <Link href="/user" onClick={close} role="menuitem" className={item}>
+                <UserRound size={16} className="text-white/45" aria-hidden="true" /> My account
+              </Link>
+              <Link href="/orders" onClick={close} role="menuitem" className={item}>
+                <Package size={16} className="text-white/45" aria-hidden="true" /> Track orders
+              </Link>
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => {
                   close();
                   openCustomRequest({
@@ -493,32 +541,28 @@ function AuthButtons({
                     productUrl: "https://creativedimensionslb.com",
                   });
                 }}
-                className="block w-full text-left px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                className={item}
               >
-                Request custom
+                <Sparkles size={16} className="text-[#FF8B64]" aria-hidden="true" /> Get a Quote
               </button>
-
               {isAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={close}
-                  className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
-                >
-                  Admin
+                <Link href="/admin" onClick={close} role="menuitem" className={item}>
+                  <LayoutDashboard size={16} className="text-white/45" aria-hidden="true" /> Admin
                 </Link>
               )}
 
-              <div className="h-px bg-white/10" />
+              <div className="my-1 h-px bg-white/[0.08]" />
 
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => {
                   close();
                   void signOut();
                 }}
-                className="w-full text-left px-4 py-3 text-sm text-white/80 hover:bg-white/5 transition"
+                className={`${item} text-white/60`}
               >
-                Sign out
+                <LogOut size={16} className="text-white/40" aria-hidden="true" /> Sign out
               </button>
             </div>
           )}
