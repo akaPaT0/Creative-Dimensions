@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SITE_URL } from "@/app/lib/site";
+import { DEFAULT_OG_IMAGE, SITE_URL } from "@/app/lib/site";
 import { SupabaseAuthProvider } from "@/app/lib/supabase/auth-client";
 import BackToTop from "@/app/components/BackToTop";
 
@@ -32,12 +32,14 @@ export const metadata: Metadata = {
     description:
       "Creative Dimensions Lebanon: custom 3D printed products, keychains, fan items, and custom requests.",
     url: SITE_URL,
+    images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "Creative Dimensions",
     description:
       "Creative Dimensions Lebanon: custom 3D printed products, keychains, fan items, and custom requests.",
+    images: [DEFAULT_OG_IMAGE.url],
   },
   icons: {
     icon: "/icon.png",

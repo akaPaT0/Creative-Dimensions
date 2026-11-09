@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/app/lib/site";
+import { DEFAULT_OG_IMAGE, SITE_URL } from "@/app/lib/site";
 
 export const metadata: Metadata = {
   title: "3D Printed Products in Lebanon",
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
       "Made-to-order 3D printed products, gifts, accessories, collectibles, and custom prints in Lebanon.",
     url: `${SITE_URL}/shop`,
     type: "website",
+    images: [DEFAULT_OG_IMAGE],
   },
 };
 
