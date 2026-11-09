@@ -1,8 +1,27 @@
 import { redirect } from "next/navigation";
-import Background from "../components/Background";
 import Link from "next/link";
-import AdminTabs from "./AdminTabs";
+import AdminShell, { type AdminSection } from "./AdminShell";
+import AdminProductForm from "./AdminProductForm";
+import AdminProductsManager from "./AdminProductsManager";
+import AdminInsights from "./AdminInsights";
+import AdminPromoCodes from "./AdminPromoCodes";
+import AdminOrders from "./AdminOrders";
 import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
+
+type TabKey = Exclude<AdminSection, "filaments">;
+
+function asTabKey(input: string | undefined): TabKey {
+  if (
+    input === "create" ||
+    input === "catalog" ||
+    input === "insights" ||
+    input === "promocodes" ||
+    input === "orders"
+  ) {
+    return input;
+  }
+  return "orders";
+}
 
 export default async function AdminPage({
   searchParams,
@@ -17,58 +36,44 @@ export default async function AdminPage({
 
   if (!adminEmail || userEmail !== adminEmail) {
     return (
-      <div className="relative min-h-screen">
-        <Background />
-        <main className="relative z-20 min-h-screen flex items-center justify-center px-6">
-          <div className="w-full max-w-xl text-center">
-            <h1 className="text-white text-2xl font-semibold">403</h1>
-            <p className="text-white/70 mt-2">Not authorized.</p>
-          </div>
-        </main>
-      </div>
+      <main className="flex min-h-screen items-center justify-center bg-[#0D0D0D] px-6 text-center text-white">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">403</p>
+          <h1 className="mt-2 text-2xl font-bold">This area is for the shop admin</h1>
+          <p className="mt-2 text-sm text-white/55">You&rsquo;re signed in with an account that doesn&rsquo;t have access.</p>
+          <Link
+            href="/"
+            className="mt-6 inline-flex rounded-xl bg-[#FF8B64] px-5 py-2.5 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
+          >
+            Back to the store
+          </Link>
+        </div>
+      </main>
     );
   }
 
+  const tab = asTabKey(sp?.tab);
+
   return (
-    <div className="relative min-h-screen">
-      <Background />
-
-      <main className="relative z-20 min-h-screen px-4 sm:px-6 lg:px-8 py-10">
-        <div className="mx-auto w-full max-w-[1400px]">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-7">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-white/45">
-                  Control Center
-                </p>
-                <h1 className="mt-2 text-white text-3xl sm:text-4xl font-semibold">
-                  Admin Dashboard
-                </h1>
-                <p className="text-white/70 mt-2">
-                  Signed in as <span className="text-white/90">{userEmail}</span>
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href="/admin/filaments"
-                  className="rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition"
-                >
-                  Filaments DB
-                </Link>
-                <Link
-                  href="/shop"
-                  className="rounded-xl bg-[#FF8B64] px-4 py-2 text-sm font-medium text-black hover:opacity-90 transition"
-                >
-                  View Store
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <AdminTabs initialTab={sp?.tab} />
-        </div>
-      </main>
-    </div>
+    <AdminShell
+      active={tab}
+      email={userEmail}
+      actions={
+        tab === "catalog" ? (
+          <Link
+            href="/admin?tab=create"
+            className="inline-flex items-center justify-center rounded-xl bg-[#FF8B64] px-4 py-2.5 text-sm font-bold text-[#0D0D0D] hover:bg-[#ffa282] transition"
+          >
+            Add product
+          </Link>
+        ) : undefined
+      }
+    >
+      {tab === "orders" && <AdminOrders />}
+      {tab === "catalog" && <AdminProductsManager />}
+      {tab === "create" && <AdminProductForm />}
+      {tab === "insights" && <AdminInsights />}
+      {tab === "promocodes" && <AdminPromoCodes />}
+    </AdminShell>
   );
 }

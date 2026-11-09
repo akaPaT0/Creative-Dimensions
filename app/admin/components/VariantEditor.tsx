@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { suggestSwatch, swatchBackground } from "@/app/lib/product-variants";
+import { ui } from "../ui";
 
 export type VariantDraft = {
   label: string;
@@ -49,14 +50,14 @@ export default function VariantEditor({
   ).size;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+    <div className={`${ui.inset} p-4 space-y-3`}>
       <div className="flex items-baseline justify-between gap-3">
         <div className="text-white/80 text-sm font-medium">Colour variants</div>
-        <div className="text-white/40 text-xs">
+        <div className={ui.note}>
           {colourCount ? `${colourCount} colour${colourCount === 1 ? "" : "s"}` : "None set"}
         </div>
       </div>
-      <p className="text-white/40 text-xs">
+      <p className={ui.note}>
         Name the colour shown in each photo. Give several photos the same name to group them under one
         colour; leave blank for photos that aren&rsquo;t a colour option. Names like &ldquo;white-black&rdquo; or
         &ldquo;gray&rdquo; fill the swatch automatically (two colour words make a split swatch). Adjust the pickers

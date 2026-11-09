@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { EmptyState, Field, FilterChips, Switch, ui } from "../ui";
+import { Pencil, RefreshCw, Search, Trash2 } from "lucide-react";
 
 type FilamentItem = {
   id: string;
@@ -135,6 +137,7 @@ export default function FilamentsManager() {
   }
 
   async function removeItem(id: string) {
+    if (!window.confirm("Delete this filament?")) return;
     setSaving(true);
     setError("");
     setMsg("");
@@ -188,222 +191,187 @@ export default function FilamentsManager() {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[360px,minmax(0,1fr)]">
-      <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
-        <h2 className="text-xl font-semibold text-white">
-          {isEditing ? "Edit Filament" : "Add Filament"}
-        </h2>
-        <p className="mt-1 text-sm text-white/60">
-          Stored in a dedicated admin filament database collection.
-        </p>
-
-        <form className="mt-4 space-y-3" onSubmit={onSubmit}>
-          <div>
-            <label className="text-sm text-white/80">Type</label>
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      {/* Library */}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" aria-hidden="true" />
             <input
-              value={form.type}
-              onChange={(e) => setForm((prev) => ({ ...prev, type: e.target.value }))}
-              placeholder="PLA"
-              className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search type, colour, brand or finish"
+              className={`${ui.input} pl-10`}
             />
           </div>
-          <div>
-            <label className="text-sm text-white/80">Color</label>
-            <input
-              value={form.color}
-              onChange={(e) => setForm((prev) => ({ ...prev, color: e.target.value }))}
-              placeholder="Matte Black"
-              className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-white/80">Hex (used in preview)</label>
-            <input
-              value={form.hex}
-              onChange={(e) => setForm((prev) => ({ ...prev, hex: e.target.value }))}
-              placeholder="#ff8b64"
-              className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-white/80">Brand</label>
-            <input
-              value={form.brand}
-              onChange={(e) => setForm((prev) => ({ ...prev, brand: e.target.value }))}
-              placeholder="Bambu / eSUN"
-              className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-white/80">Finish</label>
-            <input
-              value={form.finish}
-              onChange={(e) => setForm((prev) => ({ ...prev, finish: e.target.value }))}
-              placeholder="Silk / Matte / Glossy"
-              className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-white/80">Notes</label>
-            <textarea
-              value={form.notes}
-              onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-              placeholder="Optional production notes"
-              className="mt-1 min-h-[90px] w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-            />
-          </div>
-          <label className="flex items-center gap-2 text-sm text-white/80">
-            <input
-              type="checkbox"
-              checked={form.isActive}
-              onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.checked }))}
-            />
-            Active (available for sale)
-          </label>
-
-          <div className="flex gap-2 pt-1">
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-xl bg-[#FF8B64] px-4 py-2 font-medium text-black transition hover:opacity-90 disabled:opacity-60"
-            >
-              {saving ? "Saving..." : isEditing ? "Save changes" : "Add filament"}
-            </button>
-            {isEditing && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-white transition hover:bg-white/10"
-              >
-                Cancel edit
-              </button>
-            )}
-          </div>
-        </form>
-
-        {msg && <p className="mt-3 text-sm text-emerald-300">{msg}</p>}
-        {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-semibold text-white">Filament Library</h2>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white transition hover:bg-white/10"
-          >
+          <button type="button" onClick={() => void load()} className={ui.btn} disabled={loading}>
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} aria-hidden="true" />
             Refresh
           </button>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr,170px]">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search type, color, brand, finish..."
-            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-            className="rounded-xl border border-white/20 bg-[#0D0D0D] px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-          >
-            <option value="all">All statuses</option>
-            <option value="active">Active only</option>
-            <option value="inactive">Inactive only</option>
-          </select>
+        <FilterChips
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { value: "all", label: "All", count: items.length },
+            { value: "active", label: "In stock", count: items.filter((x) => x.isActive).length },
+            { value: "inactive", label: "Off", count: items.filter((x) => !x.isActive).length },
+          ]}
+        />
+
+        <div className={`${ui.panel} overflow-hidden`}>
+          {loading && (
+            <div className="divide-y divide-white/[0.06]">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-16 animate-pulse bg-white/[0.02]" />
+              ))}
+            </div>
+          )}
+          {!loading && filtered.length === 0 && <EmptyState title="No filaments found" hint="Add one with the form." />}
+          {!loading && filtered.length > 0 && (
+            <ul className="divide-y divide-white/[0.06]">
+              {filtered.map((item) => (
+                <li
+                  key={item.id}
+                  className={`flex items-center gap-3 px-4 py-3 sm:gap-4 sm:px-5 ${form.id === item.id ? "bg-[#FF8B64]/[0.05]" : ""} ${item.isActive ? "" : "opacity-60"}`}
+                >
+                  <span
+                    className="h-10 w-10 shrink-0 rounded-full border border-white/15 shadow-inner"
+                    style={{ backgroundColor: item.hex || "transparent" }}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-white">
+                      {item.color || "Unnamed colour"} <span className="font-normal text-white/45">· {item.type || "–"}</span>
+                    </p>
+                    <p className="truncate text-xs text-white/40">
+                      {[item.brand, item.finish, item.hex].filter(Boolean).join(" · ") || "No details"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={item.isActive}
+                    disabled={togglingId === item.id}
+                    onChange={(v) => void toggleActive(item, v)}
+                    label=""
+                    srLabel={`${item.color || "Filament"} in stock`}
+                  />
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setForm(toFormState(item))}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-white/45 transition hover:bg-white/[0.06] hover:text-white"
+                      aria-label={`Edit ${item.color}`}
+                    >
+                      <Pencil size={14} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void removeItem(item.id)}
+                      disabled={saving}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-white/35 transition hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
+                      aria-label={`Delete ${item.color}`}
+                    >
+                      <Trash2 size={14} aria-hidden="true" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={onSubmit} className={`${ui.panelPad} space-y-4 lg:sticky lg:top-6`}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-white">{isEditing ? "Edit filament" : "New filament"}</h2>
+          {isEditing && (
+            <button type="button" onClick={resetForm} className="text-xs font-semibold text-white/50 hover:text-white">
+              Cancel
+            </button>
+          )}
         </div>
 
-        <div className="mt-4 rounded-2xl border border-white/10">
-          <div className="border-b border-white/10 px-3 py-2 text-sm text-white/70">
-            {loading ? "Loading..." : `Showing ${filtered.length} filament option(s)`}
-          </div>
-          <div className="max-h-[560px] overflow-auto">
-            <table className="w-full min-w-[760px] text-left text-sm text-white/85">
-              <thead className="sticky top-0 bg-[#161616] text-white/65">
-                <tr>
-                  <th className="px-3 py-2">Type</th>
-                  <th className="px-3 py-2">Color</th>
-                  <th className="px-3 py-2">Hex</th>
-                  <th className="px-3 py-2">Brand</th>
-                  <th className="px-3 py-2">Finish</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!loading && filtered.length === 0 && (
-                  <tr>
-                    <td className="px-3 py-5 text-center text-white/60" colSpan={7}>
-                      No filament records found.
-                    </td>
-                  </tr>
-                )}
-                {filtered.map((item) => (
-                  <tr key={item.id} className="border-t border-white/10">
-                    <td className="px-3 py-2">{item.type || "-"}</td>
-                    <td className="px-3 py-2">{item.color || "-"}</td>
-                    <td className="px-3 py-2">
-                      <div className="inline-flex items-center gap-2">
-                        <span
-                          className="h-4 w-4 rounded border border-white/20"
-                          style={{ backgroundColor: item.hex || "transparent" }}
-                        />
-                        <span>{item.hex || "-"}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">{item.brand || "-"}</td>
-                    <td className="px-3 py-2">{item.finish || "-"}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs ${
-                            item.isActive
-                              ? "bg-emerald-500/20 text-emerald-300"
-                              : "bg-white/15 text-white/70"
-                          }`}
-                        >
-                          {item.isActive ? "Active" : "Inactive"}
-                        </span>
-                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-white/80">
-                          <input
-                            type="checkbox"
-                            checked={item.isActive}
-                            disabled={togglingId === item.id}
-                            onChange={(e) => void toggleActive(item, e.target.checked)}
-                            className="h-4 w-4 accent-[#FF8B64]"
-                          />
-                          <span>{item.isActive ? "ON" : "OFF"}</span>
-                        </label>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setForm(toFormState(item))}
-                          className="rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-xs text-white transition hover:bg-white/10"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void removeItem(item.id)}
-                          disabled={saving}
-                          className="rounded-lg border border-red-300/40 bg-red-500/10 px-2.5 py-1.5 text-xs text-red-200 transition hover:bg-red-500/20 disabled:opacity-60"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Type">
+            <input
+              value={form.type}
+              onChange={(e) => setForm((prev) => ({ ...prev, type: e.target.value }))}
+              placeholder="PLA"
+              className={ui.input}
+            />
+          </Field>
+          <Field label="Colour">
+            <input
+              value={form.color}
+              onChange={(e) => setForm((prev) => ({ ...prev, color: e.target.value }))}
+              placeholder="Matte Black"
+              className={ui.input}
+            />
+          </Field>
         </div>
-      </section>
+
+        <Field label="Swatch colour">
+          <div className="flex gap-2">
+            <input
+              type="color"
+              value={/^#[0-9a-f]{6}$/i.test(form.hex) ? form.hex : "#ff8b64"}
+              onChange={(e) => setForm((prev) => ({ ...prev, hex: e.target.value }))}
+              className="h-[42px] w-12 shrink-0 cursor-pointer rounded-xl border border-white/10 bg-[#0f0f11] p-1"
+              aria-label="Pick swatch colour"
+            />
+            <input
+              value={form.hex}
+              onChange={(e) => setForm((prev) => ({ ...prev, hex: e.target.value }))}
+              placeholder="#ff8b64"
+              className={`${ui.input} font-mono`}
+            />
+          </div>
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Brand">
+            <input
+              value={form.brand}
+              onChange={(e) => setForm((prev) => ({ ...prev, brand: e.target.value }))}
+              placeholder="Bambu"
+              className={ui.input}
+            />
+          </Field>
+          <Field label="Finish">
+            <input
+              value={form.finish}
+              onChange={(e) => setForm((prev) => ({ ...prev, finish: e.target.value }))}
+              placeholder="Silk / Matte"
+              className={ui.input}
+            />
+          </Field>
+        </div>
+
+        <Field label="Notes">
+          <textarea
+            value={form.notes}
+            onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+            placeholder="Optional production notes"
+            className={`min-h-[80px] ${ui.input}`}
+          />
+        </Field>
+
+        {msg && <p className={ui.success}>{msg}</p>}
+        {error && <p className={ui.error}>{error}</p>}
+
+        <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+          <Switch
+            checked={form.isActive}
+            onChange={(v) => setForm((prev) => ({ ...prev, isActive: v }))}
+            label="In stock"
+          />
+          <button type="submit" disabled={saving} className={ui.btnPrimary}>
+            {saving ? "Saving…" : isEditing ? "Save changes" : "Add filament"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

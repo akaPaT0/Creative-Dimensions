@@ -221,6 +221,28 @@ export async function upsertProduct(product: Product) {
   return product;
 }
 
+/** Update only the New / Featured flags of one product, leaving every other column alone. */
+export async function setProductFlags(
+  productId: string,
+  flags: { isNew?: boolean; featured?: boolean }
+) {
+  const patch: { isNew?: boolean; featured?: boolean } = {};
+  if (typeof flags.isNew === "boolean") patch.isNew = flags.isNew;
+  if (typeof flags.featured === "boolean") patch.featured = flags.featured;
+  if (Object.keys(patch).length === 0) throw new Error("Nothing to update");
+
+  const { data, error } = await (await writeClient())
+    .from(TABLE)
+    .update(patch)
+    .eq("SKU", productId)
+    .select("SKU, isNew, featured");
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
+
+  (revalidateTag as Function)("products");
+  return { isNew: asBool(data[0].isNew), featured: asBool(data[0].featured) };
+}
+
 export async function removeProduct(productId: string) {
   const all = await getProductsFromDb(); // bypass cache for accurate lookup
   const target = all.find((x) => x.id === productId) || null;

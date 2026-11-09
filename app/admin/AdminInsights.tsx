@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { EmptyState, StatStrip, ui } from "./ui";
+import { ChevronRight, RefreshCw, Search } from "lucide-react";
 
 type Metrics = {
   totalUsers: number;
@@ -65,107 +67,100 @@ export default function AdminInsights() {
     void load();
   }, []);
 
+  const [q, setQ] = useState("");
+  const shown = users.filter((u) => {
+    const s = q.trim().toLowerCase();
+    if (!s) return true;
+    return `${u.fullName} ${u.email} ${u.username}`.toLowerCase().includes(s);
+  });
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-white text-xl font-semibold">User Insights</h2>
-          <p className="mt-1 text-sm text-white/60">
-            Login/session activity and recent user information.
-          </p>
+    <div className="space-y-4">
+      <StatStrip
+        items={[
+          { label: "Accounts", value: loading || !metrics ? "–" : metrics.totalUsers },
+          { label: "Active this week", value: loading || !metrics ? "–" : metrics.activeLast7d, accent: true },
+          { label: "Sessions", value: loading || !metrics ? "–" : metrics.totalSessions },
+          { label: "Your sessions", value: loading || !metrics ? "–" : metrics.yourSessions },
+        ]}
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" aria-hidden="true" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, email or username"
+            className={`${ui.input} pl-10`}
+          />
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10 transition"
-        >
+        <button type="button" onClick={() => void load()} className={ui.btn} disabled={loading}>
+          <RefreshCw size={15} className={loading ? "animate-spin" : ""} aria-hidden="true" />
           Refresh
         </button>
       </div>
 
-      {error && <p className="mt-3 text-sm text-red-200/90">{error}</p>}
+      {error && <p className={ui.error}>{error}</p>}
 
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Total Users</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {loading || !metrics ? "-" : metrics.totalUsers}
+      <div className={`${ui.panel} overflow-hidden`}>
+        {loading && (
+          <div className="divide-y divide-white/[0.06]">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+                <div className="h-9 w-9 animate-pulse rounded-full bg-white/[0.06]" />
+                <div className="h-4 flex-1 animate-pulse rounded bg-white/[0.04]" />
+              </div>
+            ))}
           </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Active (7d)</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {loading || !metrics ? "-" : metrics.activeLast7d}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Total Sessions</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {loading || !metrics ? "-" : metrics.totalSessions}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Your Login Sessions</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {loading || !metrics ? "-" : metrics.yourSessions}
-          </div>
-        </div>
-      </div>
+        )}
 
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 text-sm text-white/60">
-          {loading ? "Loading users..." : `Showing ${users.length} users`}
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-white/60">
-              <tr className="border-b border-white/10">
-                <th className="px-4 py-3">User</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Username</th>
-                <th className="px-4 py-3">Last Sign In</th>
-                <th className="px-4 py-3">Joined</th>
-                <th className="px-4 py-3 text-right">Details</th>
-              </tr>
-            </thead>
-            <tbody className="text-white/85">
-              {!loading &&
-                users.map((u) => (
-                  <tr key={u.id} className="border-b border-white/10 last:border-b-0">
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/users/${u.id}`}
-                        className="font-medium hover:underline underline-offset-4"
-                      >
-                        {u.fullName}
-                      </Link>
-                      <div className="text-xs text-white/45 font-mono">{u.id}</div>
-                    </td>
-                    <td className="px-4 py-3 text-white/80">{u.email || "-"}</td>
-                    <td className="px-4 py-3 text-white/80">{u.username || "-"}</td>
-                    <td className="px-4 py-3 text-white/80">{formatDate(u.lastSignInAt)}</td>
-                    <td className="px-4 py-3 text-white/80">{formatDate(u.createdAt)}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/admin/users/${u.id}`}
-                        className="inline-flex rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
-                      >
-                        Open
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              {!loading && users.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-white/60">
-                    No user data found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {!loading && shown.length === 0 && <EmptyState title="No customers found" />}
+
+        {!loading && shown.length > 0 && (
+          <ul className="divide-y divide-white/[0.06]">
+            {shown.map((u) => {
+              const initials =
+                (u.fullName || u.email || "?")
+                  .split(/\s+/)
+                  .map((w) => w[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase() || "?";
+              return (
+                <li key={u.id}>
+                  <Link
+                    href={`/admin/users/${u.id}`}
+                    className="group grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-white/[0.02] sm:grid-cols-[36px_minmax(0,1.2fr)_minmax(0,1fr)_150px_120px_16px] sm:gap-x-4 sm:px-5"
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF8B64]/12 text-xs font-bold text-[#FF8B64]">
+                      {initials}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-white group-hover:text-[#FF8B64] transition-colors">
+                        {u.fullName || "No name"}
+                      </span>
+                      <span className="block truncate text-xs text-white/40">
+                        {u.username ? `@${u.username}` : u.email || "–"}
+                      </span>
+                    </span>
+                    <span className="hidden truncate text-sm text-white/60 sm:block">{u.email || "–"}</span>
+                    <span className="hidden text-xs text-white/50 sm:block">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-white/30">Last sign-in</span>
+                      {formatDate(u.lastSignInAt)}
+                    </span>
+                    <span className="hidden text-xs text-white/50 sm:block">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-white/30">Joined</span>
+                      {formatDate(u.createdAt)}
+                    </span>
+                    <ChevronRight size={16} className="text-white/25 group-hover:text-white/60 transition-colors" aria-hidden="true" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,5 +1,11 @@
 # Worklog
 
+## 2026-11-09 - Redesign the admin area and add quick product flags
+
+- Owner asked to flip New / Featured without opening each product, and to bring the admin in line with the redesigned storefront. Added PATCH `/api/admin/products/[id]` and `setProductFlags` in products-db, which update only those two columns on one row (no full-table rewrite), with switches in the product list that save on tap and roll back on error.
+- New `AdminShell` (sidebar on desktop, scrolling tabs on phones; sections are URL links, default tab Orders) and shared `app/admin/ui.tsx` styles. Rebuilt Orders (status chips with counts, status badge picker, expandable items/delivery/payment with invoice; the old "Items preview hidden" placeholder now lists items), Products (filters, flag switches), Add product (two columns, photo drop area, sticky save bar), Customers list and detail page, Promo codes and Filaments (list beside form). Deleting promo codes and filaments now asks for confirmation. Removed AdminTabs. Save/load/auth logic is otherwise unchanged.
+- Production build, TypeScript and three URL tests passed; admin routes compile and redirect signed-out visitors. The signed-in screens were not visually checked because that needs the owner's login; owner asked to ship without the check.
+
 ## 2026-11-09 - Add a Halloween drop scene to the home page
 
 - Owner asked to feature the Halloween drop on the home page instead of the three hero product photos. A first card-style version was rejected as generic. Shipped a full-width scene: a large HALLOWEEN word with five drop pieces lined up in front on one dark stage (the product photos share the same background), name and price labels, a flickering lantern glow and one Shop the Halloween drop button. It sits directly under the custom-work hero, which stays first with a larger headline, per owner agreement that custom work should lead and Halloween season has passed.

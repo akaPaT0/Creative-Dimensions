@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import ImageSorter from "./components/ImageSorter";
 import VariantEditor, { type VariantDraft } from "./components/VariantEditor";
 import { suggestSwatch } from "@/app/lib/product-variants";
+import { Pencil, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { EmptyState, FilterChips, StatStrip, Switch, ui } from "./ui";
 
 type Product = {
   id: string;
@@ -71,6 +73,35 @@ export default function AdminProductsManager() {
     refresh();
   }, []);
 
+  const [savingFlag, setSavingFlag] = useState<Record<string, boolean>>({});
+
+  async function toggleFlag(p: Product, flag: "isNew" | "featured") {
+    const key = `${p.id}:${flag}`;
+    if (savingFlag[key]) return;
+    const value = !p[flag];
+    setMsg(null);
+    setSavingFlag((s) => ({ ...s, [key]: true }));
+    setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, [flag]: value } : x)));
+    try {
+      const r = await fetch(`/api/admin/products/${encodeURIComponent(p.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [flag]: value }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data?.error || "Failed to save");
+    } catch (e: any) {
+      setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, [flag]: !value } : x)));
+      setMsg(`${p.name}: ${e?.message || "Could not update"}`);
+    } finally {
+      setSavingFlag((s) => {
+        const next = { ...s };
+        delete next[key];
+        return next;
+      });
+    }
+  }
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return products;
@@ -80,6 +111,21 @@ export default function AdminProductsManager() {
       return hay.includes(s);
     });
   }, [products, q]);
+
+  const [catFilter, setCatFilter] = useState<string>("all");
+  const visible = useMemo(
+    () =>
+      filtered.filter((p) =>
+        catFilter === "all"
+          ? true
+          : catFilter === "featured"
+            ? !!p.featured
+            : catFilter === "new"
+              ? !!p.isNew
+              : p.category === catFilter
+      ),
+    [filtered, catFilter]
+  );
 
   const stats = useMemo(() => {
     const total = products.length;
@@ -104,141 +150,154 @@ export default function AdminProductsManager() {
   );
 
   return (
-    <section
-      id="manage-products"
-      className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5"
-    >
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-white text-xl font-semibold">Catalog Manager</h2>
-          <p className="text-white/50 text-sm">
-            Search, edit, and delete products from a single control table.
-          </p>
-        </div>
+    <div id="manage-products" className="space-y-4">
+      <StatStrip
+        items={[
+          { label: "Products", value: loading ? "–" : stats.total },
+          { label: "Featured", value: loading ? "–" : stats.featuredCount, accent: true },
+          { label: "Marked new", value: loading ? "–" : stats.newCount },
+          { label: "Categories", value: loading ? "–" : stats.categoriesCount },
+        ]}
+      />
 
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" aria-hidden="true" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by name, id, slug..."
-            className="w-full md:w-80 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
+            placeholder="Search by name, ID or slug"
+            className={`${ui.input} pl-10`}
           />
-          <button
-            type="button"
-            onClick={refresh}
-            className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
-          >
-            Refresh
-          </button>
         </div>
+        <button type="button" onClick={refresh} className={ui.btn} disabled={loading}>
+          <RefreshCw size={15} className={loading ? "animate-spin" : ""} aria-hidden="true" />
+          Refresh
+        </button>
       </div>
 
-      {msg && <p className="mt-3 text-white/70 text-sm">{msg}</p>}
+      <FilterChips
+        value={catFilter}
+        onChange={setCatFilter}
+        options={[
+          { value: "all", label: "All", count: products.length },
+          { value: "featured", label: "Featured", count: stats.featuredCount },
+          { value: "new", label: "New", count: stats.newCount },
+          ...categoryOptions.map((c) => ({
+            value: c,
+            label: c.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()),
+            count: products.filter((p) => p.category === c).length,
+          })),
+        ]}
+      />
 
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Total Products</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {stats.total}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Featured</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {stats.featuredCount}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">New</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {stats.newCount}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Categories</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {stats.categoriesCount}
-          </div>
-        </div>
-      </div>
+      {msg && <p className={ui.error}>{msg}</p>}
 
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-          <p className="text-white/70 text-sm">{loading ? "Loading..." : `${filtered.length} items`}</p>
+      <div className={`${ui.panel} overflow-hidden`}>
+        <div className="hidden grid-cols-[56px_minmax(0,1fr)_120px_70px_120px_auto] items-center gap-4 border-b border-white/[0.06] px-5 py-2.5 md:grid">
+          <span className="sr-only">Photo</span>
+          <span className={ui.th + " px-0 py-0"}>Product</span>
+          <span className={ui.th + " px-0 py-0"}>Category</span>
+          <span className={ui.th + " px-0 py-0 text-right"}>Price</span>
+          <span className={ui.th + " px-0 py-0"}>Show as</span>
+          <span className="sr-only">Actions</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-white/60">
-              <tr className="border-b border-white/10">
-                <th className="px-4 py-3">Preview</th>
-                <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Flags</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-white/85">
-              {filtered.map((p) => {
-                const img = (p.images && p.images[0]) || p.image || "/products/placeholder.jpg";
-                return (
-                  <tr key={p.id} className="border-b border-white/10 last:border-b-0">
-                    <td className="px-4 py-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={img}
-                        alt={p.name}
-                        className="h-12 w-12 rounded-xl object-cover border border-white/10"
-                      />
-                    </td>
-                    <td className="px-4 py-3 font-mono text-white/80">{p.id}</td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{p.name}</div>
-                      <div className="text-white/50 text-xs">{p.slug}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>{p.category}</div>
-                      <div className="text-white/50 text-xs">{p.subCategory || "-"}</div>
-                    </td>
-                    <td className="px-4 py-3">${p.priceUSD}</td>
-                    <td className="px-4 py-3 text-xs text-white/70">
-                      <div>{p.isNew ? "NEW" : ""}</div>
-                      <div>{p.featured ? "FEATURED" : ""}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditing(p)}
-                          className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white hover:bg-white/10 transition"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleting(p)}
-                          className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-red-100 hover:bg-red-500/20 transition"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+        {loading && (
+          <div className="divide-y divide-white/[0.06]">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3 sm:px-5">
+                <div className="h-14 w-14 animate-pulse rounded-xl bg-white/[0.06]" />
+                <div className="h-4 flex-1 animate-pulse rounded bg-white/[0.04]" />
+              </div>
+            ))}
+          </div>
+        )}
 
-              {!loading && filtered.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-white/60">
-                    No products found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {!loading && visible.length === 0 && (
+          <EmptyState title="No products found" hint="Try another search or filter." />
+        )}
+
+        {!loading && visible.length > 0 && (
+          <ul className="divide-y divide-white/[0.06]">
+            {visible.map((p) => {
+              const img = (p.images && p.images[0]) || p.image || "/products/placeholder.jpg";
+              return (
+                <li
+                  key={p.id}
+                  className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 px-4 py-3 transition-colors hover:bg-white/[0.02] sm:px-5 md:grid-cols-[56px_minmax(0,1fr)_120px_70px_120px_auto]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img}
+                    alt=""
+                    loading="lazy"
+                    className="h-14 w-14 rounded-xl border border-white/10 bg-black object-cover"
+                  />
+
+                  <div className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(p)}
+                      className="block max-w-full truncate text-left text-sm font-semibold text-white hover:text-[#FF8B64] transition-colors"
+                    >
+                      {p.name}
+                    </button>
+                    <p className={`truncate ${ui.mono}`}>
+                      {p.id} · {p.slug}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-white/45 md:hidden">
+                      {p.category}
+                      {p.subCategory ? ` / ${p.subCategory}` : ""} · <span className="text-white/80">${p.priceUSD}</span>
+                    </p>
+                  </div>
+
+                  <div className="hidden min-w-0 md:block">
+                    <p className="truncate text-sm capitalize text-white/75">{p.category.replace(/-/g, " ")}</p>
+                    <p className="truncate text-xs text-white/40">{p.subCategory || "–"}</p>
+                  </div>
+
+                  <p className="hidden text-right text-sm font-semibold tabular-nums text-white md:block">${p.priceUSD}</p>
+
+                  <div className="col-span-3 col-start-2 flex gap-1.5 md:col-span-1 md:col-start-auto md:flex-col">
+                    <FlagToggle
+                      label="New"
+                      on={!!p.isNew}
+                      busy={!!savingFlag[`${p.id}:isNew`]}
+                      onClick={() => toggleFlag(p, "isNew")}
+                    />
+                    <FlagToggle
+                      label="Featured"
+                      on={!!p.featured}
+                      busy={!!savingFlag[`${p.id}:featured`]}
+                      onClick={() => toggleFlag(p, "featured")}
+                    />
+                  </div>
+
+                  <div className="col-start-3 row-start-1 flex justify-end gap-1.5 md:col-start-auto md:row-start-auto">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(p)}
+                      className={ui.btnSm}
+                      aria-label={`Edit ${p.name}`}
+                    >
+                      <Pencil size={13} aria-hidden="true" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleting(p)}
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-lg text-white/35 transition hover:bg-red-500/10 hover:text-red-300"
+                      aria-label={`Delete ${p.name}`}
+                    >
+                      <Trash2 size={14} aria-hidden="true" />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       {editing && (
@@ -264,17 +323,55 @@ export default function AdminProductsManager() {
           }}
         />
       )}
-    </section>
+    </div>
   );
 }
 
-/** ✅ FIXED: scrollable modal */
+function FlagToggle({
+  label,
+  on,
+  busy,
+  onClick,
+}: {
+  label: string;
+  on: boolean;
+  busy: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={onClick}
+      disabled={busy}
+      className={`inline-flex w-[104px] items-center justify-between gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold transition disabled:opacity-60 ${
+        on
+          ? "border-[#FF8B64]/50 bg-[#FF8B64]/12 text-[#FF8B64]"
+          : "border-white/10 bg-white/[0.03] text-white/45 hover:text-white/75"
+      }`}
+    >
+      {label}
+      <span
+        className={`relative h-4 w-7 shrink-0 rounded-full transition ${on ? "bg-[#FF8B64]" : "bg-white/15"}`}
+        aria-hidden="true"
+      >
+        <span
+          className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${on ? "left-[14px]" : "left-0.5"}`}
+        />
+      </span>
+    </button>
+  );
+}
+
+/** Scrollable modal */
 function ModalShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[999]">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative h-full w-full overflow-y-auto px-4 py-8">
-        <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0D0D0D]/80 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
+    <div className="fixed inset-0 z-[999]" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div className="relative h-full w-full overflow-y-auto px-3 py-6 sm:px-4 sm:py-10">
+        <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#161619] shadow-[0_30px_100px_rgba(0,0,0,0.7)]">
           {children}
         </div>
       </div>
@@ -421,47 +518,48 @@ function EditModal({
 
   return (
     <ModalShell>
-      <div className="p-5 border-b border-white/10 flex items-center justify-between">
-        <div>
-          <div className="text-white font-semibold">Edit product</div>
-          <div className="text-white/50 text-xs font-mono">{product.id}</div>
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/[0.06] bg-[#161619] px-5 py-4">
+        <div className="min-w-0">
+          <div className="truncate text-base font-bold text-white">{product.name}</div>
+          <div className={ui.mono}>{product.id}</div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white hover:bg-white/10 transition"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/50 hover:bg-white/[0.06] hover:text-white transition"
+          aria-label="Close"
         >
-          Close
+          <X size={18} aria-hidden="true" />
         </button>
       </div>
 
       <div className="p-5 space-y-4">
-        {msg && <p className="text-white/70 text-sm">{msg}</p>}
+        {msg && <p className={ui.error}>{msg}</p>}
 
         <div>
-          <label className="text-white/70 text-sm">Name</label>
+          <label className={ui.label}>Name</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
+            className={`mt-1.5 ${ui.input}`}
           />
         </div>
 
         <div>
-          <label className="text-white/70 text-sm">Slug</label>
-          <div className="mt-1 flex gap-2">
+          <label className={ui.label}>Slug</label>
+          <div className="mt-1.5 flex gap-2">
             <input
               value={slug}
               onChange={(e) => {
                 setSlugTouched(true);
                 setSlug(e.target.value);
               }}
-              className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
+              className={ui.input}
             />
             <button
               type="button"
               onClick={() => setSlugTouched(false)}
-              className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
+              className={`shrink-0 ${ui.btn}`}
             >
               Auto
             </button>
@@ -470,12 +568,12 @@ function EditModal({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="text-white/70 text-sm">Category</label>
+            <label className={ui.label}>Category</label>
             <input
               list={categoryListId}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
+              className={`mt-1.5 ${ui.input}`}
             />
             <datalist id={categoryListId}>
               {mergeUnique([...categoryOptions, category]).map((option) => (
@@ -484,12 +582,12 @@ function EditModal({
             </datalist>
           </div>
           <div>
-            <label className="text-white/70 text-sm">Sub-category</label>
+            <label className={ui.label}>Sub-category</label>
             <input
               list={subCategoryListId}
               value={subCategory}
               onChange={(e) => setSubCategory(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
+              className={`mt-1.5 ${ui.input}`}
             />
             <datalist id={subCategoryListId}>
               {mergeUnique([...subCategoryOptions, subCategory]).map((option) => (
@@ -501,45 +599,35 @@ function EditModal({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="text-white/70 text-sm">Price USD</label>
+            <label className={ui.label}>Price USD</label>
             <input
               value={priceUSD}
               onChange={(e) => setPriceUSD(e.target.value)}
               type="number"
               step="0.1"
-              className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
+              className={`mt-1.5 ${ui.input}`}
             />
           </div>
 
-          <div className="flex items-end gap-4">
-            <label className="flex items-center gap-2 text-white/70 text-sm">
-              <input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} />
-              isNew
-            </label>
-            <label className="flex items-center gap-2 text-white/70 text-sm">
-              <input
-                type="checkbox"
-                checked={featured}
-                onChange={(e) => setFeatured(e.target.checked)}
-              />
-              featured
-            </label>
+          <div className="flex items-end gap-5 pb-2.5">
+            <Switch checked={isNew} onChange={setIsNew} label="New" />
+            <Switch checked={featured} onChange={setFeatured} label="Featured" />
           </div>
         </div>
 
         <div>
-          <label className="text-white/70 text-sm">Description</label>
+          <label className={ui.label}>Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 w-full min-h-[120px] rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
+            className={`mt-1.5 min-h-[120px] ${ui.input}`}
           />
         </div>
 
         {/* Existing images: reorder/remove */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <div className={`${ui.inset} p-4 space-y-3`}>
           <ImageSorter images={existingImages} onChange={setExistingImages} />
-          <p className="text-white/40 text-xs">Reorder/remove existing images, then Save.</p>
+          <p className={ui.note}>Reorder/remove existing images, then Save.</p>
         </div>
 
         <VariantEditor
@@ -551,31 +639,31 @@ function EditModal({
 
         {/* Replace images (optional) */}
         <div>
-          <label className="text-white/70 text-sm">Replace images (optional)</label>
+          <label className={ui.label}>Replace images (optional)</label>
           <input
             type="file"
             multiple
             accept="image/png,image/jpeg,image/webp"
-            className="mt-1 w-full text-white/70"
+            className={`mt-1.5 ${ui.file}`}
             onChange={(e) => setImages(Array.from(e.target.files || []))}
           />
-          <p className="text-white/40 text-xs mt-1">
+          <p className={`mt-1.5 ${ui.note}`}>
             If you upload images here, old images will be deleted and replaced with new ones.
           </p>
         </div>
 
         <div>
-          <label className="text-white/70 text-sm">Replace 3D model (optional, max 1 .glb)</label>
+          <label className={ui.label}>Replace 3D model (optional, max 1 .glb)</label>
           <input
             type="file"
             accept=".glb,model/gltf-binary"
-            className="mt-1 w-full text-white/70"
+            className={`mt-1.5 ${ui.file}`}
             onChange={(e) => setModelFile(e.target.files?.[0] || null)}
           />
-          <p className="text-white/40 text-xs mt-1">
+          <p className={`mt-1.5 ${ui.note}`}>
             Current model: {product.customizeColors?.modelUrl || "none"}
           </p>
-          <p className="text-white/40 text-xs mt-1">
+          <p className={`mt-1.5 ${ui.note}`}>
             Storage path: <code>{targetModelPath.replace(/^\/+/, "")}</code>
           </p>
           {modelFile && (
@@ -584,7 +672,7 @@ function EditModal({
         </div>
 
         {previews.length > 0 && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+          <div className={`${ui.inset} p-3`}>
             <p className="text-white/60 text-sm mb-3">New images preview</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {previews.map((u, i) => (
@@ -598,11 +686,11 @@ function EditModal({
         )}
       </div>
 
-      <div className="p-5 border-t border-white/10 flex justify-end gap-2">
+      <div className="sticky bottom-0 flex justify-end gap-2 border-t border-white/[0.06] bg-[#161619] px-5 py-4">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
+          className={ui.btn}
         >
           Cancel
         </button>
@@ -610,7 +698,7 @@ function EditModal({
           type="button"
           disabled={busy}
           onClick={save}
-          className="rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-white hover:bg-white/15 disabled:opacity-60 transition"
+          className={ui.btnPrimary}
         >
           {busy ? "Saving..." : "Save"}
         </button>
@@ -650,15 +738,15 @@ function ConfirmDelete({
 
   return (
     <ModalShell>
-      <div className="p-5 border-b border-white/10 flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-4">
         <div>
-          <div className="text-white font-semibold">Delete product</div>
-          <div className="text-white/50 text-xs font-mono">{product.id}</div>
+          <div className="text-base font-bold text-white">Delete product</div>
+          <div className={ui.mono}>{product.id}</div>
         </div>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white hover:bg-white/10 transition"
+          className={ui.btn}
         >
           Close
         </button>
@@ -671,14 +759,14 @@ function ConfirmDelete({
         <p className="text-white/50 text-sm">
           This removes it from the product DB and deletes related storage files.
         </p>
-        {msg && <p className="text-red-200/80 text-sm">{msg}</p>}
+        {msg && <p className={ui.error}>{msg}</p>}
       </div>
 
-      <div className="p-5 border-t border-white/10 flex justify-end gap-2">
+      <div className="sticky bottom-0 flex justify-end gap-2 border-t border-white/[0.06] bg-[#161619] px-5 py-4">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
+          className={ui.btn}
         >
           Cancel
         </button>
@@ -686,7 +774,7 @@ function ConfirmDelete({
           type="button"
           disabled={busy}
           onClick={doDelete}
-          className="rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-2 text-red-100 hover:bg-red-500/25 disabled:opacity-60 transition"
+          className={ui.btnDanger}
         >
           {busy ? "Deleting..." : "Yes, delete"}
         </button>

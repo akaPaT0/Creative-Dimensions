@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { EmptyState, Field, Switch, ui } from "./ui";
+import { Pencil, RefreshCw, Trash2 } from "lucide-react";
 
 type PromoType = "percent" | "fixed" | "free_shipping";
 
@@ -132,6 +134,7 @@ export default function AdminPromoCodes() {
   }
 
   async function remove(code: string) {
+    if (!window.confirm(`Delete promo code ${code}? Customers won't be able to use it.`)) return;
     setError("");
     setSuccess("");
     try {
@@ -151,216 +154,203 @@ export default function AdminPromoCodes() {
     }
   }
 
+  const describe = (promo: PromoCodeRecord) =>
+    promo.type === "percent"
+      ? `${promo.value}% off`
+      : promo.type === "fixed"
+        ? `$${promo.value} off`
+        : "Free delivery";
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-white text-xl font-semibold">Promo Codes</h2>
-          <p className="mt-1 text-sm text-white/60">
-            Create, edit, disable, and remove checkout promo features.
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+      {/* Codes */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-white/50">
+            {loading ? "Loading codes…" : `${promos.length} ${promos.length === 1 ? "code" : "codes"} · ${promos.filter((p) => p.active).length} active`}
           </p>
+          <button type="button" onClick={() => void load()} className={ui.btnSm} disabled={loading}>
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} aria-hidden="true" />
+            Refresh
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10 transition"
-        >
-          Refresh
-        </button>
+
+        {error && <p className={ui.error}>{error}</p>}
+        {success && <p className={ui.success}>{success}</p>}
+
+        <div className={`${ui.panel} overflow-hidden`}>
+          {!loading && promos.length === 0 && (
+            <EmptyState title="No promo codes yet" hint="Create your first one with the form." />
+          )}
+          {loading && (
+            <div className="divide-y divide-white/[0.06]">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-16 animate-pulse bg-white/[0.02]" />
+              ))}
+            </div>
+          )}
+          {!loading && promos.length > 0 && (
+            <ul className="divide-y divide-white/[0.06]">
+              {promos.map((promo) => {
+                const isEditing = editingCode === promo.code;
+                return (
+                  <li
+                    key={promo.code}
+                    className={`flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3.5 sm:px-5 ${isEditing ? "bg-[#FF8B64]/[0.05]" : ""}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-md border border-dashed border-white/20 px-2 py-0.5 font-mono text-sm font-bold tracking-wider text-white">
+                          {promo.code}
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-semibold ${promo.active ? "text-emerald-300" : "text-white/35"}`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${promo.active ? "bg-emerald-400" : "bg-white/30"}`} />
+                          {promo.active ? "Active" : "Off"}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-sm font-semibold text-[#FF8B64]">
+                        {describe(promo)}
+                        {promo.label && <span className="ml-2 font-normal text-white/50">{promo.label}</span>}
+                      </p>
+                      <p className="mt-0.5 text-xs text-white/40">
+                        {promo.minSubtotal ? `Orders over $${promo.minSubtotal}` : "Any order"}
+                        {promo.maxDiscount > 0 ? ` · up to $${promo.maxDiscount}` : ""}
+                        {promo.description ? ` · ${promo.description}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <button type="button" onClick={() => onEdit(promo)} className={ui.btnSm}>
+                        <Pencil size={13} aria-hidden="true" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void remove(promo.code)}
+                        className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-lg text-white/35 transition hover:bg-red-500/10 hover:text-red-300"
+                        aria-label={`Delete ${promo.code}`}
+                      >
+                        <Trash2 size={14} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
 
-      <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="text-sm text-white/80">
-          Code*
-          <input
-            value={form.code}
-            onChange={(e) => setForm((x) => ({ ...x, code: e.target.value.toUpperCase() }))}
-            disabled={Boolean(editingCode)}
-            className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64] disabled:opacity-60"
-            placeholder="CD10"
-            required
-          />
-        </label>
-
-        <label className="text-sm text-white/80">
-          Label
-          <input
-            value={form.label}
-            onChange={(e) => setForm((x) => ({ ...x, label: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-            placeholder="10% Off"
-          />
-        </label>
-
-        <label className="text-sm text-white/80">
-          Type
-          <select
-            value={form.type}
-            onChange={(e) => setForm((x) => ({ ...x, type: e.target.value as PromoType }))}
-            className="mt-1 w-full rounded-xl border border-white/20 bg-[#0D0D0D]/60 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-          >
-            <option value="percent">Percent Discount</option>
-            <option value="fixed">Fixed Discount</option>
-            <option value="free_shipping">Free Shipping</option>
-          </select>
-        </label>
-
-        <label className="text-sm text-white/80">
-          Value
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={form.value}
-            onChange={(e) => setForm((x) => ({ ...x, value: Number(e.target.value) }))}
-            className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-          />
-        </label>
-
-        <label className="text-sm text-white/80">
-          Min Subtotal
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={form.minSubtotal}
-            onChange={(e) => setForm((x) => ({ ...x, minSubtotal: Number(e.target.value) }))}
-            className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-          />
-        </label>
-
-        <label className="text-sm text-white/80">
-          Max Discount
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={form.maxDiscount}
-            onChange={(e) => setForm((x) => ({ ...x, maxDiscount: Number(e.target.value) }))}
-            className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-          />
-        </label>
-
-        <label className="text-sm text-white/80 sm:col-span-2 lg:col-span-2">
-          Description
-          <input
-            value={form.description}
-            onChange={(e) => setForm((x) => ({ ...x, description: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#FF8B64]"
-            placeholder="Explain what this promo does..."
-          />
-        </label>
-
-        <label className="text-sm text-white/80 flex items-center gap-2 mt-6">
-          <input
-            type="checkbox"
-            checked={form.active}
-            onChange={(e) => setForm((x) => ({ ...x, active: e.target.checked }))}
-            className="h-4 w-4 rounded border-white/20 bg-white/5 accent-[#FF8B64]"
-          />
-          Active
-        </label>
-
-        <div className="sm:col-span-2 lg:col-span-4 flex gap-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-xl bg-[#FF8B64] px-5 py-2.5 font-medium text-black hover:opacity-90 disabled:opacity-60 transition"
-          >
-            {saving ? "Saving..." : editingCode ? "Update Promo" : "Create Promo"}
-          </button>
+      {/* Form */}
+      <form onSubmit={onSubmit} className={`${ui.panelPad} space-y-4 lg:sticky lg:top-6`}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-white">{editingCode ? `Edit ${editingCode}` : "New code"}</h2>
           {editingCode && (
-            <button
-              type="button"
-              onClick={resetForm}
-              className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
-            >
+            <button type="button" onClick={resetForm} className="text-xs font-semibold text-white/50 hover:text-white">
               Cancel
             </button>
           )}
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Code">
+            <input
+              value={form.code}
+              onChange={(e) => setForm((x) => ({ ...x, code: e.target.value.toUpperCase() }))}
+              disabled={Boolean(editingCode)}
+              className={`${ui.input} font-mono uppercase tracking-wider`}
+              placeholder="CD10"
+              required
+            />
+          </Field>
+          <Field label="Label">
+            <input
+              value={form.label}
+              onChange={(e) => setForm((x) => ({ ...x, label: e.target.value }))}
+              className={ui.input}
+              placeholder="10% off"
+            />
+          </Field>
+        </div>
+
+        <Field label="Discount">
+          <div className="grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-[#0f0f11] p-1">
+            {(
+              [
+                ["percent", "Percent"],
+                ["fixed", "Amount"],
+                ["free_shipping", "Free delivery"],
+              ] as [PromoType, string][]
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setForm((x) => ({ ...x, type: value }))}
+                className={`rounded-lg px-2 py-2 text-xs font-semibold transition ${
+                  form.type === value ? "bg-[#FF8B64] text-[#0D0D0D]" : "text-white/55 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <div className="grid grid-cols-3 gap-3">
+          <Field label={form.type === "percent" ? "Value %" : "Value $"}>
+            <input
+              type="number"
+              min={0}
+              step={0.01}
+              value={form.value}
+              disabled={form.type === "free_shipping"}
+              onChange={(e) => setForm((x) => ({ ...x, value: Number(e.target.value) }))}
+              className={ui.input}
+            />
+          </Field>
+          <Field label="Min order $">
+            <input
+              type="number"
+              min={0}
+              step={0.01}
+              value={form.minSubtotal}
+              onChange={(e) => setForm((x) => ({ ...x, minSubtotal: Number(e.target.value) }))}
+              className={ui.input}
+            />
+          </Field>
+          <Field label="Max off $">
+            <input
+              type="number"
+              min={0}
+              step={0.01}
+              value={form.maxDiscount}
+              onChange={(e) => setForm((x) => ({ ...x, maxDiscount: Number(e.target.value) }))}
+              className={ui.input}
+            />
+          </Field>
+        </div>
+
+        <Field label="Note" hint="Shown to you only.">
+          <input
+            value={form.description}
+            onChange={(e) => setForm((x) => ({ ...x, description: e.target.value }))}
+            className={ui.input}
+            placeholder="What this code is for"
+          />
+        </Field>
+
+        <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+          <Switch
+            checked={form.active}
+            onChange={(v) => setForm((x) => ({ ...x, active: v }))}
+            label="Active"
+          />
+          <button type="submit" disabled={saving} className={ui.btnPrimary}>
+            {saving ? "Saving…" : editingCode ? "Save changes" : "Create code"}
+          </button>
+        </div>
       </form>
-
-      {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
-      {success && <p className="mt-3 text-sm text-emerald-300">{success}</p>}
-
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 text-sm text-white/60">
-          {loading ? "Loading promo codes..." : `${promos.length} promo code(s)`}
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-white/60">
-              <tr className="border-b border-white/10">
-                <th className="px-4 py-3">Code</th>
-                <th className="px-4 py-3">Feature</th>
-                <th className="px-4 py-3">Rules</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-white/85">
-              {!loading &&
-                promos.map((promo) => (
-                  <tr key={promo.code} className="border-b border-white/10 last:border-b-0">
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{promo.code}</div>
-                      <div className="text-xs text-white/60">{promo.label || "-"}</div>
-                    </td>
-                    <td className="px-4 py-3 text-white/80">
-                      {promo.type === "percent" && `${promo.value}% off`}
-                      {promo.type === "fixed" && `$${promo.value} off`}
-                      {promo.type === "free_shipping" && "Free shipping"}
-                      {promo.description && (
-                        <div className="text-xs text-white/60 mt-1">{promo.description}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-white/80">
-                      Min ${promo.minSubtotal || 0}
-                      {promo.maxDiscount > 0 ? `, Max $${promo.maxDiscount}` : ""}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs ${
-                          promo.active
-                            ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
-                            : "border-white/20 bg-white/5 text-white/65"
-                        }`}
-                      >
-                        {promo.active ? "Active" : "Disabled"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="inline-flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onEdit(promo)}
-                          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void remove(promo.code)}
-                          className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-100 hover:bg-red-500/20 transition"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              {!loading && promos.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-white/60">
-                    No promo codes yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }

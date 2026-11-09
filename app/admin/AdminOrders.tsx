@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Printer } from "lucide-react";
+import { ChevronDown, Phone, Printer, RefreshCw, Search } from "lucide-react";
+import { OrderStatusBadge, statusLabel } from "@/app/components/OrderStatus";
+import { EmptyState, FilterChips, StatStrip, ui } from "./ui";
 import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 
 type AdminOrder = {
@@ -186,224 +188,225 @@ export default function AdminOrders() {
     });
   }, [orders, search, statusFilter]);
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const o of orders) {
+      const k = o.status.toLowerCase();
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    return counts;
+  }, [orders]);
+
+  const statusValue = (o: AdminOrder) =>
+    ORDER_STATUS_OPTIONS.includes(o.status as (typeof ORDER_STATUS_OPTIONS)[number])
+      ? o.status
+      : "pending";
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 className="text-white text-xl font-semibold">Orders Monitor</h2>
-          <p className="mt-1 text-sm text-white/60">
-            Track all user orders, totals, promo usage, and shipping details.
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <div className="space-y-4">
+      <StatStrip
+        items={[
+          { label: "Orders", value: loading || !metrics ? "–" : metrics.totalOrders },
+          { label: "Waiting", value: loading || !metrics ? "–" : metrics.pendingOrders, accent: !!metrics?.pendingOrders },
+          { label: "Revenue", value: loading || !metrics ? "–" : formatMoney(metrics.revenueUSD) },
+        ]}
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" aria-hidden="true" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search order, email, promo..."
-            className="w-full sm:w-72 rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#FF8B64]"
+            placeholder="Search order, customer, city or promo"
+            className={`${ui.input} pl-10`}
           />
-          <select
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(
-                e.target.value as "all" | (typeof ORDER_STATUS_OPTIONS)[number]
-              )
-            }
-            className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#FF8B64]"
-          >
-            <option value="all" className="bg-[#1b1b1b]">
-              All statuses
-            </option>
-            {ORDER_STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status} className="bg-[#1b1b1b]">
-                {status}
-              </option>
+        </div>
+        <button type="button" onClick={() => void load()} className={ui.btn} disabled={loading}>
+          <RefreshCw size={15} className={loading ? "animate-spin" : ""} aria-hidden="true" />
+          Refresh
+        </button>
+      </div>
+
+      <FilterChips
+        value={statusFilter}
+        onChange={setStatusFilter}
+        options={[
+          { value: "all" as const, label: "All", count: orders.length },
+          ...ORDER_STATUS_OPTIONS.filter((s) => statusCounts[s] || statusFilter === s).map((s) => ({
+            value: s,
+            label: statusLabel(s),
+            count: statusCounts[s] || 0,
+          })),
+        ]}
+      />
+
+      {error && <p className={ui.error}>{error}</p>}
+
+      <div className={`${ui.panel} overflow-hidden`}>
+        {loading && (
+          <div className="divide-y divide-white/[0.06]">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-4">
+                <div className="h-4 w-24 animate-pulse rounded bg-white/[0.06]" />
+                <div className="h-4 flex-1 animate-pulse rounded bg-white/[0.04]" />
+                <div className="h-6 w-20 animate-pulse rounded-full bg-white/[0.06]" />
+              </div>
             ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10 transition"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {error && <p className="mt-3 text-sm text-red-200/90">{error}</p>}
-
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Total Orders</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {loading || !metrics ? "-" : metrics.totalOrders}
           </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-          <div className="text-xs text-white/55">Pending</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {loading || !metrics ? "-" : metrics.pendingOrders}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3 col-span-2 lg:col-span-1">
-          <div className="text-xs text-white/55">Revenue</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {loading || !metrics ? "-" : formatMoney(metrics.revenueUSD)}
-          </div>
-        </div>
-      </div>
+        )}
 
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 text-sm text-white/60">
-          {loading ? "Loading orders..." : `Showing ${filtered.length} order(s)`}
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-white/60">
-              <tr className="border-b border-white/10">
-                <th className="px-4 py-3">Order</th>
-                <th className="px-4 py-3">User</th>
-                <th className="px-4 py-3">Totals</th>
-                <th className="px-4 py-3">Promo</th>
-                <th className="px-4 py-3">Address</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-white/85">
-              {!loading &&
-                filtered.map((o) => (
-                  <Fragment key={o.id}>
-                    <tr className="border-b border-white/10">
-                      <td className="px-4 py-3">
-                        <div className="font-medium">{o.orderNumber || o.id}</div>
-                        <div className="text-xs text-white/60">{formatDate(o.createdAt)}</div>
-                        <div className="mt-2">
-                          <label className="sr-only" htmlFor={`status-${o.id}`}>
-                            Order status
-                          </label>
-                          <select
-                            id={`status-${o.id}`}
-                            value={
-                              ORDER_STATUS_OPTIONS.includes(
-                                o.status as (typeof ORDER_STATUS_OPTIONS)[number]
-                              )
-                                ? o.status
-                                : "pending"
-                            }
-                            onChange={(e) =>
-                              void updateOrderStatus(o.id, o.user.id, e.target.value)
-                            }
-                            disabled={updatingOrderId === o.id}
-                            className="rounded-lg border border-white/20 bg-white/5 px-2 py-1 text-[11px] text-white outline-none focus:border-[#FF8B64] disabled:opacity-60"
+        {!loading && filtered.length === 0 && (
+          <EmptyState
+            title={orders.length === 0 ? "No orders yet" : "No orders match"}
+            hint={orders.length === 0 ? "New orders show up here as soon as they are placed." : "Try another status or search."}
+          />
+        )}
+
+        {!loading && filtered.length > 0 && (
+          <ul className="divide-y divide-white/[0.06]">
+            {filtered.map((o) => {
+              const open = inspectOrderId === o.id;
+              return (
+                <li key={o.id} className={open ? "bg-white/[0.02]" : ""}>
+                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto_auto] sm:px-5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-white">{o.orderNumber || o.id}</p>
+                      <p className="text-xs text-white/40">{formatDate(o.createdAt)}</p>
+                    </div>
+
+                    <div className="order-3 col-span-2 min-w-0 sm:order-none sm:col-span-1">
+                      <Link
+                        href={`/admin/users/${o.user.id}`}
+                        className="block truncate text-sm font-medium text-white/85 hover:text-[#FF8B64] transition-colors"
+                      >
+                        {o.user.fullName || o.address.fullName || "Customer"}
+                      </Link>
+                      <p className="truncate text-xs text-white/40">
+                        {o.itemsCount} {o.itemsCount === 1 ? "item" : "items"}
+                        {o.address.city ? ` · ${o.address.city}` : ""}
+                        {o.promoCode ? ` · ${o.promoCode}` : ""}
+                      </p>
+                    </div>
+
+                    <p className="text-right text-sm font-bold tabular-nums text-white">
+                      {formatMoney(o.totalUSD)}
+                    </p>
+
+                    <div className="order-4 flex items-center sm:order-none">
+                      <label className="sr-only" htmlFor={`status-${o.id}`}>
+                        Order status for {o.orderNumber || o.id}
+                      </label>
+                      <div className="relative">
+                        <select
+                          id={`status-${o.id}`}
+                          value={statusValue(o)}
+                          onChange={(e) => void updateOrderStatus(o.id, o.user.id, e.target.value)}
+                          disabled={updatingOrderId === o.id}
+                          className="absolute inset-0 w-full cursor-pointer opacity-0 disabled:cursor-wait"
+                        >
+                          {ORDER_STATUS_OPTIONS.map((status) => (
+                            <option key={status} value={status}>
+                              {statusLabel(status)}
+                            </option>
+                          ))}
+                        </select>
+                        <span className={`pointer-events-none inline-flex items-center gap-1 ${updatingOrderId === o.id ? "opacity-50" : ""}`}>
+                          <OrderStatusBadge status={o.status} />
+                          <ChevronDown size={14} className="text-white/40" aria-hidden="true" />
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setInspectOrderId((curr) => (curr === o.id ? "" : o.id))}
+                      aria-expanded={open}
+                      className="order-5 inline-flex items-center justify-end gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-white/55 hover:bg-white/[0.05] hover:text-white transition sm:order-none"
+                    >
+                      {open ? "Hide" : "Details"}
+                      <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+                    </button>
+                  </div>
+
+                  {open && (
+                    <div className="grid gap-3 px-4 pb-5 sm:px-5 lg:grid-cols-[1.4fr_1fr_1fr]">
+                      <section className={`${ui.inset} p-4`}>
+                        <h3 className={ui.label}>Items</h3>
+                        <ul className="mt-3 space-y-2">
+                          {o.items.map((it, idx) => (
+                            <li key={`${it.productId}-${idx}`} className="flex items-baseline justify-between gap-3 text-sm">
+                              <span className="min-w-0 text-white/85">
+                                <span className="mr-1.5 font-semibold tabular-nums text-[#FF8B64]">{it.quantity}×</span>
+                                {it.name}
+                              </span>
+                              <span className="shrink-0 tabular-nums text-white/60">{formatMoney(it.lineTotalUSD)}</span>
+                            </li>
+                          ))}
+                          {o.items.length === 0 && <li className="text-sm text-white/40">No item details saved.</li>}
+                        </ul>
+                      </section>
+
+                      <section className={`${ui.inset} p-4 text-sm`}>
+                        <h3 className={ui.label}>Delivery</h3>
+                        <p className="mt-3 font-semibold text-white/90">{o.address.fullName || "–"}</p>
+                        <p className="mt-1 text-white/60 leading-relaxed">
+                          {[o.address.line1, o.address.city, o.address.state, o.address.postalCode, o.address.country]
+                            .filter(Boolean)
+                            .join(", ") || "No address"}
+                        </p>
+                        {o.address.phone && (
+                          <a
+                            href={`tel:${o.address.phone}`}
+                            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF8B64] hover:text-[#ffa282]"
                           >
-                            {ORDER_STATUS_OPTIONS.map((status) => (
-                              <option key={status} value={status} className="bg-[#1b1b1b]">
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/users/${o.user.id}`}
-                          className="font-medium hover:underline underline-offset-4"
-                        >
-                          {o.user.fullName}
-                        </Link>
-                        <div className="text-xs text-white/60">{o.user.email || "No email"}</div>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-white/80">
-                        <div>Items: {o.itemsCount}</div>
-                        <div>Subtotal: {formatMoney(o.subtotalUSD)}</div>
-                        <div>Discount: -{formatMoney(o.discountUSD)}</div>
-                        <div>Shipping: {formatMoney(o.shippingUSD)}</div>
-                        <div className="font-semibold text-white mt-0.5">
-                          Total: {formatMoney(o.totalUSD)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-white/80">{o.promoCode || "-"}</td>
-                      <td className="px-4 py-3 text-xs text-white/80">
-                        <div>{o.address.fullName || "-"}</div>
-                        <div>{o.address.line1 || "-"}</div>
-                        <div>
-                          {o.address.city || "-"}, {o.address.state || "-"}{" "}
-                          {o.address.postalCode || ""}
-                        </div>
-                        <div>{o.address.country || "-"}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setInspectOrderId((curr) => (curr === o.id ? "" : o.id))
-                          }
-                          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 hover:bg-white/10 transition"
-                        >
-                          {inspectOrderId === o.id ? "Hide" : "Inspect"}
-                        </button>
-                      </td>
-                    </tr>
+                            <Phone size={14} aria-hidden="true" />
+                            {o.address.phone}
+                          </a>
+                        )}
+                        {o.user.email && <p className="mt-2 truncate text-xs text-white/40">{o.user.email}</p>}
+                      </section>
 
-                    {inspectOrderId === o.id && (
-                      <tr className="border-b border-white/10 last:border-b-0">
-                        <td colSpan={6} className="px-4 pb-4">
-                          <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                              <div className="text-white/90">
-                                Invoice:{" "}
-                                <span className="font-semibold">
-                                  {o.invoice?.invoiceNumber || "Pending"}
-                                </span>
-                              </div>
-                              <div className="text-white/70">
-                                Issued: {formatDate(o.invoice?.issuedAt || o.createdAt)}
-                              </div>
-                              <div className="text-white/70 capitalize">
-                                Payment: {o.invoice?.paymentStatus || "pending"}
-                              </div>
-                              <button
-                                type="button"
-                                aria-label="Print invoice"
-                                onClick={() =>
-                                  openInvoiceWindow(
-                                    `/invoice/${encodeURIComponent(o.id)}?userId=${encodeURIComponent(
-                                      o.user.id
-                                    )}`
-                                  )
-                                }
-                                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/85 hover:bg-white/10 transition"
-                              >
-                                <Printer size={13} />
-                              </button>
+                      <section className={`${ui.inset} p-4 text-sm`}>
+                        <h3 className={ui.label}>Payment</h3>
+                        <dl className="mt-3 space-y-1.5 tabular-nums">
+                          <div className="flex justify-between text-white/60"><dt>Subtotal</dt><dd>{formatMoney(o.subtotalUSD)}</dd></div>
+                          {o.discountUSD > 0 && (
+                            <div className="flex justify-between text-emerald-300/80">
+                              <dt>Discount{o.promoCode ? ` (${o.promoCode})` : ""}</dt>
+                              <dd>−{formatMoney(o.discountUSD)}</dd>
                             </div>
-                            <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-2 text-xs text-white/80">
-                              <div className="flex items-center justify-between gap-2 py-1">
-                                <span className="text-white/70">
-                                  Items preview hidden
-                                </span>
-                                <span className="font-semibold text-white">
-                                  {formatMoney(o.totalUSD)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                ))}
-              {!loading && filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-white/60">
-                    No orders found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                          )}
+                          <div className="flex justify-between text-white/60"><dt>Delivery</dt><dd>{formatMoney(o.shippingUSD)}</dd></div>
+                          <div className="flex justify-between border-t border-white/[0.06] pt-1.5 font-bold text-white"><dt>Total</dt><dd>{formatMoney(o.totalUSD)}</dd></div>
+                        </dl>
+                        <div className="mt-4 flex items-center justify-between gap-2">
+                          <p className="min-w-0 text-xs text-white/40">
+                            <span className="block truncate">{o.invoice?.invoiceNumber || "Invoice pending"}</span>
+                            <span className="capitalize">Payment {o.invoice?.paymentStatus || "pending"}</span>
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openInvoiceWindow(
+                                `/invoice/${encodeURIComponent(o.id)}?userId=${encodeURIComponent(o.user.id)}`
+                              )
+                            }
+                            className={ui.btnSm}
+                          >
+                            <Printer size={13} aria-hidden="true" />
+                            Invoice
+                          </button>
+                        </div>
+                      </section>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
-    </section>
+    </div>
   );
 }

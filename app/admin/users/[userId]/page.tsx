@@ -1,11 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import Background from "@/app/components/Background";
+import AdminShell from "../../AdminShell";
+import { OrderStatusBadge } from "@/app/components/OrderStatus";
+import { ArrowLeft } from "lucide-react";
 import type { Product } from "@/app/data/products";
 import { getProducts } from "@/app/lib/products-db";
 import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/app/lib/supabase/admin";
+import { ui } from "../../ui";
 
 function formatDate(value: unknown) {
   if (!value) return "N/A";
@@ -194,7 +197,7 @@ async function requireAdmin() {
     return { ok: false as const, reason: "forbidden" as const };
   }
 
-  return { ok: true as const };
+  return { ok: true as const, email: auth.email };
 }
 
 export default async function AdminUserDetailsPage({
@@ -280,233 +283,141 @@ export default async function AdminUserDetailsPage({
   const username =
     typeof userData.user_metadata?.username === "string" ? userData.user_metadata.username : "";
 
+  const productTiles = (list: Product[], prefix: string, empty: string) =>
+    list.length > 0 ? (
+      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-3">
+        {list.map((p) => (
+          <li key={`${prefix}-${p.id}`}>
+            <Link href={getProductHref(p)} className="group block">
+              <span className="relative block aspect-square overflow-hidden rounded-xl border border-white/10 bg-black">
+                <Image src={getProductImage(p)} alt={p.name} fill className="object-cover transition group-hover:scale-[1.04]" sizes="120px" />
+              </span>
+              <span className="mt-1.5 block truncate text-xs font-medium text-white/80 group-hover:text-[#FF8B64] transition-colors">
+                {p.name}
+              </span>
+              <span className="block text-[11px] text-white/40">{formatPrice(p)}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-sm text-white/40">{empty}</p>
+    );
+
   return (
-    <div className="relative min-h-screen">
-      <Background />
-
-      <main className="relative z-20 min-h-screen px-4 sm:px-6 lg:px-8 py-10">
-        <div className="mx-auto w-full max-w-[1400px] space-y-5">
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-7">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-white/45">
-                  Admin User View
-                </p>
-                <h1 className="mt-2 text-white text-3xl sm:text-4xl font-semibold">
-                  {fullName}
-                </h1>
-                <p className="mt-2 text-white/70">{primaryEmail || "No email"}</p>
-                <div className="mt-3 text-sm text-white/55 font-mono">{userData.id}</div>
-              </div>
-
-              <div className="flex gap-2">
-                <Link
-                  href="/admin"
-                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10 transition"
-                >
-                  Back to Admin
-                </Link>
-              </div>
-            </div>
+    <AdminShell
+      active="insights"
+      email={admin.email}
+      title={fullName}
+      blurb={primaryEmail || "No email"}
+      actions={
+        <Link href="/admin?tab=insights" className={ui.btn}>
+          <ArrowLeft size={15} aria-hidden="true" />
+          All customers
+        </Link>
+      }
+    >
+      <div className="grid items-start gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="space-y-4">
+          <section className={ui.panelPad}>
+            <h2 className={ui.label}>Profile</h2>
+            <dl className="mt-3 space-y-2.5 text-sm">
+              <div className="flex justify-between gap-3"><dt className="text-white/45">Username</dt><dd className="truncate text-white/85">{username ? `@${username}` : "–"}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-white/45">Joined</dt><dd className="text-white/85">{formatDate(userData.created_at)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-white/45">Last sign-in</dt><dd className="text-white/85">{formatDate(userData.last_sign_in_at)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-white/45">Orders</dt><dd className="font-semibold text-white">{orders.length}</dd></div>
+            </dl>
+            <p className={`mt-4 break-all ${ui.mono}`}>{userData.id}</p>
           </section>
 
-          <section className="grid gap-5 lg:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <h2 className="text-white text-xl font-semibold">Profile</h2>
-              <div className="mt-4 space-y-2 text-sm text-white/80">
-                <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                  <span className="text-white/60">Username:</span>{" "}
-                  <span>{username || "N/A"}</span>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                  <span className="text-white/60">Created:</span>{" "}
-                  <span>{formatDate(userData.created_at)}</span>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                  <span className="text-white/60">Last sign in:</span>{" "}
-                  <span>{formatDate(userData.last_sign_in_at)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <h2 className="text-white text-xl font-semibold">Likes</h2>
-              <p className="mt-1 text-sm text-white/60">{likesIds.length} product(s)</p>
-              <div className="mt-4 space-y-3">
-                {likedProducts.length > 0 ? (
-                  likedProducts.map((p) => (
-                    <div key={`like-${p.id}`} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                      <div className="flex gap-3">
-                        <Link
-                          href={getProductHref(p)}
-                          className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5"
-                        >
-                          <Image
-                            src={getProductImage(p)}
-                            alt={p.name}
-                            fill
-                            className="object-cover"
-                            sizes="64px"
-                          />
-                        </Link>
-                        <div className="min-w-0">
-                          <Link
-                            href={getProductHref(p)}
-                            className="line-clamp-1 text-sm font-medium text-white hover:underline underline-offset-4"
-                          >
-                            {p.name}
-                          </Link>
-                          <div className="mt-1 text-xs text-white/65">{labelCategory(p.category)}</div>
-                          <div className="mt-1 text-xs text-white/90">{formatPrice(p)}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/65">
-                    No likes found.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <h2 className="text-white text-xl font-semibold">Wishlist</h2>
-              <p className="mt-1 text-sm text-white/60">{wishlistIds.size} product(s)</p>
-              <div className="mt-4 space-y-3">
-                {wishlistProducts.length > 0 ? (
-                  wishlistProducts.map((p) => (
-                    <div
-                      key={`wishlist-${p.id}`}
-                      className="rounded-xl border border-white/10 bg-black/20 p-3"
-                    >
-                      <div className="flex gap-3">
-                        <Link
-                          href={getProductHref(p)}
-                          className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5"
-                        >
-                          <Image
-                            src={getProductImage(p)}
-                            alt={p.name}
-                            fill
-                            className="object-cover"
-                            sizes="64px"
-                          />
-                        </Link>
-                        <div className="min-w-0">
-                          <Link
-                            href={getProductHref(p)}
-                            className="line-clamp-1 text-sm font-medium text-white hover:underline underline-offset-4"
-                          >
-                            {p.name}
-                          </Link>
-                          <div className="mt-1 text-xs text-white/65">{labelCategory(p.category)}</div>
-                          <div className="mt-1 text-xs text-white/90">{formatPrice(p)}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/65">
-                    No wishlist items found.
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <h2 className="text-white text-xl font-semibold">Saved Addresses</h2>
-            <p className="mt-1 text-sm text-white/60">
-              Loaded from Supabase user_addresses table.
-            </p>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <section className={ui.panelPad}>
+            <h2 className={ui.label}>Addresses</h2>
+            <div className="mt-3 space-y-3">
               {addresses.length > 0 ? (
                 addresses.map((addr) => (
-                  <div
-                    key={addr.id}
-                    className="rounded-xl border border-white/10 bg-black/20 p-4"
-                  >
+                  <div key={addr.id} className={`${ui.inset} p-3.5 text-sm`}>
                     <div className="flex items-center gap-2">
-                      <p className="text-white font-medium">
-                        {addr.label || "Address"}
-                      </p>
+                      <p className="font-semibold text-white">{addr.label || "Address"}</p>
                       {addr.isDefault && (
-                        <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200">
+                        <span className="rounded-full bg-[#FF8B64]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#FF8B64]">
                           Default
                         </span>
                       )}
                     </div>
-                    <p className="mt-2 text-sm text-white/90">{addr.fullName}</p>
-                    <p className="text-sm text-white/75">{addr.phone}</p>
-                    <p className="mt-2 text-sm text-white/80">
-                      {addr.line1}
-                      {addr.line2 ? `, ${addr.line2}` : ""}
-                    </p>
-                    <p className="text-sm text-white/80">
-                      {addr.city}, {addr.state} {addr.postalCode}
-                    </p>
-                    <p className="text-sm text-white/80">{addr.country}</p>
-                    <p className="mt-2 text-xs text-white/55">
-                      Updated {formatDate(addr.updatedAt || addr.createdAt)}
+                    <p className="mt-1.5 text-white/80">{addr.fullName}</p>
+                    {addr.phone && (
+                      <a href={`tel:${addr.phone}`} className="text-[#FF8B64] hover:text-[#ffa282]">
+                        {addr.phone}
+                      </a>
+                    )}
+                    <p className="mt-1.5 text-white/55 leading-relaxed">
+                      {[addr.line1, addr.line2, addr.city, addr.state, addr.postalCode, addr.country].filter(Boolean).join(", ")}
                     </p>
                   </div>
                 ))
               ) : (
-                <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/65">
-                  No saved addresses found for this user.
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <h2 className="text-white text-xl font-semibold">Orders</h2>
-            <p className="mt-1 text-sm text-white/60">
-              Loaded from KV store.
-            </p>
-
-            <div className="mt-4 space-y-3">
-              {orders.length > 0 ? (
-                orders.map((order) => (
-                  <div key={order.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <div className="text-sm text-white/90 font-medium">
-                          {order.orderNumber || order.id}
-                        </div>
-                        <div className="text-[11px] text-white/60">{order.id}</div>
-                      </div>
-                      <div className="text-xs text-white/70">{formatDate(order.createdAt)}</div>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-white/80">
-                      <span>Status: {order.status}</span>
-                      <span>Items: {order.itemsCount}</span>
-                      <span>Subtotal: {order.subtotal}</span>
-                      <span>Discount: {order.discount}</span>
-                      <span>Shipping: {order.shipping}</span>
-                      <span>Total: {order.total}</span>
-                      <span>Promo: {order.promoCode || "-"}</span>
-                      <span>Address: {order.addressLine || "-"}</span>
-                    </div>
-                    <details className="mt-2 text-xs text-white/65">
-                      <summary className="cursor-pointer">Raw order payload</summary>
-                      <pre className="mt-2 overflow-x-auto rounded-lg border border-white/10 bg-black/35 p-2 text-[11px] leading-relaxed text-white/75">
-                        {JSON.stringify(order.raw, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/65">
-                  No orders found for this user in KV.
-                </div>
+                <p className="text-sm text-white/40">No saved addresses.</p>
               )}
             </div>
           </section>
         </div>
-      </main>
-    </div>
+
+        <div className="space-y-4">
+          <section className={`${ui.panel} overflow-hidden`}>
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3.5">
+              <h2 className="text-base font-bold text-white">Orders</h2>
+              <span className="text-xs text-white/40">{orders.length}</span>
+            </div>
+            {orders.length > 0 ? (
+              <ul className="divide-y divide-white/[0.06]">
+                {orders.map((order) => (
+                  <li key={order.id} className="px-5 py-3.5">
+                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-white">{order.orderNumber || order.id}</p>
+                        <p className="text-xs text-white/40">
+                          {formatDate(order.createdAt)} · {order.itemsCount} {order.itemsCount === 1 ? "item" : "items"}
+                          {order.promoCode ? ` · ${order.promoCode}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold tabular-nums text-white">{order.total}</span>
+                        <OrderStatusBadge status={order.status} />
+                      </div>
+                    </div>
+                    {order.addressLine && <p className="mt-1.5 truncate text-xs text-white/45">{order.addressLine}</p>}
+                    <details className="mt-2 text-xs text-white/40">
+                      <summary className="cursor-pointer select-none hover:text-white/70">Full order data</summary>
+                      <pre className="mt-2 max-h-72 overflow-auto rounded-lg border border-white/10 bg-black/40 p-3 text-[11px] leading-relaxed text-white/70">
+                        {JSON.stringify(order.raw, null, 2)}
+                      </pre>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-5 py-10 text-center text-sm text-white/40">No orders yet.</p>
+            )}
+          </section>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <section className={ui.panelPad}>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className={ui.label}>Liked</h2>
+                <span className="text-xs text-white/40">{likesIds.length}</span>
+              </div>
+              {productTiles(likedProducts, "like", "No likes yet.")}
+            </section>
+            <section className={ui.panelPad}>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className={ui.label}>Wishlist</h2>
+                <span className="text-xs text-white/40">{wishlistIds.size}</span>
+              </div>
+              {productTiles(wishlistProducts, "wish", "Nothing saved yet.")}
+            </section>
+          </div>
+        </div>
+      </div>
+    </AdminShell>
   );
 }

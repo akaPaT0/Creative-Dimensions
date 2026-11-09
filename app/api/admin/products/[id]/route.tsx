@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProductsFromDb, saveProducts } from "@/app/lib/products-db";
+import { getProductsFromDb, saveProducts, setProductFlags } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
 import { deletePublicAssetByUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
 import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
@@ -185,6 +185,36 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     await saveProducts(next);
 
     return json({ ok: true, product: updated });
+  } catch (error) {
+    const message = error instanceof Error
+        ? error.message
+        : error && typeof error === "object" && "message" in error
+          ? String((error as { message: unknown }).message)
+          : "Unknown error";
+    return json({ error: message }, 500);
+  }
+}
+
+// Quick toggle from the product list: only isNew / featured change.
+export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const admin = await requireSupabaseAdmin(req);
+    if ("response" in admin) return admin.response;
+    const { id } = await ctx.params;
+
+    const body = (await req.json().catch(() => null)) as
+      | { isNew?: unknown; featured?: unknown }
+      | null;
+    const flags: { isNew?: boolean; featured?: boolean } = {};
+    if (typeof body?.isNew === "boolean") flags.isNew = body.isNew;
+    if (typeof body?.featured === "boolean") flags.featured = body.featured;
+    if (Object.keys(flags).length === 0) {
+      return json({ error: "Send isNew and/or featured as true or false" }, 400);
+    }
+
+    const saved = await setProductFlags(id, flags);
+    if (!saved) return json({ error: `Product not found: ${id}` }, 404);
+    return json({ ok: true, ...saved });
   } catch (error) {
     const message = error instanceof Error
         ? error.message

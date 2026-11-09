@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Field, Switch, ui } from "./ui";
+import { Box, ChevronLeft, ChevronRight, ImagePlus, X } from "lucide-react";
 
 const DEFAULT_CATEGORIES = [
   "halloween",
@@ -272,7 +274,7 @@ export default function AdminProductForm() {
       if (!res.ok) throw new Error(data?.error || "Failed");
 
       setMsg(
-        `Saved ✅ ${data.product.category}/${data.product.slug} (${data.product.images?.length || 0} images)`
+        `Saved ${data.product.category}/${data.product.slug} (${data.product.images?.length || 0} images)`
       );
 
       // reset fields (keep category/subCategory)
@@ -294,334 +296,265 @@ export default function AdminProductForm() {
     }
   }
 
+  const coverLabel = (i: number) => (i === 0 ? "Cover" : String(i + 1));
+
   return (
-    <section
-      id="create-product"
-      className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5"
-    >
-      <div className="mb-4 border-b border-white/10 pb-4">
-        <h2 className="text-white text-xl font-semibold">Create Product</h2>
-        <p className="mt-1 text-sm text-white/60">
-          Add a new item with ordered images, category mapping, and metadata.
-        </p>
-      </div>
+    <form id="create-product" onSubmit={onSubmit} className="space-y-4">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
+        {/* Details */}
+        <section className={`${ui.panelPad} space-y-4`}>
+          <h2 className="text-base font-bold text-white">Details</h2>
 
-      <form onSubmit={onSubmit} className="w-full space-y-4">
-      {/* ID + price */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label className="text-white/80 text-sm">ID (auto)</label>
-          <div className="mt-1 flex gap-2">
+          <Field label="Name">
             <input
-              readOnly
-              className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white/90 outline-none"
-              value={id}
-              placeholder="KECU008"
+              className={ui.input}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Cute Barbie Comb"
             />
-            <button
-              type="button"
-              onClick={regenerateId}
-              className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
-            >
-              Regen
-            </button>
-          </div>
-        </div>
+          </Field>
 
-        <div>
-          <label className="text-white/80 text-sm">Price USD</label>
-          <input
-            type="number"
-            step="0.1"
-            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
-            value={priceUSD}
-            onChange={(e) => setPriceUSD(e.target.value)}
-            placeholder="2"
-          />
-        </div>
-      </div>
-
-      {/* Name */}
-      <div>
-        <label className="text-white/80 text-sm">Name</label>
-        <input
-          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Cute Barbie Comb"
-        />
-      </div>
-
-      {/* Slug + Auto button */}
-      <div>
-        <label className="text-white/80 text-sm">Slug</label>
-        <div className="mt-1 flex gap-2">
-          <input
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
-            value={slug}
-            onChange={(e) => {
-              setSlugTouched(true);
-              setSlug(e.target.value);
-            }}
-            placeholder="cute-barbie-comb"
-          />
-          <button
-            type="button"
-            onClick={() => setSlugTouched(false)}
-            className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
-            title="Return to auto-generated slug"
-          >
-            Auto
-          </button>
-        </div>
-      </div>
-
-      {/* Category + SubCategory + Add new */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <div>
-            <label className="text-white/80 text-sm">Category</label>
-            <select
-              className="mt-1 w-full rounded-xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-2 text-white outline-none"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="Add new category..."
-            />
-            <button
-              type="button"
-              onClick={addCategory}
-              className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
-            >
-              Add
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div>
-            <label className="text-white/80 text-sm">Sub-category</label>
-            <select
-              className="mt-1 w-full rounded-xl border border-white/15 bg-[#0D0D0D]/60 px-4 py-2 text-white outline-none"
-              value={subCategory}
-              onChange={(e) => setSubCategory(e.target.value)}
-            >
-              {subCategories.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
-              value={newSubCategory}
-              onChange={(e) => setNewSubCategory(e.target.value)}
-              placeholder="Add new sub-category..."
-            />
-            <button
-              type="button"
-              onClick={addSubCategory}
-              className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white hover:bg-white/10 transition"
-            >
-              Add
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* MULTI Image upload */}
-      <div>
-        <label className="text-white/80 text-sm">Images (multiple)</label>
-        <input
-          className="mt-1 w-full text-white/80"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          multiple
-          onChange={(e) => {
-            const files = Array.from(e.target.files || []);
-            if (files.length === 0) return;
-
-            // ✅ append instead of replace
-            setImages((prev) => {
-              const seen = new Set(prev.map((f) => `${f.name}-${f.size}-${f.lastModified}`));
-              const toAdd = files.filter((f) => !seen.has(`${f.name}-${f.size}-${f.lastModified}`));
-              return [...prev, ...toAdd];
-            });
-
-            // ✅ allow adding the same file again later if needed
-            e.currentTarget.value = "";
-          }}
-        />
-
-        <div className="mt-2 flex items-center gap-2">
-          <p className="text-white/40 text-xs">
-            Order matters: first image becomes <b>-1</b> (cover). Stored in Supabase
-            Storage path: {category}/{subCategory}/{slug}-001.webp, -002.webp...
-          </p>
-          {images.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setImages([])}
-              className="ml-auto rounded-lg border border-white/15 bg-white/5 px-3 py-1 text-xs text-white hover:bg-white/10 transition"
-            >
-              Clear all
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Single model upload */}
-      <div>
-        <label className="text-white/80 text-sm">3D Model (optional, max 1)</label>
-        <input
-          className="mt-1 w-full text-white/80"
-          type="file"
-          accept=".glb,model/gltf-binary"
-          onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-            setModelFile(file);
-            e.currentTarget.value = "";
-          }}
-        />
-        <p className="mt-1 text-white/40 text-xs">
-          Upload a single <b>.glb</b> model for color customization. One model per product.
-        </p>
-        <p className="mt-1 text-white/40 text-xs">
-          Storage path: <code>{targetModelPath.replace(/^\/+/, "")}</code>
-        </p>
-        {modelFile && (
-          <div className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/80">
-            <span className="truncate">{modelFile.name}</span>
-            <button
-              type="button"
-              onClick={() => setModelFile(null)}
-              className="ml-auto rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-white hover:bg-white/10 transition"
-            >
-              Remove
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Preview grid + ordering controls */}
-      {previewUrls.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-          <p className="text-white/60 text-sm mb-3">
-            Preview ({previewUrls.length}) <span className="text-white/40">(first is cover)</span>
-          </p>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {previewUrls.map((u, i) => (
-              <div key={u} className="relative rounded-xl overflow-hidden border border-white/10">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={u} alt={`preview-${i}`} className="w-full h-40 object-cover" />
-
-                {/* index badge */}
-                <div className="absolute bottom-2 left-2 rounded-lg border border-white/15 bg-black/35 px-2 py-1 text-xs text-white">
-                  {i === 0 ? "Cover (1)" : i + 1}
-                </div>
-
-                {/* controls */}
-                <div className="absolute top-2 left-2 flex gap-2">
+          <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+            <Field label="Link (slug)" hint={slugTouched ? "Edited by hand" : "Made from the name"}>
+              <div className="flex gap-2">
+                <input
+                  className={ui.input}
+                  value={slug}
+                  onChange={(e) => {
+                    setSlugTouched(true);
+                    setSlug(e.target.value);
+                  }}
+                  placeholder="cute-barbie-comb"
+                />
+                {slugTouched && (
                   <button
                     type="button"
-                    disabled={i === 0}
-                    onClick={() => moveImage(i, -1)}
-                    className="rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-xs text-white hover:bg-black/55 disabled:opacity-40 transition"
-                    title="Move up"
+                    onClick={() => setSlugTouched(false)}
+                    className={`shrink-0 ${ui.btn}`}
+                    title="Go back to the slug made from the name"
                   >
-                    ↑
+                    Auto
                   </button>
-                  <button
-                    type="button"
-                    disabled={i === previewUrls.length - 1}
-                    onClick={() => moveImage(i, 1)}
-                    className="rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-xs text-white hover:bg-black/55 disabled:opacity-40 transition"
-                    title="Move down"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    disabled={i === 0}
-                    onClick={() => makeCover(i)}
-                    className="rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-xs text-white hover:bg-black/55 disabled:opacity-40 transition"
-                    title="Make cover (move to first)"
-                  >
-                    Cover
-                  </button>
-                </div>
+                )}
+              </div>
+            </Field>
+            <Field label="Price $">
+              <input
+                type="number"
+                step="0.1"
+                className={ui.input}
+                value={priceUSD}
+                onChange={(e) => setPriceUSD(e.target.value)}
+                placeholder="2"
+              />
+            </Field>
+          </div>
 
-                <button
-                  type="button"
-                  onClick={() => removeImageAt(i)}
-                  className="absolute top-2 right-2 rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-xs text-white hover:bg-black/55 transition"
-                >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Category">
+              <select className={ui.select} value={category} onChange={(e) => setCategory(e.target.value)}>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2 flex gap-2">
+                <input
+                  className={`${ui.input} py-2 text-xs`}
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="New category"
+                />
+                <button type="button" onClick={addCategory} className={`shrink-0 ${ui.btnSm}`} disabled={!newCategory.trim()}>
+                  Add
+                </button>
+              </div>
+            </Field>
+            <Field label="Sub-category">
+              <select className={ui.select} value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
+                {subCategories.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2 flex gap-2">
+                <input
+                  className={`${ui.input} py-2 text-xs`}
+                  value={newSubCategory}
+                  onChange={(e) => setNewSubCategory(e.target.value)}
+                  placeholder="New sub-category"
+                />
+                <button type="button" onClick={addSubCategory} className={`shrink-0 ${ui.btnSm}`} disabled={!newSubCategory.trim()}>
+                  Add
+                </button>
+              </div>
+            </Field>
+          </div>
+
+          <Field label="Description">
+            <textarea
+              className={`min-h-[160px] ${ui.input}`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What it is, size, colours, what it's good for…"
+            />
+          </Field>
+
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/[0.06] pt-4">
+            <Switch checked={isNew} onChange={setIsNew} label="Mark as new" />
+            <Switch checked={featured} onChange={setFeatured} label="Featured on home" />
+            <span className={`ml-auto ${ui.mono}`}>
+              ID {id || "…"}{" "}
+              <button type="button" onClick={regenerateId} className="ml-1 text-white/50 underline-offset-2 hover:text-white hover:underline">
+                regenerate
+              </button>
+            </span>
+          </div>
+        </section>
+
+        {/* Media */}
+        <div className="space-y-4">
+          <section className={`${ui.panelPad} space-y-3`}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-white">
+                Photos {images.length > 0 && <span className="text-white/40">({images.length})</span>}
+              </h2>
+              {images.length > 0 && (
+                <button type="button" onClick={() => setImages([])} className="text-xs font-semibold text-white/45 hover:text-white">
+                  Clear all
+                </button>
+              )}
+            </div>
+
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-[#0f0f11] px-4 py-7 text-center transition hover:border-[#FF8B64]/50 hover:bg-[#FF8B64]/[0.03]">
+              <ImagePlus size={22} className="text-[#FF8B64]" aria-hidden="true" />
+              <span className="text-sm font-semibold text-white">Add photos</span>
+              <span className="text-xs text-white/40">PNG, JPG or WebP · under {MAX_MB_EACH}MB each</span>
+              <input
+                className="sr-only"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length === 0) return;
+                  setImages((prev) => {
+                    const seen = new Set(prev.map((f) => `${f.name}-${f.size}-${f.lastModified}`));
+                    const toAdd = files.filter((f) => !seen.has(`${f.name}-${f.size}-${f.lastModified}`));
+                    return [...prev, ...toAdd];
+                  });
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
+
+            {previewUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {previewUrls.map((u, i) => (
+                  <div
+                    key={u}
+                    className={`group relative aspect-square overflow-hidden rounded-xl border bg-black ${
+                      i === 0 ? "border-[#FF8B64]/60" : "border-white/10"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={u} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+                    <span
+                      className={`absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                        i === 0 ? "bg-[#FF8B64] text-[#0D0D0D]" : "bg-black/60 text-white"
+                      }`}
+                    >
+                      {coverLabel(i)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeImageAt(i)}
+                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-black/60 text-white/80 hover:bg-red-500/80 hover:text-white transition"
+                      aria-label={`Remove photo ${i + 1}`}
+                    >
+                      <X size={13} aria-hidden="true" />
+                    </button>
+                    <div className="absolute inset-x-1.5 bottom-1.5 flex gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+                      <button
+                        type="button"
+                        disabled={i === 0}
+                        onClick={() => moveImage(i, -1)}
+                        className="flex h-6 flex-1 items-center justify-center rounded-md bg-black/70 text-white hover:bg-black disabled:opacity-30"
+                        aria-label="Move earlier"
+                      >
+                        <ChevronLeft size={13} aria-hidden="true" />
+                      </button>
+                      {i !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => makeCover(i)}
+                          className="flex h-6 flex-[2] items-center justify-center rounded-md bg-black/70 text-[10px] font-bold text-white hover:bg-black"
+                        >
+                          Cover
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={i === previewUrls.length - 1}
+                        onClick={() => moveImage(i, 1)}
+                        className="flex h-6 flex-1 items-center justify-center rounded-md bg-black/70 text-white hover:bg-black disabled:opacity-30"
+                        aria-label="Move later"
+                      >
+                        <ChevronRight size={13} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className={ui.note}>
+              The first photo is the cover. Saved as {category}/{subCategory}/{slug || "slug"}-001.webp, -002…
+            </p>
+          </section>
+
+          <section className={`${ui.panelPad} space-y-3`}>
+            <h2 className="text-base font-bold text-white">
+              3D model <span className="text-sm font-normal text-white/40">optional</span>
+            </h2>
+            {modelFile ? (
+              <div className={`${ui.inset} flex items-center gap-3 px-3 py-2.5 text-sm`}>
+                <Box size={16} className="shrink-0 text-[#FF8B64]" aria-hidden="true" />
+                <span className="min-w-0 flex-1 truncate text-white/85">{modelFile.name}</span>
+                <button type="button" onClick={() => setModelFile(null)} className="text-xs font-semibold text-white/45 hover:text-white">
                   Remove
                 </button>
               </div>
-            ))}
-          </div>
+            ) : (
+              <input
+                className={ui.file}
+                type="file"
+                accept=".glb,model/gltf-binary"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setModelFile(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+            )}
+            <p className={ui.note}>
+              One .glb file lets customers pick colours on the product page. Saved to{" "}
+              <code className="text-white/55">{targetModelPath.replace(/^\/+/, "")}</code>
+            </p>
+          </section>
         </div>
-      )}
-
-      {/* Description */}
-      <div>
-        <label className="text-white/80 text-sm">Description</label>
-        <textarea
-          className="mt-1 w-full min-h-[140px] rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-white outline-none"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Write the product description..."
-        />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <label className="flex items-center gap-2 text-white/80 text-sm">
-          <input
-            type="checkbox"
-            checked={isNew}
-            onChange={(e) => setIsNew(e.target.checked)}
-          />
-          Mark as new
-        </label>
-        <label className="flex items-center gap-2 text-white/80 text-sm">
-          <input
-            type="checkbox"
-            checked={featured}
-            onChange={(e) => setFeatured(e.target.checked)}
-          />
-          Mark as featured
-        </label>
+      {/* Save bar */}
+      <div className="sticky bottom-3 z-20 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#161619]/95 px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <p className={`min-w-0 text-sm ${msg ? "text-white/80" : "text-white/40"}`}>
+          {msg || (name ? `${name} · $${priceUSD || 0} · ${images.length} photo${images.length === 1 ? "" : "s"}` : "Fill in the details and add at least one photo.")}
+        </p>
+        <button disabled={busy} className={`${ui.btnPrimary} shrink-0`} type="submit">
+          {busy ? "Saving…" : "Save product"}
+        </button>
       </div>
-
-      {/* Submit */}
-      <button
-        disabled={busy}
-        className="rounded-xl border border-white/15 bg-white/5 px-5 py-2 text-white hover:bg-white/10 disabled:opacity-60 transition"
-        type="submit"
-      >
-        {busy ? "Saving..." : "Save product"}
-      </button>
-
-        {msg && <p className="text-white/70 text-sm">{msg}</p>}
-      </form>
-    </section>
+    </form>
   );
 }
