@@ -247,6 +247,7 @@ export default function CheckoutPage() {
   const [promoError, setPromoError] = useState("");
   const [promoInfo, setPromoInfo] = useState("");
   const [promoRules, setPromoRules] = useState<Record<string, PromoRule>>({});
+  const [promoChecking, setPromoChecking] = useState(false);
 
   async function loadAddresses() {
     const res = await authFetch("/api/addresses");
@@ -288,55 +289,6 @@ export default function CheckoutPage() {
       if (res.ok && Array.isArray(data.products)) setProducts(data.products);
     }
     void loadProducts();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    async function loadPromos() {
-      const res = await fetch("/api/promocodes", { cache: "no-store" });
-      const data = (await res.json().catch(() => ({}))) as {
-        promos?: Array<{
-          code?: string;
-          label?: string;
-          description?: string;
-          type?: PromoRule["type"];
-          value?: number;
-          minSubtotal?: number;
-          maxDiscount?: number;
-        }>;
-      };
-      if (!alive) return;
-      if (res.ok && Array.isArray(data.promos)) {
-        const next: Record<string, PromoRule> = {};
-        for (const promo of data.promos) {
-          const code = typeof promo.code === "string" ? promo.code.toUpperCase() : "";
-          if (!code) continue;
-          const type =
-            promo.type === "fixed" || promo.type === "free_shipping"
-              ? promo.type
-              : "percent";
-          next[code] = {
-            label: typeof promo.label === "string" ? promo.label : "",
-            description: typeof promo.description === "string" ? promo.description : "",
-            type,
-            value: typeof promo.value === "number" ? Math.max(0, promo.value) : 0,
-            minSubtotal:
-              typeof promo.minSubtotal === "number"
-                ? Math.max(0, promo.minSubtotal)
-                : 0,
-            maxDiscount:
-              typeof promo.maxDiscount === "number"
-                ? Math.max(0, promo.maxDiscount)
-                : 0,
-          };
-        }
-        setPromoRules(next);
-      }
-    }
-    void loadPromos();
     return () => {
       alive = false;
     };
@@ -481,24 +433,74 @@ export default function CheckoutPage() {
     }
   }
 
-  function applyPromo() {
+  /** Ask the server about one typed code. Returns the rule, null if it isn't valid, or throws. */
+  async function lookupPromo(code: string): Promise<PromoRule | null> {
+    const res = await fetch(`/api/promocodes?code=${encodeURIComponent(code)}`, { cache: "no-store" });
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      promos?: Array<{
+        code?: string;
+        label?: string;
+        description?: string;
+        type?: PromoRule["type"];
+        value?: number;
+        minSubtotal?: number;
+        maxDiscount?: number;
+      }>;
+    };
+    if (!res.ok) throw new Error(data.error || "Promo codes are temporarily unavailable. Please try again.");
+    const promo = (data.promos ?? []).find(
+      (x) => typeof x.code === "string" && x.code.toUpperCase() === code
+    );
+    if (!promo) return null;
+    return {
+      label: typeof promo.label === "string" ? promo.label : "",
+      description: typeof promo.description === "string" ? promo.description : "",
+      type: promo.type === "fixed" || promo.type === "free_shipping" ? promo.type : "percent",
+      value: typeof promo.value === "number" ? Math.max(0, promo.value) : 0,
+      minSubtotal: typeof promo.minSubtotal === "number" ? Math.max(0, promo.minSubtotal) : 0,
+      maxDiscount: typeof promo.maxDiscount === "number" ? Math.max(0, promo.maxDiscount) : 0,
+    };
+  }
+
+  async function applyPromo() {
+    if (promoChecking) return;
     setPromoError("");
     setPromoInfo("");
 
-    const result = computePromoDiscount(subtotal, subtotal > 0 ? 5 : 0, promoInput, promoRules);
-    if (!promoInput.trim()) {
+    const typed = promoInput.trim().toUpperCase();
+    if (!typed) {
       setAppliedPromoCode("");
       setPromoInfo("Promo code removed.");
       return;
     }
 
+    let rules = promoRules;
+    if (!rules[typed]) {
+      setPromoChecking(true);
+      try {
+        const found = await lookupPromo(typed);
+        if (found) {
+          rules = { ...promoRules, [typed]: found };
+          setPromoRules(rules);
+        }
+      } catch (e) {
+        setAppliedPromoCode("");
+        setPromoError(e instanceof Error ? e.message : "Promo codes are temporarily unavailable. Please try again.");
+        return;
+      } finally {
+        setPromoChecking(false);
+      }
+    }
+
+    const result = computePromoDiscount(subtotal, subtotal > 0 ? 5 : 0, typed, rules);
     if (result.error) {
       setAppliedPromoCode("");
       setPromoError(result.error);
       return;
     }
 
-    const rule = promoRules[result.normalized];
+    const rule = rules[result.normalized];
     let context = `You saved ${formatMoney(result.discountUSD)}.`;
     if (rule?.type === "free_shipping") {
       const shippingSaved = subtotal > 0 ? 5 : 0;
@@ -927,17 +929,18 @@ export default function CheckoutPage() {
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") applyPromo();
+                        if (e.key === "Enter") void applyPromo();
                       }}
                       placeholder="Enter code"
                       className="min-w-0 flex-1 rounded-xl border border-white/12 bg-white/[0.04] px-3.5 py-2.5 text-sm uppercase text-white placeholder:normal-case placeholder:text-white/30 outline-none focus:border-[#FF8B64]/60"
                     />
                     <button
                       type="button"
-                      onClick={applyPromo}
-                      className="rounded-xl border border-white/15 bg-white/[0.06] px-4 text-sm font-semibold hover:bg-white/10 transition"
+                      onClick={() => void applyPromo()}
+                      disabled={promoChecking}
+                      className="rounded-xl border border-white/15 bg-white/[0.06] px-4 text-sm font-semibold hover:bg-white/10 transition disabled:opacity-60"
                     >
-                      Apply
+                      {promoChecking ? "Checking…" : "Apply"}
                     </button>
                   </div>
                   {promoError && <p className="mt-2 text-xs text-red-300">{promoError}</p>}

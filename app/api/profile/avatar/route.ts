@@ -1,7 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
-import { deletePublicAssetByUrl, getStorageObjectFromPublicUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
+import {
+  PUBLIC_ASSET_BUCKET,
+  deletePublicAssetByUrl,
+  getStorageObjectFromPublicUrl,
+  uploadPublicAsset,
+} from "@/app/lib/supabase/storage";
 
 export const runtime = "nodejs";
 
@@ -45,19 +50,22 @@ export async function POST(req: Request) {
     // Only ever delete this user's own previous avatar.
     if (previous) {
       const prev = getStorageObjectFromPublicUrl(previous);
-      if (prev?.path.startsWith(folder)) {
+      // Exactly avatars/<this user>/<plain file name>: no sub-folders, no "..", no other bucket.
+      const ownFile = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+      if (
+        prev &&
+        prev.bucket === PUBLIC_ASSET_BUCKET &&
+        prev.path.startsWith(folder) &&
+        ownFile.test(prev.path.slice(folder.length)) &&
+        !prev.path.includes("..")
+      ) {
         await deletePublicAssetByUrl(previous).catch(() => {});
       }
     }
 
     return NextResponse.json({ url });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : error && typeof error === "object" && "message" in error
-          ? String((error as { message: unknown }).message)
-          : "Upload failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Avatar upload failed:", error);
+    return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 500 });
   }
 }

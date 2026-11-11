@@ -1,33 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LayoutGrid, X } from "lucide-react";
-import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
+import { useIsAdmin } from "@/app/lib/supabase/auth-client";
 
 export default function AdminShortcutFab() {
-  const { isLoaded, isSignedIn } = useSupabaseAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = useIsAdmin();
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    let alive = true;
-
-    async function checkAdmin() {
-      if (!isLoaded || !isSignedIn) {
-        if (alive) setIsAdmin(false);
-        return;
-      }
-      const res = await authFetch("/api/admin/me", { cache: "no-store" });
-      if (!alive) return;
-      setIsAdmin(res.ok);
-    }
-
-    void checkAdmin();
-    return () => {
-      alive = false;
-    };
-  }, [isLoaded, isSignedIn]);
 
   if (!isAdmin) return null;
 

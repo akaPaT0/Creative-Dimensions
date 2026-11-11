@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FileBox, ImagePlus, MessageCircle, X } from "lucide-react";
+import Turnstile from "./Turnstile";
 
 export const CUSTOM_REQUEST_OPEN_EVENT = "cd:open-custom-request";
 
@@ -43,6 +44,11 @@ type Props = {
 
 type PickedFile = { file: File; preview?: string };
 
+// Keep in step with /api/custom-request.
+const MAX_FILES = 6;
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "stl", "3mf", "obj", "zip"]);
+
 const fileKey = (f: File) => `${f.name}::${f.size}::${f.lastModified}`;
 
 export default function CustomRequestModal({
@@ -69,6 +75,10 @@ export default function CustomRequestModal({
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Bot check, only needed when files are uploaded to our storage.
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [challengeAttempt, setChallengeAttempt] = useState(0);
+  const clearTurnstileToken = useCallback(() => setTurnstileToken(""), []);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const filesRef = useRef<PickedFile[]>([]);
@@ -131,16 +141,33 @@ export default function CustomRequestModal({
 
   function addFiles(incoming: File[]) {
     if (!incoming.length) return;
-    setFiles((prev) => {
-      const existing = new Set(prev.map((p) => fileKey(p.file)));
-      const added = incoming
-        .filter((f) => !existing.has(fileKey(f)))
-        .map((file) => ({
-          file,
-          preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
-        }));
-      return [...prev, ...added];
-    });
+    setErr(null);
+
+    const wrongType = incoming.filter(
+      (f) => !ALLOWED_EXTENSIONS.has(f.name.slice(f.name.lastIndexOf(".") + 1).toLowerCase())
+    );
+    const tooBig = incoming.filter((f) => f.size > MAX_FILE_BYTES);
+    const usable = incoming.filter((f) => !wrongType.includes(f) && !tooBig.includes(f));
+    if (wrongType.length) {
+      setErr("Only PNG, JPG, WebP, STL, 3MF, OBJ or ZIP files can be attached.");
+    } else if (tooBig.length) {
+      setErr("Each file must be 4 MB or smaller. Send bigger files directly on WhatsApp.");
+    }
+
+    const current = filesRef.current;
+    const existing = new Set(current.map((p) => fileKey(p.file)));
+    const room = Math.max(0, MAX_FILES - current.length);
+    const fresh = usable.filter((f) => !existing.has(fileKey(f)));
+    if (fresh.length > room) setErr(`You can attach up to ${MAX_FILES} files.`);
+    const added = fresh.slice(0, room).map((file) => ({
+      file,
+      preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+    }));
+    if (added.length) {
+      const next = [...current, ...added];
+      filesRef.current = next;
+      setFiles(next);
+    }
   }
 
   function removeFileAt(i: number) {
@@ -196,6 +223,10 @@ export default function CustomRequestModal({
     let links: string[] = [];
 
     if (files.length > 0) {
+      if (!turnstileToken) {
+        setErr("Please wait for the security check under your files to finish, then try again.");
+        return;
+      }
       setBusy(true);
       try {
         const fd = new FormData();
@@ -203,6 +234,7 @@ export default function CustomRequestModal({
         if (hasProductContext && ctxName) fd.set("productName", ctxName);
         if (hasProductContext && ctxUrl) fd.set("productUrl", ctxUrl);
         for (const f of files) fd.append("files", f.file);
+        fd.set("turnstileToken", turnstileToken);
 
         const res = await fetch("/api/custom-request", { method: "POST", body: fd });
         const data = await res.json().catch(() => ({}));
@@ -214,9 +246,14 @@ export default function CustomRequestModal({
             ? `Couldn't upload your files: ${e.message}. Try again or send them directly on WhatsApp.`
             : "Couldn't upload your files. Try again or send them directly on WhatsApp."
         );
+        // Each check passes once: get a fresh one for the retry.
+        setTurnstileToken("");
+        setChallengeAttempt((n) => n + 1);
         setBusy(false);
         return;
       }
+      setTurnstileToken("");
+      setChallengeAttempt((n) => n + 1);
       setBusy(false);
     }
 
@@ -440,6 +477,14 @@ export default function CustomRequestModal({
                         ? ` (${imageCount} image${imageCount === 1 ? "" : "s"})`
                         : ""}
                     </p>
+                  )}
+                  {files.length > 0 && (
+                    <Turnstile
+                      key={challengeAttempt}
+                      action="custom_request"
+                      onVerify={setTurnstileToken}
+                      onExpire={clearTurnstileToken}
+                    />
                   )}
                 </div>
 

@@ -13,8 +13,8 @@ export async function GET() {
       }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to load products";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Products request failed:", error);
+    return NextResponse.json({ error: "Products are temporarily unavailable. Please try again." }, { status: 500 });
   }
 }
 

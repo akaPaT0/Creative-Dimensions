@@ -51,7 +51,7 @@ export async function GET() {
     const items = normalizeItems(await loadFilamentItems());
     return NextResponse.json({ ok: true, items });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to load filaments";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Filaments request failed:", error);
+    return NextResponse.json({ error: "Colours are temporarily unavailable. Please try again." }, { status: 500 });
   }
 }

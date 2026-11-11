@@ -131,9 +131,41 @@ function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+// Sanity limits so one account can't flood the shop with junk orders.
+const MAX_QUANTITY_PER_ITEM = 100;
+const MAX_LINES_PER_ORDER = 40;
+const MAX_ORDERS_PER_10_MINUTES = 3;
+const MAX_ORDERS_PER_DAY = 10;
+
 function asPositiveInt(value: unknown) {
   if (typeof value !== "number" || !Number.isFinite(value)) return 1;
   return Math.max(1, Math.floor(value));
+}
+
+const SUPABASE_HOST = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "").host;
+  } catch {
+    return "";
+  }
+})();
+const TRUSTED_IMAGE_HOSTS = new Set(
+  [SUPABASE_HOST, "www.creativedimensionslb.com", "creativedimensionslb.com"].filter(Boolean)
+);
+
+/** Only our own pictures: a generated preview, a site path, or a file in our storage. */
+function safePreviewUrl(value: unknown) {
+  const raw = asText(value);
+  if (!raw) return "";
+  if (/^data:image\/(png|jpeg|webp);base64,/i.test(raw)) return raw;
+  if (raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")) return raw.slice(0, 500);
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "https:" && TRUSTED_IMAGE_HOSTS.has(url.host)) return url.toString().slice(0, 1000);
+  } catch {
+    // not a URL
+  }
+  return "";
 }
 
 function normalizeItems(raw: unknown): OrderRequestItem[] {
@@ -157,20 +189,21 @@ function normalizeItems(raw: unknown): OrderRequestItem[] {
             const filamentId = asText(s.filamentId);
             if (!filamentId) return null;
             return {
-              slot: asText(s.slot),
-              label: asText(s.label),
-              filamentId,
-              filamentLabel: asText(s.filamentLabel),
-              colorValue: asText(s.colorValue),
+              slot: asText(s.slot).slice(0, 60),
+              label: asText(s.label).slice(0, 80),
+              filamentId: filamentId.slice(0, 80),
+              filamentLabel: asText(s.filamentLabel).slice(0, 80),
+              colorValue: asText(s.colorValue).slice(0, 40),
             };
           })
           .filter((x): x is NonNullable<typeof x> => Boolean(x))
+          .slice(0, 12)
       : [];
-    const summary = asText(customizationRaw?.summary);
+    const summary = asText(customizationRaw?.summary).slice(0, 300);
     out.push({
       productId,
       quantity,
-      previewImageUrl: asText(row.previewImageUrl) || undefined,
+      previewImageUrl: safePreviewUrl(row.previewImageUrl) || undefined,
       customization: slots.length ? { summary, slots } : undefined,
     });
   }
@@ -362,7 +395,8 @@ export async function GET(req: Request) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Loading orders failed:", error);
+    return NextResponse.json({ error: "Could not load your orders. Please try again." }, { status: 500 });
   }
 
   const orders = (data ?? []).map((row) => rowToOrder(row as Record<string, unknown>));
@@ -385,6 +419,41 @@ export async function POST(req: Request) {
   if (items.length === 0) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
+  if (items.length > MAX_LINES_PER_ORDER) {
+    return NextResponse.json(
+      { error: "That's a very large order. Please contact us on WhatsApp to arrange it." },
+      { status: 400 }
+    );
+  }
+  if (items.some((item) => item.quantity > MAX_QUANTITY_PER_ITEM)) {
+    return NextResponse.json(
+      {
+        error: `You can order up to ${MAX_QUANTITY_PER_ITEM} of each item online. For bigger quantities, contact us on WhatsApp.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  // Counted in the database, so the limit holds across all servers.
+  const now = Date.now();
+  const { data: recentOrders, error: recentError } = await supabaseAdmin
+    .from("orders")
+    .select("created_at")
+    .eq("user_id", userId)
+    .gte("created_at", new Date(now - 24 * 60 * 60 * 1000).toISOString());
+  if (recentError) {
+    console.error("Order rate check failed:", recentError);
+    return NextResponse.json({ error: "Could not create order. Please try again." }, { status: 503 });
+  }
+  const lastTenMinutes = (recentOrders ?? []).filter(
+    (row) => now - new Date(String(row.created_at)).getTime() < 10 * 60 * 1000
+  ).length;
+  if (lastTenMinutes >= MAX_ORDERS_PER_10_MINUTES || (recentOrders ?? []).length >= MAX_ORDERS_PER_DAY) {
+    return NextResponse.json(
+      { error: "You've placed several orders in a short time. Please wait a little, or contact us on WhatsApp." },
+      { status: 429 }
+    );
+  }
 
   const { data: addressRows, error: addressError } = await supabaseAdmin
     .from("user_addresses")
@@ -392,7 +461,8 @@ export async function POST(req: Request) {
     .eq("user_id", userId);
 
   if (addressError) {
-    return NextResponse.json({ error: addressError.message }, { status: 500 });
+    console.error("Loading addresses for order failed:", addressError);
+    return NextResponse.json({ error: "Could not create order. Please try again." }, { status: 500 });
   }
 
   const addresses = normalizeAddresses(
@@ -427,6 +497,12 @@ export async function POST(req: Request) {
 
   const products = await getProducts();
   const byId = new Map(products.map((p) => [String(p.id), p]));
+  if (items.some((item) => !byId.has(item.productId))) {
+    return NextResponse.json(
+      { error: "An item in your cart is no longer available. Please remove it and try again." },
+      { status: 400 }
+    );
+  }
   const resolvedItems = items.map((item) => {
     const product = byId.get(item.productId);
     if (!product) {

@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
+// Log the technical details on the server; show the visitor a plain message.
+function serverError(error: unknown) {
+  console.error("Address request failed:", error);
+  return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+}
+
 type AddressInput = {
   id?: string;
   label?: string;
@@ -86,7 +92,7 @@ export async function GET(req: Request) {
     .order("is_default", { ascending: false })
     .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError(error);
   return NextResponse.json({ addresses: (data ?? []).map(toClient) });
 }
 
@@ -118,7 +124,7 @@ export async function POST(req: Request) {
     .select("*")
     .single();
 
-  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+  if (insertError) return serverError(insertError);
   return NextResponse.json({ ok: true, address: toClient(data as Record<string, unknown>) });
 }
 
@@ -153,7 +159,7 @@ export async function PUT(req: Request) {
     .select("*")
     .single();
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (updateError) return serverError(updateError);
   return NextResponse.json({ ok: true, address: toClient(data as Record<string, unknown>) });
 }
 
@@ -170,6 +176,6 @@ export async function DELETE(req: Request) {
     .eq("id", input.id)
     .eq("user_id", auth.userId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError(error);
   return NextResponse.json({ ok: true });
 }

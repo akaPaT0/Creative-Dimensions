@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/app/lib/supabase/admin";
 
+// Log the technical details on the server; show the visitor a plain message.
+function serverError(error: unknown) {
+  console.error("Profile request failed:", error);
+  return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+}
+
 function asText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -49,7 +55,7 @@ export async function GET(req: Request) {
     .maybeSingle();
 
   if (error && !isProfilesTableMissing(error)) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError(error);
   }
 
   if (isProfilesTableMissing(error)) {
@@ -80,7 +86,7 @@ export async function GET(req: Request) {
     }
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      return serverError(insertError);
     }
 
     return NextResponse.json({
@@ -134,7 +140,7 @@ export async function PUT(req: Request) {
     );
 
     if (metadataError) {
-      return NextResponse.json({ error: metadataError.message }, { status: 500 });
+      return serverError(metadataError);
     }
 
     return NextResponse.json({
@@ -147,7 +153,7 @@ export async function PUT(req: Request) {
     });
   }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError(error);
 
   // Mirror into the auth user's metadata: the navbar and menus read the name
   // and photo from the signed-in user. Not fatal if it fails.

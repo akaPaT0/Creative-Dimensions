@@ -33,6 +33,24 @@ admin approves it under Admin → Reviews. Approved reviews show on the homepage
 (section hidden while there are none) and at `/reviews`, with surnames shortened
 to an initial. Order numbers are stored for the admin only.
 
+## Security notes
+
+- Every response carries `X-Frame-Options: DENY`, `nosniff`, a referrer policy,
+  a permissions policy and a small CSP (`frame-ancestors`, `base-uri`,
+  `object-src`, `form-action`); see `next.config.ts`. There is no `script-src`
+  rule: Next.js inline scripts would need per-request nonces.
+- `/api/custom-request` (photo/3D uploads from the request form) needs a
+  Turnstile token (action `custom_request`), accepts at most 6 files of 4 MB,
+  only PNG/JPG/WebP/STL/3MF/OBJ/ZIP whose bytes match, and stores them with a
+  server-chosen content type.
+- `/api/promocodes?code=X` answers for one typed code only; the list of codes
+  is never public. Orders are capped at 100 per item, 40 lines, 3 orders per
+  10 minutes and 10 per day per account (counted in the `orders` table).
+- The admin email exists only in the server variable `ADMIN_EMAIL`. Client
+  code asks `/api/admin/me`; do not reintroduce `NEXT_PUBLIC_ADMIN_EMAIL`.
+- In-memory rate limits (reviews, uploads, promo guesses, password reset) are
+  per server instance and best-effort; Turnstile is the real bot barrier.
+
 ## Getting Started
 
 First, run the development server:

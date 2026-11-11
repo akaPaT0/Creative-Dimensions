@@ -35,15 +35,17 @@ function getMessage(error: unknown) {
 
 function syncTokenCookie(session: Session | null) {
   if (typeof document === "undefined") return;
+  // On the live (https) site the login cookie is never sent over plain http.
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
 
   if (!session?.access_token) {
-    document.cookie = `${TOKEN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+    document.cookie = `${TOKEN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
     return;
   }
 
   document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(
     session.access_token
-  )}; Path=/; Max-Age=604800; SameSite=Lax`;
+  )}; Path=/; Max-Age=604800; SameSite=Lax${secure}`;
 }
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
@@ -144,3 +146,41 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
     headers,
   });
 }
+
+// One server check per signed-in user, shared by every component that asks.
+const adminChecks = new Map<string, Promise<boolean>>();
+
+/**
+ * Whether the signed-in user is the shop admin. The server decides (it alone knows
+ * the admin email); this only controls which shortcuts are shown. Admin pages and
+ * actions are always checked again on the server.
+ */
+export function useIsAdmin() {
+  const { isLoaded, user } = useSupabaseAuth();
+  const userId = user?.id ?? "";
+  const [adminUserId, setAdminUserId] = useState("");
+
+  useEffect(() => {
+    if (!isLoaded || !userId) return;
+    let alive = true;
+    let check = adminChecks.get(userId);
+    if (!check) {
+      check = authFetch("/api/admin/me", { cache: "no-store" })
+        .then((res) => res.ok)
+        .catch(() => {
+          adminChecks.delete(userId); // network hiccup: allow a retry later
+          return false;
+        });
+      adminChecks.set(userId, check);
+    }
+    void check.then((isAdmin) => {
+      if (alive && isAdmin) setAdminUserId(userId);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [isLoaded, userId]);
+
+  return Boolean(userId) && adminUserId === userId;
+}
+

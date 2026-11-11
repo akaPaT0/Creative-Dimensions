@@ -21,7 +21,7 @@ import { Ubuntu } from "next/font/google";
 import CustomRequestModal, { openCustomRequest } from "./CustomRequestModal";
 import AdminShortcutFab from "./AdminShortcutFab";
 import AuthModal from "./AuthModal";
-import { useSupabaseAuth } from "@/app/lib/supabase/auth-client";
+import { useIsAdmin, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
 
 const CART_STORAGE_KEY = "cd_cart_v1";
 const CART_UPDATED_EVENT = "cd-cart-updated";
@@ -274,9 +274,7 @@ function MobileMenuContent({
     "Account";
   const avatar = typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : "";
 
-  const isAdmin =
-    user?.email?.trim().toLowerCase() ===
-    process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
+  const isAdmin = useIsAdmin();
 
   const row =
     "flex items-center justify-between gap-3 rounded-xl px-3 py-3 text-[15px] font-medium text-white/90 hover:bg-white/[0.06] transition";
@@ -415,9 +413,7 @@ function MobileMenuContent({
 function AuthButtons({ onSignIn }: { onSignIn: () => void }) {
   const { signOut, user, isLoaded, isSignedIn } = useSupabaseAuth();
 
-  const isAdmin =
-    user?.email?.trim().toLowerCase() ===
-    process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
+  const isAdmin = useIsAdmin();
 
   const name =
     (typeof user?.user_metadata?.username === "string" && user.user_metadata.username.trim()) ||
