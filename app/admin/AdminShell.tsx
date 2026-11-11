@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowUpRight, Layers, Package, Plus, ShoppingBag, TicketPercent, Users } from "lucide-react";
+import { ArrowUpRight, Layers, MessageSquareQuote, Package, Plus, ShoppingBag, TicketPercent, Users } from "lucide-react";
 
-export type AdminSection = "orders" | "catalog" | "create" | "insights" | "promocodes" | "filaments";
+export type AdminSection = "orders" | "catalog" | "create" | "insights" | "promocodes" | "reviews" | "filaments";
 
 const NAV: { key: AdminSection; label: string; href: string; icon: typeof Package }[] = [
   { key: "orders", label: "Orders", href: "/admin?tab=orders", icon: ShoppingBag },
@@ -10,6 +10,7 @@ const NAV: { key: AdminSection; label: string; href: string; icon: typeof Packag
   { key: "create", label: "Add product", href: "/admin?tab=create", icon: Plus },
   { key: "insights", label: "Customers", href: "/admin?tab=insights", icon: Users },
   { key: "promocodes", label: "Promo codes", href: "/admin?tab=promocodes", icon: TicketPercent },
+  { key: "reviews", label: "Reviews", href: "/admin?tab=reviews", icon: MessageSquareQuote },
   { key: "filaments", label: "Filaments", href: "/admin/filaments", icon: Layers },
 ];
 
@@ -19,6 +20,7 @@ export const SECTION_TITLES: Record<AdminSection, { title: string; blurb: string
   create: { title: "Add product", blurb: "Photos first, then the details. The first photo is the cover." },
   insights: { title: "Customers", blurb: "Accounts, sign-ins and activity." },
   promocodes: { title: "Promo codes", blurb: "Create, edit and switch off discount codes." },
+  reviews: { title: "Reviews", blurb: "Send clients the review link, then approve what shows on the site." },
   filaments: { title: "Filaments", blurb: "Materials and colours available for custom orders." },
 };
 

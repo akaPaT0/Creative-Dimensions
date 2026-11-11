@@ -21,6 +21,16 @@ counters start above existing numeric values; allocation can leave gaps after
 failed orders. Management credentials belong only in ignored local env files,
 never in client variables, Git, or Vercel deployment uploads.
 
+## Customer reviews
+
+Apply `supabase-reviews-schema.sql` (additive, rerunnable) to create `cd_reviews`.
+Clients submit at `/review` (prefill with `?product=...&order=...&name=...`).
+Submissions are Turnstile-checked (action `review`), rate limited, and saved as
+`pending`; a Telegram alert is sent if configured. Nothing is public until the
+admin approves it under Admin → Reviews. Approved reviews show on the homepage
+(section hidden while there are none) and at `/reviews`, with surnames shortened
+to an initial. Order numbers are stored for the admin only.
+
 ## Getting Started
 
 First, run the development server:

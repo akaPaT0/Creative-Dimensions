@@ -13,6 +13,7 @@ import { FileUp, Instagram, MessageCircle, Palette, Sparkles, Truck, Wrench } fr
 import { SITE_URL } from "../lib/site";
 import { slugify } from "../lib/product-seo";
 import HeroEventDrop from "../components/HeroEventDrop";
+import ReviewsSection from "../components/ReviewsSection";
 import { HOME_EVENT } from "../lib/home-event";
 
 function getCardImage(p: Product) {
@@ -407,6 +408,9 @@ export default async function TempHomePage() {
             <div className="shrink-0 w-2 sm:hidden pointer-events-none" aria-hidden="true" />
           </div>
         </section>
+
+        {/* ── REVIEWS (hidden until one is approved) ─────────────────── */}
+        <ReviewsSection className="mt-16 sm:mt-24" />
 
         {/* ── CUSTOM ORDER CTA ───────────────────────────────────────── */}
         <CustomOrderBand id="custom-order" className="mt-16 sm:mt-24" />

@@ -6,6 +6,7 @@ import AdminProductsManager from "./AdminProductsManager";
 import AdminInsights from "./AdminInsights";
 import AdminPromoCodes from "./AdminPromoCodes";
 import AdminOrders from "./AdminOrders";
+import AdminReviews from "./AdminReviews";
 import { getSupabaseUserFromCookies } from "@/app/lib/supabase/auth-server";
 
 type TabKey = Exclude<AdminSection, "filaments">;
@@ -16,7 +17,8 @@ function asTabKey(input: string | undefined): TabKey {
     input === "catalog" ||
     input === "insights" ||
     input === "promocodes" ||
-    input === "orders"
+    input === "orders" ||
+    input === "reviews"
   ) {
     return input;
   }
@@ -74,6 +76,7 @@ export default async function AdminPage({
       {tab === "create" && <AdminProductForm />}
       {tab === "insights" && <AdminInsights />}
       {tab === "promocodes" && <AdminPromoCodes />}
+      {tab === "reviews" && <AdminReviews />}
     </AdminShell>
   );
 }

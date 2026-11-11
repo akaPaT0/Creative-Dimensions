@@ -1,7 +1,11 @@
 // Official Cloudflare dummy testing secret key (always passes)
 const DUMMY_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
 
-export async function verifyTurnstileToken(token: string, ip: string): Promise<{ success: boolean; error?: string }> {
+export async function verifyTurnstileToken(
+  token: string,
+  ip: string,
+  expectedAction = "password_reset"
+): Promise<{ success: boolean; error?: string }> {
   const secret = process.env.TURNSTILE_SECRET_KEY || DUMMY_TEST_SECRET_KEY;
 
   if (!token || token.length > 2048) {
@@ -25,7 +29,7 @@ export async function verifyTurnstileToken(token: string, ip: string): Promise<{
     const isProduction = process.env.NODE_ENV === "production";
     const allowedHosts = ["www.creativedimensionslb.com", "creativedimensionslb.com"];
     if (!res.ok || !data.success || (isProduction && (
-      data.action !== "password_reset" || !allowedHosts.includes(data.hostname)
+      data.action !== expectedAction || !allowedHosts.includes(data.hostname)
     ))) {
       return { success: false, error: "Security check failed. Please refresh and try again." };
     }

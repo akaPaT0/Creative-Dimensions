@@ -13,6 +13,7 @@ export default function Footer() {
           <Link href="/shop/desk-add-ons">Desk Add-Ons</Link>
           <Link href="/shop/fanboys">Figurines & Collectibles</Link>
           <Link href="/custom-quote">Custom 3D Print</Link>
+          <Link href="/reviews">Reviews</Link>
           <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
           <Link href="/privacy">Privacy Policy</Link>

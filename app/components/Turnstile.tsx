@@ -26,6 +26,8 @@ type TurnstileProps = {
   onVerify: (token: string) => void;
   onExpire?: () => void;
   theme?: "light" | "dark" | "auto";
+  /** Must match the action the server route verifies. */
+  action?: string;
 };
 
 // Official Cloudflare dummy testing key for local dev (always passes)
@@ -35,6 +37,7 @@ export default function Turnstile({
   onVerify,
   onExpire,
   theme = "dark",
+  action = "password_reset",
 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -61,7 +64,7 @@ export default function Turnstile({
       try {
         const id = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
-          action: "password_reset",
+          action,
           theme,
           callback: (token: string) => {
             if (isMounted) onVerify(token);
@@ -109,7 +112,7 @@ export default function Turnstile({
         widgetIdRef.current = null;
       }
     };
-  }, [siteKey, theme, onVerify, onExpire]);
+  }, [siteKey, theme, action, onVerify, onExpire]);
 
   return (
     <div className="my-2 flex justify-center">
