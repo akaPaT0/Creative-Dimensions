@@ -69,3 +69,12 @@ export function displayName(name: string) {
   if (parts.length < 2) return parts[0] || "Customer";
   return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
 }
+
+/** "Ghost Candy Bowl, Skull Pot +2 more" from an order's items, capped to the product field length. */
+export function orderProductSummary(items: { name?: string }[] | undefined) {
+  const names = Array.from(new Set((items ?? []).map((i) => (i?.name || "").trim()).filter(Boolean)));
+  if (!names.length) return "";
+  const shown = names.slice(0, 2).join(", ");
+  const text = names.length > 2 ? `${shown} +${names.length - 2} more` : shown;
+  return text.slice(0, REVIEW_LIMITS.product);
+}

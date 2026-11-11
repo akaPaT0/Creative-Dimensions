@@ -3,7 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, EyeOff, RefreshCw, RotateCcw, Star, Trash2 } from "lucide-react";
 import { EmptyState, FilterChips, ui } from "./ui";
-import type { AdminReview, ReviewStatus } from "@/app/lib/reviews";
+import { orderProductSummary, type AdminReview, type ReviewStatus } from "@/app/lib/reviews";
+
+type LinkOrder = {
+  orderNumber: string;
+  createdAt: string;
+  items: { name: string }[];
+  user: { fullName: string };
+  address: { fullName: string };
+};
 
 type Filter = ReviewStatus | "all";
 
@@ -23,6 +31,27 @@ export default function AdminReviews() {
   const [filter, setFilter] = useState<Filter>("pending");
   const [copied, setCopied] = useState(false);
   const [linkProduct, setLinkProduct] = useState("");
+  const [linkName, setLinkName] = useState("");
+  const [linkOrder, setLinkOrder] = useState("");
+  const [orders, setOrders] = useState<LinkOrder[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/orders", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : { orders: [] }))
+      .then((data: { orders?: LinkOrder[] }) => setOrders(Array.isArray(data.orders) ? data.orders.slice(0, 100) : []))
+      .catch(() => {});
+  }, []);
+
+  function pickOrder(orderNumber: string) {
+    setLinkOrder(orderNumber);
+    const o = orders.find((x) => x.orderNumber === orderNumber);
+    if (!o) {
+      setLinkName("");
+      return;
+    }
+    setLinkProduct(orderProductSummary(o.items));
+    setLinkName((o.user.fullName || o.address.fullName || "").trim().split(/\s+/)[0] || "");
+  }
 
   async function load() {
     setLoading(true);
@@ -78,9 +107,11 @@ export default function AdminReviews() {
   const shareLink = useMemo(() => {
     const origin = typeof window === "undefined" ? "" : window.location.origin;
     const url = new URL("/review", origin || "https://www.creativedimensionslb.com");
+    if (linkName.trim()) url.searchParams.set("name", linkName.trim());
     if (linkProduct.trim()) url.searchParams.set("product", linkProduct.trim());
+    if (linkOrder) url.searchParams.set("order", linkOrder);
     return url.toString();
-  }, [linkProduct]);
+  }, [linkName, linkProduct, linkOrder]);
 
   async function copyLink() {
     try {
@@ -101,9 +132,19 @@ export default function AdminReviews() {
       <div className={ui.panelPad}>
         <p className="text-sm font-semibold">Link to send clients</p>
         <p className={`mt-1 ${ui.note}`}>
-          Optionally fill in what they bought so it&rsquo;s pre-filled for them. New reviews wait here until you approve them.
+          Pick their order (or just type what they bought) and it&rsquo;s filled in for them. New reviews wait here until you approve them.
         </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        {orders.length > 0 && (
+          <select className={`${ui.select} mt-3`} value={linkOrder} onChange={(e) => pickOrder(e.target.value)}>
+            <option value="">Website order? Pick it here (optional)</option>
+            {orders.map((o) => (
+              <option key={o.orderNumber} value={o.orderNumber}>
+                {o.orderNumber} · {o.user.fullName || o.address.fullName || "Customer"} · {orderProductSummary(o.items) || "No items"}
+              </option>
+            ))}
+          </select>
+        )}
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
           <input
             className={ui.input}
             value={linkProduct}

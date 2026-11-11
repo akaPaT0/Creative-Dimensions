@@ -1,10 +1,15 @@
 "use client";
 
-import { FormEvent, useCallback, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Star } from "lucide-react";
 import Turnstile from "../components/Turnstile";
-import { REVIEW_LIMITS } from "@/app/lib/reviews";
+import { REVIEW_LIMITS, orderProductSummary } from "@/app/lib/reviews";
+import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
+
+type MyOrder = { orderNumber: string; createdAt: string; items?: { name: string }[] };
+
+const orderDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 const RATING_WORDS = ["", "Poor", "Fair", "Good", "Great", "Amazing"];
 
@@ -33,6 +38,32 @@ export default function ReviewForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+
+  const { isLoaded, isSignedIn } = useSupabaseAuth();
+  const [myOrders, setMyOrders] = useState<MyOrder[]>([]);
+  // The link already says which order this is, so don't ask again.
+  const orderFromLink = Boolean(initialOrderRef);
+
+  // Signed-in clients pick from their own orders instead of typing a number.
+  useEffect(() => {
+    if (orderFromLink || !isLoaded || !isSignedIn) return;
+    let alive = true;
+    authFetch("/api/orders", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : { orders: [] }))
+      .then((data: { orders?: MyOrder[] }) => {
+        if (alive) setMyOrders(Array.isArray(data.orders) ? data.orders.slice(0, 30) : []);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [orderFromLink, isLoaded, isSignedIn]);
+
+  function pickOrder(orderNumber: string) {
+    setOrderRef(orderNumber);
+    const picked = myOrders.find((o) => o.orderNumber === orderNumber);
+    if (picked && !product.trim()) setProduct(orderProductSummary(picked.items));
+  }
 
   const clearToken = useCallback(() => setToken(""), []);
   const shown = hover || rating;
@@ -168,16 +199,29 @@ export default function ReviewForm({
         </span>
       </label>
 
-      <label className="block">
-        <span className={label}>Order number <span className="normal-case tracking-normal text-white/30">(optional, never shown)</span></span>
-        <input
-          className={`${input} mt-1.5`}
-          value={orderRef}
-          onChange={(e) => setOrderRef(e.target.value)}
-          maxLength={REVIEW_LIMITS.orderRef}
-          placeholder="e.g. CD-0000123"
-        />
-      </label>
+      {orderFromLink ? (
+        <p className="text-xs text-white/40">
+          Reviewing order <span className="font-mono text-white/60">{orderRef}</span>
+        </p>
+      ) : (
+        myOrders.length > 0 && (
+          <label className="block">
+            <span className={label}>Which order? <span className="normal-case tracking-normal text-white/30">(optional, never shown)</span></span>
+            <select
+              className={`${input} mt-1.5 [&>option]:bg-[#161619]`}
+              value={orderRef}
+              onChange={(e) => pickOrder(e.target.value)}
+            >
+              <option value="">Not listed / ordered on WhatsApp or Instagram</option>
+              {myOrders.map((o) => (
+                <option key={o.orderNumber} value={o.orderNumber}>
+                  {orderDate.format(new Date(o.createdAt))} · {orderProductSummary(o.items) || o.orderNumber}
+                </option>
+              ))}
+            </select>
+          </label>
+        )
+      )}
 
       {/* Honeypot for bots: hidden from people and screen readers. */}
       <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
