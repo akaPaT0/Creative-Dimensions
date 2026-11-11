@@ -1,0 +1,21 @@
+{
+  "product": {
+    "SKU": "HA009",
+    "Name": "Skull Apple Sculpture",
+    "slug": "skull-apple-sculpture",
+    "category": "halloween",
+    "subCategory": "figurines",
+    "priceUSD": 7,
+    "description": "A spooky apple-core sculpture with carved skull details, red apple skin accents and a short stem. A striking little figurine for Halloween displays, shelves or desks.",
+    "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/halloween/figurines/skull-apple-sculpture-001.webp\"]",
+    "isNew": true,
+    "featured": false,
+    "variants": null
+  },
+  "asset": {
+    "file": "catalog/pending/assets/skull-apple-sculpture-001.webp",
+    "storagePath": "halloween/figurines/skull-apple-sculpture-001.webp",
+    "sha256": "6ac4b0c44d700122ea194eecc468fbff9a55a549e878bd41b59dd5719d4b7d7b",
+    "sizeBytes": 83024
+  }
+}
