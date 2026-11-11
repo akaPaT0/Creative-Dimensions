@@ -224,7 +224,7 @@ export default function CustomRequestModal({
 
     if (files.length > 0) {
       if (!turnstileToken) {
-        setErr("Please wait for the security check under your files to finish, then try again.");
+        setErr("Please complete the security check under your files, then tap Send again.");
         return;
       }
       setBusy(true);
