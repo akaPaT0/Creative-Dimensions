@@ -1,0 +1,55 @@
+import fs from "node:fs/promises";
+import crypto from "node:crypto";
+import assert from "node:assert/strict";
+const apply=process.argv.includes("--apply");
+const manifest=JSON.parse(await fs.readFile("catalog/pending/skull-apple-sculpture.json","utf8"));
+const {product,asset}=manifest;
+const url="https://ypevaawhxhupjxjgkwdp.supabase.co";
+const key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+assert(key,"Missing SUPABASE_SERVICE_ROLE_KEY");
+assert.equal(product.SKU,"HA009");
+assert.equal(product.Name,"Skull Apple Sculpture");
+assert.equal(product.slug,"skull-apple-sculpture");
+assert.equal(product.category,"halloween");
+assert.equal(product.subCategory,"figurines");
+assert.equal(product.priceUSD,7);
+assert.match(asset.storagePath,/^halloween\/figurines\/[a-z0-9-]+\.webp$/);
+const imageUrl=url+"/storage/v1/object/public/product_images/"+asset.storagePath;
+assert.deepEqual(JSON.parse(product.images),[imageUrl]);
+const bytes=await fs.readFile(asset.file);
+const hash=(b)=>crypto.createHash("sha256").update(b).digest("hex");
+assert.equal(hash(bytes),asset.sha256,"Local image hash mismatch");
+assert.equal(bytes.length,asset.sizeBytes,"Image size mismatch");
+const headers={apikey:key,Authorization:"Bearer "+key};
+async function api(path,options={}) {
+ const r=await fetch(url+path,{...options,headers:{...headers,...options.headers},signal:AbortSignal.timeout(30000)});
+ if(!r.ok)throw Error((options.method||"GET")+" "+path+": HTTP "+r.status+" "+await r.text());
+ return r;
+}
+const before=await (await api("/rest/v1/products?select=*&limit=1000")).json();
+assert(Array.isArray(before)&&before.length>0);
+const duplicates=before.filter(p=>p.SKU===product.SKU||p.slug===product.slug||String(p.Name).toLowerCase()===product.Name.toLowerCase());
+assert(duplicates.length<=1,"Duplicate collision");
+if(duplicates.length)for(const [k,v] of Object.entries(product))assert.deepEqual(duplicates[0][k],v,"Existing product differs: "+k);
+const existing=await fetch(imageUrl,{signal:AbortSignal.timeout(30000)});
+if(existing.ok)assert.equal(hash(Buffer.from(await existing.arrayBuffer())),asset.sha256,"Remote image differs");
+else assert([400,404].includes(existing.status),"Unexpected image status "+existing.status);
+console.log(JSON.stringify({mode:apply?"apply":"dry-run",catalogCount:before.length,alreadyListed:!!duplicates.length,imageExists:existing.ok}));
+if(!apply)process.exit(0);
+await fs.mkdir(".vercel/catalog-backups",{recursive:true});
+await fs.writeFile(".vercel/catalog-backups/before-HA009.json",JSON.stringify(before,null,2));
+if(!existing.ok)await api("/storage/v1/object/product_images/"+asset.storagePath,{method:"POST",headers:{"Content-Type":"image/webp","x-upsert":"false"},body:bytes});
+const checked=await fetch(imageUrl,{signal:AbortSignal.timeout(30000)});
+assert(checked.ok,"Image not publicly accessible");
+assert.equal(hash(Buffer.from(await checked.arrayBuffer())),asset.sha256,"Uploaded hash mismatch");
+if(!duplicates.length){
+ const inserted=await (await api("/rest/v1/products",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify([product])})).json();
+ assert.equal(inserted.length,1);
+}
+const after=await (await api("/rest/v1/products?select=*&limit=1000")).json();
+assert.equal(after.length,before.length+(duplicates.length?0:1));
+for(const original of before)assert.deepEqual(after.find(p=>p.SKU===original.SKU),original,"Existing row changed: "+original.SKU);
+const actual=after.find(p=>p.SKU===product.SKU);
+assert(actual);
+for(const [k,v] of Object.entries(product))assert.deepEqual(actual[k],v,"Published field differs: "+k);
+console.log(JSON.stringify({success:true,sku:actual.SKU,productCount:after.length,imageUrl}));
