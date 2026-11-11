@@ -1,0 +1,40 @@
+name: Publish approved catalogue product
+on:
+  workflow_dispatch:
+    inputs:
+      sku:
+        description: Approved SKU (currently HA009)
+        required: true
+        type: string
+      publish:
+        description: Publish after dry run (otherwise validate only)
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: catalogue-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: ${{ inputs.sku == 'HA009' }}
+    runs-on: ubuntu-latest
+    environment: catalogue-production
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate image is present
+        run: test -f catalog/pending/assets/skull-apple-sculpture-001.webp
+      - name: Dry run and duplicate check
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/publish-single-product.mjs
+      - name: Publish and verify
+        if: ${{ inputs.publish }}
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/publish-single-product.mjs --apply
