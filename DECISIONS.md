@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-11-12 - Count AI traffic in the app, not from Vercel logs
+
+- Owner wants to see AI traffic only: which assistants read the shop and the visitors they send. Order attribution, bot IP verification and charts were left out on purpose.
+- Count in a Next.js proxy with a header/query matcher rather than polling Vercel logs: Hobby keeps logs one hour, has no reliable hourly scheduler and would need an account-wide token. The matcher keeps ordinary customer requests out of the proxy entirely.
+- Store daily aggregate counters in the existing Supabase project (`cd_ai_traffic`), with no per-visit rows, IP addresses or identifiers. Keep robot reads, assistant fetches and visitor referrals as three separate numbers; a robot visit is not treated as a recommendation.
+- Do not apply the schema or release without the owner's go-ahead.
+
 ## 2026-11-09 - Publish the Halloween collection
 
 - Owner authorized publishing all eight prepared listings under the top-level category `halloween` (display label Halloween). Group them into candy-bowls, pots, figurines, wall-decor and lanterns. Retain the existing category/product page components, image-linked variant/cart behavior and canonical URL pattern.

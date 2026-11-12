@@ -58,3 +58,11 @@
 - Production regression checks passed: old fidget slug returns 308 to lowercase hyphenated path; category card uses canonical slug; accessory recommendations point into accessories; custom quote canonical present. Apex domain returns 308 to www while retaining path and query, then 200.
 - Search Console displayed “Sitemap submitted successfully” for the canonical www sitemap. Receipt saved locally at `C:/Users/Patrick/.codex/visualizations/2026/10/28/01a18464-647c-7160-ac3f-7398b8d478b1/sitemap-submitted.png`. This is submission confirmation, not an indexing guarantee.
 - Remaining: manual Request indexing needs Google's reCAPTCHA service to work; retry important categories/products through Search Console. Monitor index changes after Google recrawls. No background automation was created. Original local checkout remains untouched apart from its earlier audit worklog.
+
+## 2026-11-12 - AI traffic counter
+
+- Request: owner asked for a review of an "AI Discovery Tracker" brief, then narrowed it to "I just want to know the traffic" and chose an in-app counter over an hourly Vercel log script.
+- Audit: Next.js 16.0.10 with no proxy/middleware; product pages are ISR (revalidate 300), so per-request code in pages would not see cached hits. Supabase is the only database. Vercel Web Analytics is not enabled; runtime logs returned nothing for the last hour and Hobby retains one hour. Admin Customers tab shows accounts only. No existing traffic history.
+- Code: `proxy.ts` (matcher on robot name, AI referring site or AI utm_source; public pages only; counts after the response via waitUntil; production only), `app/lib/ai-traffic.ts` (lists and classification), `app/lib/supabase/ai-traffic-store.ts`, `/api/admin/ai-traffic` (admin-only, 7/30/90 days), `app/admin/AdminAiTraffic.tsx` plus nav/tab wiring, `supabase-ai-traffic-schema.sql`, `scripts/ai-traffic.test.mjs`.
+- Checks: see PROJECT_STATE.md. All local, with a stand-in Supabase server and local Postgres; no production database, Vercel setting or deployment was touched. Existing lint errors elsewhere were not addressed.
+- Pending owner decisions: apply the schema to Supabase, then merge/release.

@@ -1,5 +1,11 @@
 # Project state
 
+## AI traffic counter (2026-11-12)
+
+- Branch `ccr-7578fd42-o0sps1`, not released. Adds `proxy.ts`, `app/lib/ai-traffic.ts`, the Admin → AI traffic tab (`/admin?tab=aitraffic`, `/api/admin/ai-traffic`) and `supabase-ai-traffic-schema.sql`. README.md "AI traffic" describes behaviour and limits.
+- The schema has NOT been applied to Supabase project ypevaawhxhupjxjgkwdp. Until it is, the tab shows "Counting is not switched on yet" and visits are dropped silently. There is no history from before go-live: Vercel Web Analytics is off and Hobby keeps logs for one hour.
+- Verified locally only, against a stand-in for Supabase and a throwaway Postgres 16: production build, 8 Node tests, focused ESLint, SQL applied twice with counter, 5000-row daily cap and anon/authenticated refusal, 9 expected visits counted and 15 non-AI/private/preload requests ignored, identical page body and headers for robot and customer, pages unaffected with the counting backend down or hanging. Not yet observed against real robots or the real database.
+
 ## Halloween collection (2026-11-09)
 
 - Lantern gallery improvement: HA008 now has three clearer unlit front views from the larger second source photo, followed by its four original lit/comparison views (seven lantern images, 25 across the collection). Source crops are 566–584 pixels tall versus roughly 400 previously; this uses original photograph detail, not generative reconstruction. Exact background and separate original-photo layers are preserved. Current gallery override and hashes are in catalog/halloween-lantern-gallery-v3.json; halloween-2026.json remains the initial publication snapshot and its insert-only publisher should not be rerun to update existing listings. Price remains $11 and there are still three choices, with both lit/unlit photos mapped to each.

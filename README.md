@@ -33,6 +33,31 @@ admin approves it under Admin → Reviews. Approved reviews show on the homepage
 (section hidden while there are none) and at `/reviews`, with surnames shortened
 to an initial. Order numbers are stored for the admin only.
 
+## AI traffic
+
+Admin → AI traffic shows daily counts of visits that involve an AI assistant,
+in three separate numbers: robots reading pages (`GPTBot`, `ClaudeBot`, ...),
+assistants opening a page for someone's question (`ChatGPT-User`,
+`Claude-User`, ...), and real visitors arriving from an assistant (referring
+site or `utm_source`). Apply `supabase-ai-traffic-schema.sql` (additive,
+rerunnable) to create `cd_ai_traffic` and `cd_ai_traffic_hit()`; until then the
+tab says counting is not switched on and nothing is recorded.
+
+`proxy.ts` does the counting. Its matcher only wakes it for public pages whose
+request already names a known robot, AI referring site or AI `utm_source`, so
+ordinary customer requests never run it. It adds 1 to a daily counter after the
+response is sent, never changes the response and drops the count on any
+failure. Only the production deployment counts. No IP address, cookie or
+visitor identifier is stored, only day, service, robot/site, page and a number.
+
+The robot and site lists live in `app/lib/ai-traffic.ts` and are repeated in
+the `proxy.ts` matcher because Next.js needs literal values there;
+`node --test scripts/ai-traffic.test.mjs` fails if the two drift apart.
+Limits: robots are recognised by the name they send and are not verified by IP;
+Gemini and Copilot crawl through the ordinary Google and Bing robots and cannot
+be told apart; many apps strip the referring site, so visitor counts are a
+minimum; a reload of a tagged landing URL counts again.
+
 ## Security notes
 
 - Every response carries `X-Frame-Options: DENY`, `nosniff`, a referrer policy,
