@@ -1,12 +1,15 @@
 # Project state
 
-## Personalised names and price options (2026-11-14, branch claude/product-personalization, not deployed)
+## Personalised names and price options (2026-11-14, live)
+
+- Released: PR akaPaT0/Creative-Dimensions#3 squash-merged as `27b9ae0` (includes Christmas commit 198ce48). Vercel production `dpl_Hyn3VjSjHGAbfWhDb8YmA92gnrp7` READY on www and apex; previous `dpl_HFuTfspZJvCJCQiG5gPUtNzCCxcX` is the rollback point. Live checks: home, shop, Christmas list and product, Halloween lantern, cart, checkout and products API return 200; lantern add-to-cart on the live site kept its colour with no name box or picker and no console errors. No product has either feature switched on yet.
+- Handoff for Codex on posting Christmas items with these settings: original checkout `product-drafts/NOTE-FOR-CODEX-names-and-price-options.md`.
 
 - Per-product opt-in features, off by default: a "Name" text field (`personalization`) and priced choices (`priceOptions`, e.g. "1 snowman" / "Full set of 5"). Admin product editor has both controls. Product page, cart, checkout, orders API, invoice and Telegram carry them; the orders API re-validates the option and name and charges the option price from the product. With options, admin save sets the base `priceUSD` to the cheapest option; listings show "From $X".
 - All cart readers now share `app/lib/cart-items.ts` (previously four copies that dropped unknown fields on re-save).
 - Production Supabase `products` now has nullable jsonb columns `priceOptions` and `personalization` (owner approved; migration `products_price_options_and_personalization`, file `supabase-product-options.sql`). All 44 existing rows verified unchanged; new columns NULL everywhere. Live site returned 200 afterwards.
 - Verified locally with temporary in-memory product settings (removed): picker, required name, separate lines per name, cart totals, "From $" listings, ordinary products unchanged. TypeScript and 10 Node tests pass. A real order end-to-end (order row, invoice, Telegram) is not yet exercised.
-- Pending: commit/PR and deploy; owner to set snowman option prices; after the Christmas release (separate uncommitted `codex/christmas-release` worktree) lands, switch on the name field for the name ornaments and drop the "use the custom request button to discuss your name" wording. Photo ornament stays on custom request.
+- Pending: one real test order with a name and an option (order row, invoice, Telegram); owner to give snowman option prices; Codex (owner relays the note) switches on the name field for the name ornaments, including sweater ornaments, and drops the "use the custom request button to discuss your name" wording. Photo ornament stays on custom request.
 
 ## Christmas category release in progress (2026-11-14)
 
