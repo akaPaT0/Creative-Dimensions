@@ -290,6 +290,7 @@ export default async function TempHomePage() {
             blurb={HOME_EVENT.blurb}
             href={HOME_EVENT.href}
             ctaLabel={HOME_EVENT.ctaLabel}
+            theme={HOME_EVENT.theme}
             items={eventHeroItems}
           />
           </div>
