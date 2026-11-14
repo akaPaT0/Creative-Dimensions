@@ -4,6 +4,7 @@ import { SITE_URL } from "@/app/lib/site";
 import { slugify, getProductImages } from "@/app/lib/product-seo";
 
 const PRODUCT_CATEGORIES = new Set([
+  "christmas",
   "halloween",
   "keychains",
   "accessories",
@@ -18,6 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Core Pages
   const coreRoutes: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/shop/christmas`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.85,
+    },
     {
       url: `${SITE_URL}/shop/halloween`,
       lastModified: now,
