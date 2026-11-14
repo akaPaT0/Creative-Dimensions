@@ -3,7 +3,7 @@ import { SITE_URL } from "@/app/lib/site";
 
 export const metadata: Metadata = {
   title: "Christmas Decorations in Lebanon",
-  description: "Shop Christmas crabs, a tree advent calendar and personalised name and photo ornaments from Creative Dimensions, with delivery across Lebanon.",
+  description: "Shop Christmas trees, ornaments, nativity scenes, figurines and personalised gifts from Creative Dimensions, with delivery across Lebanon.",
   alternates: { canonical: `${SITE_URL}/shop/christmas` },
 };
 

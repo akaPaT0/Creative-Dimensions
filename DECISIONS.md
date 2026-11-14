@@ -7,8 +7,9 @@
 
 ## 2026-11-14 - Christmas publication and direct imagegen cutouts
 
-- Owner rejected the manually refined masks and explicitly requested direct imagegen cutouts composited onto the exact original `2.png` background. Use the generated cutout RGB and alpha directly; do not restore source pixels or rerun segmentation. This supersedes the original-photo-only rules for this batch. Preserve source references, cutouts and editable layers locally.
-- Owner authorized adding the requested products to the top-level Christmas category (`christmas`), including the later $5 sweater name ornaments. Reuse category/product components, custom request flow and existing checkout. Insert only the new rows; preserve all previous products.
+- Owner rejected manual mask refinement and explicitly requested direct imagegen cutouts composited onto the exact saved background. Use generated RGB and alpha directly; no source RGB restoration or re-segmentation. This supersedes earlier original-photo-only rules for this Christmas batch. Preserve source references, cutouts, prompts and editable layers locally. Imagegen rejected the Stitch cutout; retain the supplied unmodified photo for that listing.
+- Publish 33 new listings in top-level `christmas`: 18 supplied in chat plus all 15 distinct catalogue listings. Preserve their prices, $12 ornament set and $15 nine-bauble set. Spiral trees are $8 and tall gnomes $7, each in green/red/white; sculpted deer $6.50 white only. Tree clicker $6 includes a stylized exploded-view illustration using the existing fidget clicker's presentation. Personalised products use the existing custom request flow.
+- Use isolated `codex/christmas-release` based on current main and the existing category/product/checkout components. Insert only these new rows and immutable assets; preserve all existing products. The publisher is insert-only and must not be used to update future image changes.
 
 ## 2026-11-09 - Publish the Halloween collection
 

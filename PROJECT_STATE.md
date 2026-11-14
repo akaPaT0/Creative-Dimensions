@@ -11,9 +11,13 @@
 - Verified locally with temporary in-memory product settings (removed): picker, required name, separate lines per name, cart totals, "From $" listings, ordinary products unchanged. TypeScript and 10 Node tests pass. A real order end-to-end (order row, invoice, Telegram) is not yet exercised.
 - Pending: one real test order with a name and an option (order row, invoice, Telegram); owner to give snowman option prices; Codex (owner relays the note) switches on the name field for the name ornaments, including sweater ornaments, and drops the "use the custom request button to discuss your name" wording. Photo ornament stays on custom request.
 
-## Christmas category release in progress (2026-11-14)
+## Christmas collection (2026-11-14)
 
-- Owner requested direct imagegen cutouts on the exact saved background and publication under Christmas, then added $5 sweater name ornaments and a $6 Christmas tree clicker with an exploded-view illustration matching the existing fidget listing. Eight initial rows/assets are published in Supabase; clicker images and final deployment are in progress. Category routes/filter, footer/admin entries, SEO and sitemap are ready. Build/TypeScript and three URL tests passed; all 34 old products unchanged. Release isolated in `codex/christmas-release`.
+- Published 33 new Supabase listings CH001–CH033 with 38 lossless WebP images; 67 total products. Readback verified all 34 earlier rows unchanged. Scope is 18 attachment products plus all 15 distinct listings from the owner's catalogue. Public rows, assets and hashes: `catalog/christmas-2026.json`.
+- Spiral trees ($8) and tall gnomes ($7) have image-linked green/red/white choices. Sculpted seated deer is $6.50, white only. The $6 Christmas tree clicker has regular and illustrative exploded gallery views. PDF sets retain $12 set pricing and $15 for nine baubles. Personalisation uses the existing custom request flow.
+- Final images use direct imagegen RGBA cutouts over the exact original `2.png`; manual segmentation/source RGB restoration drafts are superseded. Imagegen rejected the Stitch cutout, so that listing uses the unmodified supplied photo. Local sources, cutouts, layered OpenRaster files, prompts and QA are in the original checkout's `product-drafts/christmas-batch-2026/`.
+- Category/product routes, shop filter, footer/admin choices, SEO labels and sitemap are included. Release isolated in `codex/christmas-release`; original Google work preserved. Production category is live from `198ce48` / Vercel `dpl_HFuTfspZJvCJCQiG5gPUtNzCCxcX`. Final catalogue/metadata deployment and complete live audit are pending.
+- Checks so far: build/TypeScript and 3 URL tests passed, all prices/unique slugs/colour mappings matched requests, image QA and lossless/background invariants passed, database/assets readback passed. First eight local storefront routes/prices/canonicals passed; finish the complete live audit before marking this release complete.
 
 ## Halloween collection (2026-11-09)
 

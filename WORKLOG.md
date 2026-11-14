@@ -4,9 +4,11 @@
 
 - Owner needed name fields for custom Christmas ornaments and priced options (melting snowman: single vs set). Built both on `claude/product-personalization` from main 83a33c7. Added the two `products` columns in production with owner approval and verified existing rows unchanged by fingerprint. Local browser checks and tests passed; no real order placed. Not committed or deployed.
 
-## 2026-11-14 - Christmas category release
+## 2026-11-14 - Christmas category and 33-product batch
 
-- Owner requested direct imagegen cutouts on the exact saved background and publication under Christmas, then added $5 sweater name ornaments and a $6 Christmas tree clicker with an exploded-view illustration matching the existing fidget listing. Eight initial rows/assets are published in Supabase; clicker images and final deployment are in progress. Category routes/filter, footer/admin entries, SEO and sitemap are ready. Build/TypeScript and three URL tests passed; all 34 old products unchanged. Release isolated in `codex/christmas-release`.
+- Owner requested direct imagegen cutouts composited onto the saved `2.png` background, then production publication. Added 18 listings from chat and all 15 from the supplied catalogue, retaining requested prices and explicit set pricing. Spiral trees ($8) and tall gnomes ($7) each have three image-linked green/red/white choices. Sculpted deer is white only ($6.50); the $6 tree clicker has a matching exploded illustration.
+- Added Christmas category/product routes, shop filter, footer/admin entries, SEO labels and sitemap. Public rows/assets/hashes: `catalog/christmas-2026.json`; insert-only publisher and storefront verifier: `scripts/publish-christmas.mjs`, `scripts/verify-christmas.mjs`. Local sources, generated cutouts, editable OpenRaster layers, prompts and QA reports remain in the original checkout's `product-drafts/christmas-batch-2026/`.
+- Verified all requested prices, unique slugs, colour mappings, lossless WebP exports and unchanged background outside generated alpha. Imagegen rejected the Stitch cutout; its listing uses the unmodified supplied photo. Build/TypeScript and 3 URL tests passed; first 8 deployed routes/prices/canonicals/images passed local HTTP checks. All 33 rows and 38 image hashes were read back, with all 34 old rows unchanged (67 total). Final deployment and complete live audit remain in progress.
 
 ## 2026-11-09 - Redesign the admin area and add quick product flags
 

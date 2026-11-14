@@ -25,6 +25,10 @@ for (const product of manifest.products) {
   assert.equal(Number(schema.offers.price), product.priceUSD);
   assert.equal(schema.category, 'Christmas');
   for (const url of JSON.parse(product.images)) assert(body.includes(url), 'Missing image');
+  for (const variant of product.variants || []) {
+    assert(body.includes(variant.label), 'Missing colour option ' + variant.label);
+    assert(JSON.parse(product.images).includes(variant.image), 'Variant must use gallery image');
+  }
   console.log('Verified ' + path + ' $' + product.priceUSD);
 }
 for (const asset of manifest.assets) {

@@ -105,6 +105,369 @@
       "isNew": true,
       "featured": false,
       "variants": []
+    },
+    {
+      "SKU": "CH009",
+      "Name": "Christmas Tree Clicker Keychain",
+      "slug": "christmas-tree-clicker",
+      "category": "christmas",
+      "subCategory": "fidgets",
+      "priceUSD": 6,
+      "description": "A festive Christmas tree-shaped fidget clicker with textured green branches, a gold-coloured star and a brown trunk base. A playful seasonal keychain. Sold individually at $6 each. The gallery includes an illustrative exploded view of the clicker assembly.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/christmas-tree-clicker-01.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/christmas-tree-clicker-02-exploded.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH010",
+      "Name": "Christmas Three-Tier Display Stand",
+      "slug": "christmas-tiered-display-stand",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 30,
+      "description": "A white Christmas tree-shaped display stand with three fluted tiers and an intricate star topper. A festive centrepiece for your seasonal display. Treats in the image are styling props. Price is for the stand.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/christmas-tiered-display-stand-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH011",
+      "Name": "Red Hat Christmas Gnome",
+      "slug": "red-hat-christmas-gnome",
+      "category": "christmas",
+      "subCategory": "figurines",
+      "priceUSD": 7,
+      "description": "A festive gnome with a curved red hat, a long white beard, peach-coloured nose and grey mittens and boots. A cheerful decoration for a Christmas shelf or tabletop.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/red-hat-christmas-gnome-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH012",
+      "Name": "Spiral Christmas Tree",
+      "slug": "spiral-christmas-tree",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 8,
+      "description": "A star-topped Christmas tree with flowing spiral ridges. Choose green, red or white at $8 each.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/spiral-christmas-tree-01.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/spiral-christmas-tree-02.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/spiral-christmas-tree-03.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "Green",
+          "hex": "#174b35",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/spiral-christmas-tree-01.webp"
+        },
+        {
+          "label": "Red",
+          "hex": "#a51e2b",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/spiral-christmas-tree-02.webp"
+        },
+        {
+          "label": "White",
+          "hex": "#f5f1e8",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/spiral-christmas-tree-03.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "CH013",
+      "Name": "Stitch Christmas Ornament",
+      "slug": "stitch-christmas-ornament",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 5,
+      "description": "A black and white circular Christmas ornament featuring Stitch in a Santa hat, with snowflakes and leafy details.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/stitch-christmas-ornament-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH014",
+      "Name": "Snowy Christmas Tree",
+      "slug": "snowy-christmas-trees",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 7,
+      "description": "A textured white Christmas tree decoration with a gold-coloured star and black base. The gallery shows examples of the design. Price is per tree.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/snowy-christmas-trees-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH015",
+      "Name": "Tall Hat Christmas Gnome",
+      "slug": "tall-christmas-gnome",
+      "category": "christmas",
+      "subCategory": "figurines",
+      "priceUSD": 7,
+      "description": "A gnome with a tall pointed hat, flowing white beard and round nose. Choose white, red or green at $7 each.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tall-christmas-gnome-01.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tall-christmas-gnome-02.webp\", \"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tall-christmas-gnome-03.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "White",
+          "hex": "#f5f1e8",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tall-christmas-gnome-01.webp"
+        },
+        {
+          "label": "Red",
+          "hex": "#b31f2c",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tall-christmas-gnome-02.webp"
+        },
+        {
+          "label": "Green",
+          "hex": "#174b35",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tall-christmas-gnome-03.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "CH016",
+      "Name": "Knit-Style Christmas Reindeer",
+      "slug": "knit-style-christmas-reindeer",
+      "category": "christmas",
+      "subCategory": "figurines",
+      "priceUSD": 8,
+      "description": "A brown reindeer decoration with a knitted-style surface, red nose and red scarf, cream muzzle and dark antlers and hooves.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/knit-style-christmas-reindeer-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH017",
+      "Name": "Santa Bottle Holder",
+      "slug": "santa-bottle-holder",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 30,
+      "description": "A reclining Santa figure designed to hold a bottle, with a red suit, white beard, black belt and raised boots. Bottle shown as a display prop.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/santa-bottle-holder-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH018",
+      "Name": "White Sculpted Reindeer",
+      "slug": "white-sculpted-reindeer",
+      "category": "christmas",
+      "subCategory": "figurines",
+      "priceUSD": 6.5,
+      "description": "An elegant seated reindeer with flowing ribbed details and branching antlers. Available in white only.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/white-sculpted-reindeer-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "White",
+          "hex": "#f5f5f5",
+          "image": "https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/white-sculpted-reindeer-01.webp"
+        }
+      ]
+    },
+    {
+      "SKU": "CH019",
+      "Name": "Minimal Christmas Tree Art",
+      "slug": "minimal-christmas-tree-art",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 10,
+      "description": "A minimalist Christmas tree sculpture with clean layered lines for a shelf, mantel or desk. Price is per tree.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/minimal-christmas-tree-art-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH020",
+      "Name": "Classic Nativity Figures",
+      "slug": "classic-nativity-figures",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 15,
+      "description": "A traditional nativity display with the Holy Family beneath a stable frame and star, for your Christmas display.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/classic-nativity-figures-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH021",
+      "Name": "Cozy Pinecone Cottage Tealight",
+      "slug": "pinecone-cottage-tealight",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 9,
+      "description": "A pinecone-shaped cottage tealight decoration with a tiny door and windows. A cosy addition to a Christmas display. Price is per cottage.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/pinecone-cottage-tealight-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH022",
+      "Name": "Tealight Christmas Tree",
+      "slug": "tealight-christmas-trees",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 10,
+      "description": "A Christmas tree tealight decoration with sculpted ridges for a seasonal shelf or tabletop. Price is per tree.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tealight-christmas-trees-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH023",
+      "Name": "Nutcracker Decoration",
+      "slug": "nutcracker-decoration",
+      "category": "christmas",
+      "subCategory": "figurines",
+      "priceUSD": 11,
+      "description": "A classic nutcracker soldier decoration for Christmas shelves, entryways and gift tables. Price is per figure.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/nutcracker-decoration-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH024",
+      "Name": "Nordic Ribbed Deer",
+      "slug": "nordic-ribbed-deer",
+      "category": "christmas",
+      "subCategory": "figurines",
+      "priceUSD": 15,
+      "description": "A Scandinavian-style standing deer decoration with a ribbed finish and branching antlers. Price is per deer.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/nordic-ribbed-deer-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH025",
+      "Name": "Santa Bowl",
+      "slug": "santa-bowl",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 19,
+      "description": "A Santa-themed bowl with a red suit, black belt, gold-coloured buckle and black boots. Treats in the image are styling props.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/santa-bowl-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH026",
+      "Name": "Tree & Snowflake Ornament Set",
+      "slug": "tree-snowflake-ornament-set",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 12,
+      "description": "A matching set of tree and snowflake ornaments for a Christmas tree, window display or gift wrap. The $12 price is for the set.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/tree-snowflake-ornament-set-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH027",
+      "Name": "9 Christmas Baubles Set",
+      "slug": "nine-christmas-baubles-set",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 15,
+      "description": "A set of nine decorative Christmas baubles with different festive patterns. The $15 price is for all nine ornaments.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/nine-christmas-baubles-set-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH028",
+      "Name": "Spiral Ornament",
+      "slug": "spiral-bauble-ornament",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 5,
+      "description": "A lightweight spherical spiral ornament with a hanging loop for the Christmas tree. Price is per ornament.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/spiral-bauble-ornament-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH029",
+      "Name": "Personalised Round Name Ornament",
+      "slug": "personalised-round-name-ornament",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 5,
+      "description": "A circular Christmas ornament with your chosen name and festive decorative details. Use the custom request button to discuss your name and design. Price is per ornament.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/personalised-round-name-ornament-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH030",
+      "Name": "Wreath Photo Ornament",
+      "slug": "wreath-photo-ornament",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 7,
+      "description": "A wreath-shaped ornament that holds a favourite photo for the Christmas tree. Use the custom request button to discuss your photo.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/wreath-photo-ornament-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH031",
+      "Name": "Christmas Tree Photo Frame",
+      "slug": "christmas-tree-photo-frame",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 10,
+      "description": "A decorative Christmas tree-shaped standing frame for a favourite photo. Use the custom request button to discuss your photo.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/christmas-tree-photo-frame-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH032",
+      "Name": "Personalised Gingerbread Gift Tags",
+      "slug": "gingerbread-gift-tags",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 5,
+      "description": "Gingerbread-style gift tags with name lettering and icing-style details. Use the custom request button to discuss your name and preferred design. Price is per tag.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/gingerbread-gift-tags-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH033",
+      "Name": "Family Names Christmas Tree",
+      "slug": "family-names-christmas-tree",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 18,
+      "description": "A Christmas tree decoration formed from family members\u2019 names and topped with a star. Use the custom request button to discuss your names. Price is per personalised tree.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/family-names-christmas-tree-01.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
     }
   ],
   "assets": [
@@ -147,6 +510,156 @@
       "file": "sweater-name-ornaments-001.webp",
       "storagePath": "christmas/sweater-name-ornaments-001.webp",
       "sha256": "fb25f4c0995855bf72b8e706c03cd04009c010bc09a3baaf5e43e593a5367f60"
+    },
+    {
+      "file": "christmas-tree-clicker-01.webp",
+      "storagePath": "christmas/christmas-tree-clicker-01.webp",
+      "sha256": "ea29e0aa79704b4be079a6209d4f474b78f395e6286ff17c7b12438016593d77"
+    },
+    {
+      "file": "christmas-tree-clicker-02-exploded.webp",
+      "storagePath": "christmas/christmas-tree-clicker-02-exploded.webp",
+      "sha256": "d898a5780a18080ec4e84ac5424f5d69765cdd2e8281751f50cdaa2d646005eb"
+    },
+    {
+      "file": "christmas-tiered-display-stand-001.webp",
+      "storagePath": "christmas/christmas-tiered-display-stand-001.webp",
+      "sha256": "42140912726ebffcbb02fb85e10e4e8b5ce128e397ad17e8b1ff6d114fd5a385"
+    },
+    {
+      "file": "red-hat-christmas-gnome-01.webp",
+      "storagePath": "christmas/red-hat-christmas-gnome-01.webp",
+      "sha256": "a6dd177fb6c6afc9ecc0d36e503421ed7b7a9e4114cd3aa699c24e68fb7ae071"
+    },
+    {
+      "file": "spiral-christmas-tree-01.webp",
+      "storagePath": "christmas/spiral-christmas-tree-01.webp",
+      "sha256": "2ffae3f99072140ef405bce061d540f1cfc4480b42d3dc4afdc92a3debe28128"
+    },
+    {
+      "file": "spiral-christmas-tree-02.webp",
+      "storagePath": "christmas/spiral-christmas-tree-02.webp",
+      "sha256": "09d8affe404100e9fabf7d157a1cd2f0ab0eed03a64aa44475ee271d4f05ee5c"
+    },
+    {
+      "file": "spiral-christmas-tree-03.webp",
+      "storagePath": "christmas/spiral-christmas-tree-03.webp",
+      "sha256": "849ddcf3332c531069b628ec32675c3c5a5e15cd3a02c2082ecf0ca01f9ec9d6"
+    },
+    {
+      "file": "stitch-christmas-ornament-01.webp",
+      "storagePath": "christmas/stitch-christmas-ornament-01.webp",
+      "sha256": "7fa8f532edf0caff2707e6b60797a10596ca29d18970940239ab00461265d942"
+    },
+    {
+      "file": "snowy-christmas-trees-01.webp",
+      "storagePath": "christmas/snowy-christmas-trees-01.webp",
+      "sha256": "78f4e35caf2e2b768440f94e64b4b305bda6d0bf0fa4a7053d45fbf7818f7b41"
+    },
+    {
+      "file": "tall-christmas-gnome-01.webp",
+      "storagePath": "christmas/tall-christmas-gnome-01.webp",
+      "sha256": "80564ffc05f9f503c534482c45382326265745706acabc931923242b29fd39c0"
+    },
+    {
+      "file": "tall-christmas-gnome-02.webp",
+      "storagePath": "christmas/tall-christmas-gnome-02.webp",
+      "sha256": "38869ee33177b7f6946284b1776145f27eb412ad899ca714b423b2938d21ad46"
+    },
+    {
+      "file": "tall-christmas-gnome-03.webp",
+      "storagePath": "christmas/tall-christmas-gnome-03.webp",
+      "sha256": "a7d12034670a26f77a9ca0b4f2be81f056839aea1cb813e4e9e5009402148a96"
+    },
+    {
+      "file": "knit-style-christmas-reindeer-01.webp",
+      "storagePath": "christmas/knit-style-christmas-reindeer-01.webp",
+      "sha256": "3ca99ceb583fa99c956174f72bd3c63338df208b37b2eb5d68fd05371da5e979"
+    },
+    {
+      "file": "santa-bottle-holder-01.webp",
+      "storagePath": "christmas/santa-bottle-holder-01.webp",
+      "sha256": "fbbcb66bc99b3af2fe180cb7b72efecbf1134aa67cfcb0a1fbb99e835295dca7"
+    },
+    {
+      "file": "white-sculpted-reindeer-01.webp",
+      "storagePath": "christmas/white-sculpted-reindeer-01.webp",
+      "sha256": "02fc9770935dd20f2ec79d9292dd0379890e097abd758e61b1c0767f20c3cc9e"
+    },
+    {
+      "file": "minimal-christmas-tree-art-01.webp",
+      "storagePath": "christmas/minimal-christmas-tree-art-01.webp",
+      "sha256": "d014386984e0b77ddd407907e9bae1483bdac75160116f89b238dfa8853f7236"
+    },
+    {
+      "file": "classic-nativity-figures-01.webp",
+      "storagePath": "christmas/classic-nativity-figures-01.webp",
+      "sha256": "6a47b6476d0c31ce070371e5fa0868f63f3e8b09592b53afccdc135b39c98711"
+    },
+    {
+      "file": "pinecone-cottage-tealight-01.webp",
+      "storagePath": "christmas/pinecone-cottage-tealight-01.webp",
+      "sha256": "9d147b756e3615da9dcec18bcbaa3348374017e6d4e231e41ac9265c7b50f8ae"
+    },
+    {
+      "file": "tealight-christmas-trees-01.webp",
+      "storagePath": "christmas/tealight-christmas-trees-01.webp",
+      "sha256": "1330ca34b8658257f8d2903571cde4a4aa13ba8e1f50eef2e08f6d9afb1d998f"
+    },
+    {
+      "file": "nutcracker-decoration-01.webp",
+      "storagePath": "christmas/nutcracker-decoration-01.webp",
+      "sha256": "3d8382288af30877f6adf7500644b19f5b4fe8f347af7f4eedc9442a1326a4d1"
+    },
+    {
+      "file": "nordic-ribbed-deer-01.webp",
+      "storagePath": "christmas/nordic-ribbed-deer-01.webp",
+      "sha256": "466b5b07bac976ad5e9214a780c95dbe668674b006e85e2028b66ebf1e263c2c"
+    },
+    {
+      "file": "santa-bowl-01.webp",
+      "storagePath": "christmas/santa-bowl-01.webp",
+      "sha256": "0a04fc0d927c24705d646dda6b75e76e591bd58741d586c2690a09a5465e3ccd"
+    },
+    {
+      "file": "tree-snowflake-ornament-set-01.webp",
+      "storagePath": "christmas/tree-snowflake-ornament-set-01.webp",
+      "sha256": "6fd3cb7ed4753cac77c58e02c1e1a9336fea2e05b5b92430fec4cc4e665a7c11"
+    },
+    {
+      "file": "nine-christmas-baubles-set-01.webp",
+      "storagePath": "christmas/nine-christmas-baubles-set-01.webp",
+      "sha256": "fe7417ef25459c225a837cd6c190dcdee489f57dd1f19da5dc0e333d0dc8393d"
+    },
+    {
+      "file": "spiral-bauble-ornament-01.webp",
+      "storagePath": "christmas/spiral-bauble-ornament-01.webp",
+      "sha256": "1a63e44574e5b113eb65eafadad792d510cb5a94a9e4d8ed839c61134b078e12"
+    },
+    {
+      "file": "personalised-round-name-ornament-01.webp",
+      "storagePath": "christmas/personalised-round-name-ornament-01.webp",
+      "sha256": "45f986cb173d4256a273ed05a6d5648976afa10b7166ab4ede81397d9b419ac4"
+    },
+    {
+      "file": "wreath-photo-ornament-01.webp",
+      "storagePath": "christmas/wreath-photo-ornament-01.webp",
+      "sha256": "11dd165d971f5cfbaeae5ef503c59d6e9f9288823366ea0ad2fe16f9ed20d141"
+    },
+    {
+      "file": "christmas-tree-photo-frame-01.webp",
+      "storagePath": "christmas/christmas-tree-photo-frame-01.webp",
+      "sha256": "30916520082d306e56940b0cb7fcf0faa258afafd348762cefaa9ed7fa430708"
+    },
+    {
+      "file": "gingerbread-gift-tags-01.webp",
+      "storagePath": "christmas/gingerbread-gift-tags-01.webp",
+      "sha256": "9295e66c3ac8b50b9fee7dd51bfeb27856ac5eca7a9f2f3a2184836fa546763b"
+    },
+    {
+      "file": "family-names-christmas-tree-01.webp",
+      "storagePath": "christmas/family-names-christmas-tree-01.webp",
+      "sha256": "f13a944513515009ef5e926b6c4fdbba935031fd38d590c92a60080f122213ac"
     }
   ]
 }
