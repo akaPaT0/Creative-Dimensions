@@ -12,9 +12,10 @@ import CustomOrderBand from "../components/CustomOrderBand";
 import { FileUp, Instagram, MessageCircle, Palette, Sparkles, Truck, Wrench } from "lucide-react";
 import { SITE_URL } from "../lib/site";
 import { slugify } from "../lib/product-seo";
-import HeroEventDrop from "../components/HeroEventDrop";
+import HeroEventDrop, { THEME_DOTS } from "../components/HeroEventDrop";
+import SeasonalTabs from "../components/SeasonalTabs";
 import ReviewsSection from "../components/ReviewsSection";
-import { HOME_EVENT } from "../lib/home-event";
+import { liveHomeEvents } from "../lib/home-event";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -79,26 +80,30 @@ export default async function TempHomePage() {
       }),
     ...featured.filter((p) => !heroSlugs.includes(String(p.slug))),
   ].slice(0, 3);
-  const eventProducts = HOME_EVENT.enabled
-    ? products.filter((p) => p.category === HOME_EVENT.category)
-    : [];
-  const eventHeroItems = [
-    ...HOME_EVENT.slugs.flatMap((slug) => {
-      const match = eventProducts.find((p) => p.slug === slug);
-      return match ? [match] : [];
-    }),
-    ...eventProducts.filter((p) => !HOME_EVENT.slugs.includes(String(p.slug))),
-  ]
-    .slice(0, 5)
-    .map((p) => ({
-      key: `ev-${getStableKey(p)}`,
-      href: getProductHref(p),
-      slug: String(p.slug ?? ""),
-      title: getTitle(p),
-      image: getCardImage(p),
-      price: getPriceLabel(p),
-    }));
-  const showEvent = eventHeroItems.length > 0;
+  // Seasonal drops that are live right now, each with its five lineup pieces.
+  const seasonalDrops = liveHomeEvents()
+    .map((event) => {
+      const inCategory = products.filter((p) => p.category === event.category);
+      const items = [
+        ...event.slugs.flatMap((slug) => {
+          const match = inCategory.find((p) => p.slug === slug);
+          return match ? [match] : [];
+        }),
+        ...inCategory.filter((p) => !event.slugs.includes(String(p.slug))),
+      ]
+        .slice(0, 5)
+        .map((p) => ({
+          key: `ev-${event.key}-${getStableKey(p)}`,
+          href: getProductHref(p),
+          slug: String(p.slug ?? ""),
+          title: getTitle(p),
+          image: getCardImage(p),
+          price: getPriceLabel(p),
+        }));
+      return { event, items };
+    })
+    .filter((drop) => drop.items.length > 0);
+  const showEvent = seasonalDrops.length > 0;
 
   const coverFor = (category: string, preferredSlug: string) => {
     const inCategory = products.filter((p) => p.category === category);
@@ -284,15 +289,27 @@ export default async function TempHomePage() {
         {/* ── SEASONAL DROP ───────────────────────────────────────────── */}
         {showEvent && (
           <div className="mt-14 sm:mt-20">
-          <HeroEventDrop
-            word={HOME_EVENT.word}
-            eyebrow={HOME_EVENT.eyebrow}
-            blurb={HOME_EVENT.blurb}
-            href={HOME_EVENT.href}
-            ctaLabel={HOME_EVENT.ctaLabel}
-            theme={HOME_EVENT.theme}
-            items={eventHeroItems}
-          />
+            <SeasonalTabs
+              tabs={seasonalDrops.map(({ event }) => ({
+                key: event.key,
+                label: event.tabLabel,
+                dot: THEME_DOTS[event.theme],
+              }))}
+            >
+              {seasonalDrops.map(({ event, items }, i) => (
+                <HeroEventDrop
+                  key={event.key}
+                  word={event.word}
+                  eyebrow={event.eyebrow}
+                  blurb={event.blurb}
+                  href={event.href}
+                  ctaLabel={event.ctaLabel}
+                  theme={event.theme}
+                  priority={i === 0}
+                  items={items}
+                />
+              ))}
+            </SeasonalTabs>
           </div>
         )}
 

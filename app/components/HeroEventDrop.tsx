@@ -21,7 +21,15 @@ type Props = {
   href: string;
   ctaLabel: string;
   theme?: HomeEventTheme;
+  /** Load the centre photo first. Only for the section people see first. */
+  priority?: boolean;
   items: HeroEventItem[];
+};
+
+/** Tab dot colour for each theme. */
+export const THEME_DOTS: Record<HomeEventTheme, string> = {
+  halloween: "bg-[#ff7a28]",
+  christmas: "bg-[#c7362f]",
 };
 
 // Colours per season. Full class strings so Tailwind keeps them in the build.
@@ -67,6 +75,7 @@ export default function HeroEventDrop({
   href,
   ctaLabel,
   theme = "halloween",
+  priority = true,
   items,
 }: Props) {
   const t = THEMES[theme];
@@ -119,7 +128,7 @@ export default function HeroEventDrop({
                       src={item.image}
                       alt={item.title}
                       fill
-                      priority={i === 2}
+                      priority={priority && i === 2}
                       sizes="(max-width: 640px) 64vw, (max-width: 1440px) 34vw, 490px"
                       className="object-contain [mask-image:radial-gradient(closest-side,black_62%,transparent)] transition duration-500 group-hover:brightness-110"
                     />
