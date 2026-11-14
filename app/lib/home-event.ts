@@ -89,7 +89,7 @@ export const HOME_EVENTS = {
 export type HomeEventKey = keyof typeof HOME_EVENTS;
 
 /** Seasons on the home page, in tab order. Empty to hide the section. */
-export const ACTIVE_HOME_EVENTS: HomeEventKey[] = ["berbara", "christmas"];
+export const ACTIVE_HOME_EVENTS: HomeEventKey[] = ["christmas", "berbara"];
 
 /** The active seasons that are live at `now`. */
 export function liveHomeEvents(now: Date = new Date()) {
