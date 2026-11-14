@@ -1,0 +1,90 @@
+[
+  {
+    "SKU": "CH004",
+    "originalDescription": "Decorative hanging ornaments with a name worked into the circular design. The examples show festive stars, a moon, snowflakes and a sleigh. Sold individually at $3 each. Use the custom request button to discuss your name and design.",
+    "description": "Decorative hanging ornaments with a name worked into the circular design. The examples show festive stars, a moon, snowflakes and a sleigh. Sold individually at $3 each.",
+    "personalization": {
+      "label": "Name",
+      "placeholder": "e.g. Emma",
+      "maxLength": 20,
+      "required": true
+    }
+  },
+  {
+    "SKU": "CH005",
+    "originalDescription": "Circular name ornaments with raised lettering, snowflakes and colourful frames. Use the custom request button to discuss your name and preferred design. Price is per ornament.",
+    "description": "Circular name ornaments with raised lettering, snowflakes and colourful frames. Price is per ornament.",
+    "personalization": {
+      "label": "Name",
+      "placeholder": "e.g. Emma",
+      "maxLength": 20,
+      "required": true
+    }
+  },
+  {
+    "SKU": "CH006",
+    "originalDescription": "A red and white Santa hat ornament with raised name lettering and a hanging loop. Use the custom request button to discuss your name. Price is per ornament.",
+    "description": "A red and white Santa hat ornament with raised name lettering and a hanging loop. Price is per ornament.",
+    "personalization": {
+      "label": "Name",
+      "placeholder": "e.g. Emma",
+      "maxLength": 20,
+      "required": true
+    }
+  },
+  {
+    "SKU": "CH007",
+    "originalDescription": "Gingerbread character ornaments with name lettering, icing-style outlines and bow or heart details. Use the custom request button to discuss your name and character. Price is per ornament.",
+    "description": "Gingerbread character ornaments with name lettering, icing-style outlines and bow or heart details. Price is per ornament.",
+    "personalization": {
+      "label": "Name",
+      "placeholder": "e.g. Emma",
+      "maxLength": 20,
+      "required": true
+    }
+  },
+  {
+    "SKU": "CH008",
+    "originalDescription": "Red Christmas sweater ornaments with raised name lettering, reindeer and snowflake details. The knitted-style texture makes a festive keepsake for the tree. Sold individually at $5 each. Use the custom request button to discuss your name.",
+    "description": "Red Christmas sweater ornaments with raised name lettering, reindeer and snowflake details. The knitted-style texture makes a festive keepsake for the tree. Sold individually at $5 each.",
+    "personalization": {
+      "label": "Name",
+      "placeholder": "e.g. Emma",
+      "maxLength": 20,
+      "required": true
+    }
+  },
+  {
+    "SKU": "CH029",
+    "originalDescription": "A circular Christmas ornament with your chosen name and festive decorative details. Use the custom request button to discuss your name and design. Price is per ornament.",
+    "description": "A circular Christmas ornament with your chosen name and festive decorative details. Price is per ornament.",
+    "personalization": {
+      "label": "Name",
+      "placeholder": "e.g. Emma",
+      "maxLength": 20,
+      "required": true
+    }
+  },
+  {
+    "SKU": "CH032",
+    "originalDescription": "Gingerbread-style gift tags with name lettering and icing-style details. Use the custom request button to discuss your name and preferred design. Price is per tag.",
+    "description": "Gingerbread-style gift tags with name lettering and icing-style details. Price is per tag.",
+    "personalization": {
+      "label": "Name",
+      "placeholder": "e.g. Emma",
+      "maxLength": 20,
+      "required": true
+    }
+  },
+  {
+    "SKU": "CH033",
+    "originalDescription": "A Christmas tree decoration formed from family members\u2019 names and topped with a star. Use the custom request button to discuss your names. Price is per personalised tree.",
+    "description": "A Christmas tree decoration formed from family members\u2019 names and topped with a star. Price is per personalised tree.",
+    "personalization": {
+      "label": "Family names",
+      "placeholder": "e.g. Emma, Noah, Mia",
+      "maxLength": 60,
+      "required": true
+    }
+  }
+]

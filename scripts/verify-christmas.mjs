@@ -29,6 +29,8 @@ for (const product of manifest.products) {
     assert(body.includes(variant.label), 'Missing colour option ' + variant.label);
     assert(JSON.parse(product.images).includes(variant.image), 'Variant must use gallery image');
   }
+  assert.equal(body.includes('We print it exactly as typed.'), Boolean(product.personalization), 'Name field opt-in mismatch: '+product.slug);
+  if (product.personalization) assert(body.includes('placeholder="'+product.personalization.placeholder+'"'), 'Missing name placeholder');
   console.log('Verified ' + path + ' $' + product.priceUSD);
 }
 for (const asset of manifest.assets) {

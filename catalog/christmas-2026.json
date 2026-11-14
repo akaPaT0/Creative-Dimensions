@@ -48,11 +48,17 @@
       "category": "christmas",
       "subCategory": "ornaments",
       "priceUSD": 3,
-      "description": "Decorative hanging ornaments with a name worked into the circular design. The examples show festive stars, a moon, snowflakes and a sleigh. Sold individually at $3 each. Use the custom request button to discuss your name and design.",
+      "description": "Decorative hanging ornaments with a name worked into the circular design. The examples show festive stars, a moon, snowflakes and a sleigh. Sold individually at $3 each.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/hanging-name-ornaments-001.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Name",
+        "placeholder": "e.g. Emma",
+        "maxLength": 20,
+        "required": true
+      }
     },
     {
       "SKU": "CH005",
@@ -61,11 +67,17 @@
       "category": "christmas",
       "subCategory": "ornaments",
       "priceUSD": 4,
-      "description": "Circular name ornaments with raised lettering, snowflakes and colourful frames. Use the custom request button to discuss your name and preferred design. Price is per ornament.",
+      "description": "Circular name ornaments with raised lettering, snowflakes and colourful frames. Price is per ornament.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/snowflake-name-ornaments-001.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Name",
+        "placeholder": "e.g. Emma",
+        "maxLength": 20,
+        "required": true
+      }
     },
     {
       "SKU": "CH006",
@@ -74,11 +86,17 @@
       "category": "christmas",
       "subCategory": "ornaments",
       "priceUSD": 3,
-      "description": "A red and white Santa hat ornament with raised name lettering and a hanging loop. Use the custom request button to discuss your name. Price is per ornament.",
+      "description": "A red and white Santa hat ornament with raised name lettering and a hanging loop. Price is per ornament.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/santa-hat-name-ornament-001.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Name",
+        "placeholder": "e.g. Emma",
+        "maxLength": 20,
+        "required": true
+      }
     },
     {
       "SKU": "CH007",
@@ -87,11 +105,17 @@
       "category": "christmas",
       "subCategory": "ornaments",
       "priceUSD": 5,
-      "description": "Gingerbread character ornaments with name lettering, icing-style outlines and bow or heart details. Use the custom request button to discuss your name and character. Price is per ornament.",
+      "description": "Gingerbread character ornaments with name lettering, icing-style outlines and bow or heart details. Price is per ornament.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/gingerbread-name-ornaments-001.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Name",
+        "placeholder": "e.g. Emma",
+        "maxLength": 20,
+        "required": true
+      }
     },
     {
       "SKU": "CH008",
@@ -100,11 +124,17 @@
       "category": "christmas",
       "subCategory": "ornaments",
       "priceUSD": 5,
-      "description": "Red Christmas sweater ornaments with raised name lettering, reindeer and snowflake details. The knitted-style texture makes a festive keepsake for the tree. Sold individually at $5 each. Use the custom request button to discuss your name.",
+      "description": "Red Christmas sweater ornaments with raised name lettering, reindeer and snowflake details. The knitted-style texture makes a festive keepsake for the tree. Sold individually at $5 each.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/sweater-name-ornaments-001.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Name",
+        "placeholder": "e.g. Emma",
+        "maxLength": 20,
+        "required": true
+      }
     },
     {
       "SKU": "CH009",
@@ -411,11 +441,17 @@
       "category": "christmas",
       "subCategory": "ornaments",
       "priceUSD": 5,
-      "description": "A circular Christmas ornament with your chosen name and festive decorative details. Use the custom request button to discuss your name and design. Price is per ornament.",
+      "description": "A circular Christmas ornament with your chosen name and festive decorative details. Price is per ornament.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/personalised-round-name-ornament-01.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Name",
+        "placeholder": "e.g. Emma",
+        "maxLength": 20,
+        "required": true
+      }
     },
     {
       "SKU": "CH030",
@@ -450,11 +486,17 @@
       "category": "christmas",
       "subCategory": "ornaments",
       "priceUSD": 5,
-      "description": "Gingerbread-style gift tags with name lettering and icing-style details. Use the custom request button to discuss your name and preferred design. Price is per tag.",
+      "description": "Gingerbread-style gift tags with name lettering and icing-style details. Price is per tag.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/gingerbread-gift-tags-01.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Name",
+        "placeholder": "e.g. Emma",
+        "maxLength": 20,
+        "required": true
+      }
     },
     {
       "SKU": "CH033",
@@ -463,11 +505,17 @@
       "category": "christmas",
       "subCategory": "decorations",
       "priceUSD": 18,
-      "description": "A Christmas tree decoration formed from family members\u2019 names and topped with a star. Use the custom request button to discuss your names. Price is per personalised tree.",
+      "description": "A Christmas tree decoration formed from family members\u2019 names and topped with a star. Price is per personalised tree.",
       "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/family-names-christmas-tree-01.webp\"]",
       "isNew": true,
       "featured": false,
-      "variants": []
+      "variants": [],
+      "personalization": {
+        "label": "Family names",
+        "placeholder": "e.g. Emma, Noah, Mia",
+        "maxLength": 60,
+        "required": true
+      }
     }
   ],
   "assets": [
