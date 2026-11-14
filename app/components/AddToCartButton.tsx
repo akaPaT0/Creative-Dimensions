@@ -1,17 +1,13 @@
 "use client";
 
 import { useState } from "react";
-
-type CartCustomization = {
-  summary: string;
-  slots: Array<{
-    slot: string;
-    label: string;
-    filamentId: string;
-    filamentLabel: string;
-    colorValue: string;
-  }>;
-};
+import {
+  CART_STORAGE_KEY,
+  CART_UPDATED_EVENT,
+  cartLineKey,
+  parseCustomization,
+  type CartCustomization,
+} from "@/app/lib/cart-items";
 
 export type AddToCartOptions = {
   /** e.g. the chosen colour; items with different customization stay separate lines. */
@@ -20,12 +16,9 @@ export type AddToCartOptions = {
   previewImageUrl?: string;
 };
 
-const STORAGE_KEY = "cd_cart_v1";
-const CART_UPDATED_EVENT = "cd-cart-updated";
-
 function readRawCart(): Array<Record<string, unknown>> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed)
       ? parsed.filter((x): x is Record<string, unknown> => !!x && typeof x === "object")
@@ -35,24 +28,19 @@ function readRawCart(): Array<Record<string, unknown>> {
   }
 }
 
-function customizationKey(value: unknown) {
-  if (!value || typeof value !== "object") return "";
-  const summary = (value as { summary?: unknown }).summary;
-  return typeof summary === "string" ? summary : "";
-}
-
 /**
  * Add one unit to the cart. Existing entries keep all their fields (e.g. custom
- * preview images); a matching line (same product and customization) is incremented.
+ * preview images); a matching line (same product, colours, option and name) is incremented.
  */
 export function addToCart(productId: string, options: AddToCartOptions = {}) {
   if (typeof window === "undefined") return;
   const id = String(productId);
-  const key = customizationKey(options.customization);
+  const key = cartLineKey({ productId: id, customization: options.customization });
   const current = readRawCart();
 
   const index = current.findIndex(
-    (x) => String(x.productId) === id && customizationKey(x.customization) === key
+    (x) =>
+      cartLineKey({ productId: String(x.productId), customization: parseCustomization(x.customization) }) === key
   );
 
   if (index >= 0) {
@@ -70,7 +58,7 @@ export function addToCart(productId: string, options: AddToCartOptions = {}) {
     });
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(current));
   window.dispatchEvent(new Event(CART_UPDATED_EVENT));
 }
 

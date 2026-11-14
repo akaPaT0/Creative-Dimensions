@@ -10,22 +10,13 @@ import Background from "../components/Background";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
 import { getProductPath } from "../lib/product-url";
 import type { Product } from "../data/products";
-
-type StoredCartItem = {
-  productId: string;
-  quantity: number;
-  previewImageUrl?: string;
-  customization?: {
-    summary: string;
-    slots: Array<{
-      slot: string;
-      label: string;
-      filamentId: string;
-      filamentLabel: string;
-      colorValue: string;
-    }>;
-  };
-};
+import {
+  cartLineKey,
+  readStoredCart,
+  writeStoredCart,
+  type StoredCartItem,
+} from "../lib/cart-items";
+import { unitPriceFor } from "../lib/product-options";
 
 type CartLine = {
   key: string;
@@ -34,10 +25,8 @@ type CartLine = {
   quantity: number;
   previewImageUrl?: string;
   customization?: StoredCartItem["customization"];
+  unitPriceUSD: number;
 };
-
-const STORAGE_KEY = "cd_cart_v1";
-const CART_UPDATED_EVENT = "cd-cart-updated";
 
 function getProductImage(product: Product) {
   if (Array.isArray(product.images) && product.images.length > 0) {
@@ -55,82 +44,11 @@ function formatMoney(value: number) {
   }).format(value);
 }
 
-function parseStoredCart(raw: unknown): StoredCartItem[] {
-  if (!Array.isArray(raw)) return [];
-  const out: StoredCartItem[] = [];
-  for (const entry of raw) {
-    if (!entry || typeof entry !== "object") continue;
-    const row = entry as Record<string, unknown>;
-    const id = typeof row.productId === "string" ? row.productId : "";
-    const qtyRaw =
-      typeof row.quantity === "number"
-        ? row.quantity
-        : typeof row.qty === "number"
-          ? row.qty
-          : 1;
-    const quantity = Math.max(1, Math.floor(qtyRaw));
-    if (!id) continue;
-    const customizationRaw =
-      row.customization && typeof row.customization === "object"
-        ? (row.customization as Record<string, unknown>)
-        : null;
-    const slots = Array.isArray(customizationRaw?.slots)
-      ? customizationRaw.slots
-          .map((slot) => {
-            if (!slot || typeof slot !== "object") return null;
-            const s = slot as Record<string, unknown>;
-            const filamentId = typeof s.filamentId === "string" ? s.filamentId : "";
-            if (!filamentId) return null;
-            return {
-              slot: typeof s.slot === "string" ? s.slot : "",
-              label: typeof s.label === "string" ? s.label : "",
-              filamentId,
-              filamentLabel: typeof s.filamentLabel === "string" ? s.filamentLabel : "",
-              colorValue: typeof s.colorValue === "string" ? s.colorValue : "",
-            };
-          })
-          .filter((x): x is NonNullable<typeof x> => Boolean(x))
-      : [];
-    const summary = typeof customizationRaw?.summary === "string" ? customizationRaw.summary : "";
-    out.push({
-      productId: id,
-      quantity,
-      previewImageUrl: typeof row.previewImageUrl === "string" ? row.previewImageUrl : undefined,
-      customization: slots.length ? { summary, slots } : undefined,
-    });
-  }
-  return out;
-}
-
-function cartLineKey(item: StoredCartItem) {
-  return JSON.stringify({
-    productId: item.productId,
-    slots: (item.customization?.slots || []).map((x) => ({ slot: x.slot, filamentId: x.filamentId })),
-  });
-}
-
-function readCartFromStorage(): StoredCartItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return parseStoredCart(JSON.parse(raw));
-  } catch {
-    return [];
-  }
-}
-
-function saveCartToStorage(items: StoredCartItem[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  window.dispatchEvent(new Event(CART_UPDATED_EVENT));
-}
-
 export default function CartPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoaded, setProductsLoaded] = useState(false);
   const [cartItems, setCartItems] = useState<StoredCartItem[]>(() =>
-    readCartFromStorage()
+    readStoredCart()
   );
 
   useEffect(() => {
@@ -149,7 +67,7 @@ export default function CartPage() {
   }, []);
 
   useEffect(() => {
-    saveCartToStorage(cartItems);
+    writeStoredCart(cartItems);
   }, [cartItems]);
 
   const cartLines = useMemo<CartLine[]>(() => {
@@ -166,6 +84,7 @@ export default function CartPage() {
         quantity: item.quantity,
         previewImageUrl: item.previewImageUrl,
         customization: item.customization,
+        unitPriceUSD: unitPriceFor(product, item.customization),
       });
     }
     return out;
@@ -177,7 +96,7 @@ export default function CartPage() {
   );
 
   const subtotal = useMemo(
-    () => cartLines.reduce((sum, line) => sum + line.product.priceUSD * line.quantity, 0),
+    () => cartLines.reduce((sum, line) => sum + line.unitPriceUSD * line.quantity, 0),
     [cartLines]
   );
 
@@ -322,7 +241,20 @@ export default function CartPage() {
                         </p>
                       ) : null}
 
-                      <p className="mt-1 text-xs text-white/45">{formatMoney(line.product.priceUSD)} each</p>
+                      {line.customization?.option && (
+                        <p className="mt-1 text-xs text-white/60">{line.customization.option.label}</p>
+                      )}
+
+                      {line.customization?.personalization && (
+                        <p className="mt-1 text-xs text-white/60">
+                          {line.customization.personalization.label}:{" "}
+                          <span className="font-semibold text-white">
+                            {line.customization.personalization.text}
+                          </span>
+                        </p>
+                      )}
+
+                      <p className="mt-1 text-xs text-white/45">{formatMoney(line.unitPriceUSD)} each</p>
 
                       <div className="mt-auto flex items-center justify-between gap-2 pt-2">
                         <div className="inline-flex items-center rounded-xl border border-white/15 bg-white/[0.04]">
@@ -347,7 +279,7 @@ export default function CartPage() {
                           </button>
                         </div>
                         <span className="text-base font-bold text-[#FF8B64] tabular-nums">
-                          {formatMoney(line.product.priceUSD * line.quantity)}
+                          {formatMoney(line.unitPriceUSD * line.quantity)}
                         </span>
                       </div>
                     </div>

@@ -11,22 +11,15 @@ import type { Product } from "../data/products";
 import { openInvoiceWindow } from "@/app/lib/invoiceWindow";
 import AuthModal from "../components/AuthModal";
 import { authFetch, useSupabaseAuth } from "@/app/lib/supabase/auth-client";
+import {
+  cartLineKey,
+  describeCustomization,
+  readStoredCart,
+  writeStoredCart,
+  type StoredCartItem,
+} from "@/app/lib/cart-items";
+import { unitPriceFor } from "@/app/lib/product-options";
 
-type StoredCartItem = {
-  productId: string;
-  quantity: number;
-  previewImageUrl?: string;
-  customization?: {
-    summary: string;
-    slots: Array<{
-      slot: string;
-      label: string;
-      filamentId: string;
-      filamentLabel: string;
-      colorValue: string;
-    }>;
-  };
-};
 
 type Address = {
   id: string;
@@ -96,8 +89,6 @@ type PlacedOrderPrintData = {
   }>;
 };
 
-const STORAGE_KEY = "cd_cart_v1";
-const CART_UPDATED_EVENT = "cd-cart-updated";
 const EMPTY_ADDRESS_FORM: AddressFormState = {
   label: "",
   fullName: "",
@@ -110,60 +101,6 @@ const EMPTY_ADDRESS_FORM: AddressFormState = {
   country: "LB",
   isDefault: false,
 };
-
-function parseStoredCart(raw: unknown): StoredCartItem[] {
-  if (!Array.isArray(raw)) return [];
-  const out: StoredCartItem[] = [];
-  for (const entry of raw) {
-    if (!entry || typeof entry !== "object") continue;
-    const row = entry as Record<string, unknown>;
-    const productId = typeof row.productId === "string" ? row.productId : "";
-    const quantity =
-      typeof row.quantity === "number" && Number.isFinite(row.quantity)
-        ? Math.max(1, Math.floor(row.quantity))
-        : 1;
-    if (!productId) continue;
-    const customizationRaw =
-      row.customization && typeof row.customization === "object"
-        ? (row.customization as Record<string, unknown>)
-        : null;
-    const slots = Array.isArray(customizationRaw?.slots)
-      ? customizationRaw.slots
-          .map((slot) => {
-            if (!slot || typeof slot !== "object") return null;
-            const s = slot as Record<string, unknown>;
-            const filamentId = typeof s.filamentId === "string" ? s.filamentId : "";
-            if (!filamentId) return null;
-            return {
-              slot: typeof s.slot === "string" ? s.slot : "",
-              label: typeof s.label === "string" ? s.label : "",
-              filamentId,
-              filamentLabel: typeof s.filamentLabel === "string" ? s.filamentLabel : "",
-              colorValue: typeof s.colorValue === "string" ? s.colorValue : "",
-            };
-          })
-          .filter((x): x is NonNullable<typeof x> => Boolean(x))
-      : [];
-    const summary = typeof customizationRaw?.summary === "string" ? customizationRaw.summary : "";
-    out.push({
-      productId,
-      quantity,
-      previewImageUrl: typeof row.previewImageUrl === "string" ? row.previewImageUrl : undefined,
-      customization: slots.length ? { summary, slots } : undefined,
-    });
-  }
-  return out;
-}
-
-function readCart(): StoredCartItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? parseStoredCart(JSON.parse(raw)) : [];
-  } catch {
-    return [];
-  }
-}
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -225,7 +162,7 @@ export default function CheckoutPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
 
-  const [cart, setCart] = useState<StoredCartItem[]>(() => readCart());
+  const [cart, setCart] = useState<StoredCartItem[]>(() => readStoredCart());
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressId, setAddressId] = useState("");
   const [loadingAddresses, setLoadingAddresses] = useState(false);
@@ -301,7 +238,7 @@ export default function CheckoutPage() {
     return cart.reduce((sum, row) => {
       const p = byId.get(row.productId);
       if (!p) return sum;
-      return sum + p.priceUSD * row.quantity;
+      return sum + unitPriceFor(p, row.customization) * row.quantity;
     }, 0);
   }, [cart, products]);
 
@@ -312,15 +249,12 @@ export default function CheckoutPage() {
         const product = byId.get(row.productId);
         if (!product) return null;
         return {
-          key: JSON.stringify({
-            productId: row.productId,
-            slots: (row.customization?.slots || []).map((x) => x.filamentId),
-          }),
+          key: cartLineKey(row),
           productId: row.productId,
           name: product.name,
           quantity: row.quantity,
-          lineTotalUSD: product.priceUSD * row.quantity,
-          customizationSummary: row.customization?.summary || "",
+          lineTotalUSD: unitPriceFor(product, row.customization) * row.quantity,
+          customizationSummary: describeCustomization(row.customization),
           image:
             row.previewImageUrl ||
             (Array.isArray(product.images) && product.images[0]) ||
@@ -391,8 +325,7 @@ export default function CheckoutPage() {
       setPlacedOrderPrintData(data.order ?? null);
       setCart([]);
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-        window.dispatchEvent(new Event(CART_UPDATED_EVENT));
+        writeStoredCart([]);
       }
     } catch {
       setError("Could not place order.");

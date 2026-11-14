@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-11-14 - Personalised names and price options are per-product opt-ins
+
+- Owner: only custom items should ask for a name; non-custom items keep today's flow. Both features default off and are enabled per product in admin.
+- Store settings in two nullable jsonb columns on `products` rather than overloading `variants`. Prices always come from the product on the server; the cart only carries the option label and typed text. Each distinct name is its own cart line.
+
 ## 2026-11-09 - Publish the Halloween collection
 
 - Owner authorized publishing all eight prepared listings under the top-level category `halloween` (display label Halloween). Group them into candy-bowls, pots, figurines, wall-decor and lanterns. Retain the existing category/product page components, image-linked variant/cart behavior and canonical URL pattern.

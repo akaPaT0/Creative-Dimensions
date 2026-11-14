@@ -20,6 +20,8 @@ type Product = {
   image?: string;
   images?: string[];
   variants?: { label: string; hex: string; hex2?: string; image: string }[];
+  personalization?: { label: string; placeholder?: string; maxLength: number; required: boolean } | null;
+  priceOptions?: { label: string; priceUSD: number }[] | null;
   customizeColors?: {
     modelUrl: string;
     defaultHexes: string[];
@@ -409,6 +411,26 @@ function EditModal({
   const [isNew, setIsNew] = useState(!!product.isNew);
   const [featured, setFeatured] = useState(!!product.featured);
 
+  // Customer types a name (or other text) before adding to cart.
+  const hadPersonalization = !!product.personalization;
+  const [personalize, setPersonalize] = useState(hadPersonalization);
+  const [personalLabel, setPersonalLabel] = useState(product.personalization?.label || "Name");
+  const [personalPlaceholder, setPersonalPlaceholder] = useState(
+    product.personalization?.placeholder ?? "e.g. Emma"
+  );
+  const [personalMax, setPersonalMax] = useState(String(product.personalization?.maxLength ?? 20));
+  const [personalRequired, setPersonalRequired] = useState(product.personalization?.required ?? true);
+
+  // Choices with their own price (e.g. "1 snowman" $4, "Full set of 5" $18).
+  const initialPriceOptions = useMemo(
+    () => JSON.stringify(product.priceOptions ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+  const [priceOptionRows, setPriceOptionRows] = useState<{ label: string; price: string }[]>(() =>
+    (product.priceOptions ?? []).map((o) => ({ label: o.label, price: String(o.priceUSD) }))
+  );
+
   // ✅ Existing images you can reorder/remove
   const initialExistingImages =
     (product.images && product.images.length
@@ -477,6 +499,42 @@ function EditModal({
       fd.set("description", description);
       fd.set("isNew", String(isNew));
       fd.set("featured", String(featured));
+
+      // Only sent when on, or when switching it off, so ordinary products save as before.
+      if (personalize) {
+        const max = Math.floor(Number(personalMax));
+        if (!Number.isFinite(max) || max < 1 || max > 60) {
+          throw new Error("Max characters must be between 1 and 60.");
+        }
+        fd.set(
+          "personalization",
+          JSON.stringify({
+            label: personalLabel.trim() || "Name",
+            placeholder: personalPlaceholder.trim(),
+            maxLength: max,
+            required: personalRequired,
+          })
+        );
+      } else if (hadPersonalization) {
+        fd.set("personalization", "off");
+      }
+
+      // Price options: only sent when they changed.
+      const cleanedOptions = priceOptionRows
+        .map((row) => ({ label: row.label.replace(/\s+/g, " ").trim(), priceUSD: Number(row.price) }))
+        .filter((row) => row.label || row.priceUSD);
+      for (const row of cleanedOptions) {
+        if (!row.label) throw new Error("Every price option needs a name.");
+        if (!Number.isFinite(row.priceUSD) || row.priceUSD < 0) {
+          throw new Error(`Enter a valid price for "${row.label}".`);
+        }
+      }
+      if (new Set(cleanedOptions.map((r) => r.label.toLowerCase())).size !== cleanedOptions.length) {
+        throw new Error("Price option names must be different.");
+      }
+      if (JSON.stringify(cleanedOptions) !== initialPriceOptions) {
+        fd.set("priceOptions", JSON.stringify(cleanedOptions));
+      }
 
       // ✅ FIX: persist order/removals ONLY if changed
       const currentImagesOrderStr = JSON.stringify(existingImages);
@@ -622,6 +680,111 @@ function EditModal({
             onChange={(e) => setDescription(e.target.value)}
             className={`mt-1.5 min-h-[120px] ${ui.input}`}
           />
+        </div>
+
+        <div className={`${ui.inset} p-4 space-y-3`}>
+          <div className={ui.label}>Price options</div>
+          {priceOptionRows.map((row, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                value={row.label}
+                onChange={(e) =>
+                  setPriceOptionRows((rows) => rows.map((r, j) => (j === i ? { ...r, label: e.target.value } : r)))
+                }
+                maxLength={40}
+                placeholder="e.g. Full set of 5"
+                aria-label="Option name"
+                className={ui.input}
+              />
+              <input
+                value={row.price}
+                onChange={(e) =>
+                  setPriceOptionRows((rows) => rows.map((r, j) => (j === i ? { ...r, price: e.target.value } : r)))
+                }
+                type="number"
+                step="0.5"
+                min={0}
+                placeholder="$"
+                aria-label="Option price in USD"
+                className={`w-28 shrink-0 ${ui.input}`}
+              />
+              <button
+                type="button"
+                onClick={() => setPriceOptionRows((rows) => rows.filter((_, j) => j !== i))}
+                className={`shrink-0 ${ui.btn}`}
+                aria-label={`Remove option ${row.label || i + 1}`}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+          ))}
+          {priceOptionRows.length < 12 && (
+            <button
+              type="button"
+              onClick={() => setPriceOptionRows((rows) => [...rows, { label: "", price: "" }])}
+              className={ui.btn}
+            >
+              + Add price option
+            </button>
+          )}
+          <p className={ui.note}>
+            Leave empty for one price. With options, the customer must pick one and pays that
+            option&rsquo;s price; listings show &ldquo;From $&rdquo; the lowest.
+          </p>
+        </div>
+
+        <div className={`${ui.inset} p-4 space-y-3`}>
+          <Switch
+            checked={personalize}
+            onChange={setPersonalize}
+            label="Customer types a name (personalised item)"
+          />
+          {personalize && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className={ui.label}>Field label</label>
+                  <input
+                    value={personalLabel}
+                    onChange={(e) => setPersonalLabel(e.target.value)}
+                    maxLength={40}
+                    placeholder="Name"
+                    className={`mt-1.5 ${ui.input}`}
+                  />
+                </div>
+                <div>
+                  <label className={ui.label}>Example text</label>
+                  <input
+                    value={personalPlaceholder}
+                    onChange={(e) => setPersonalPlaceholder(e.target.value)}
+                    maxLength={60}
+                    placeholder="e.g. Emma"
+                    className={`mt-1.5 ${ui.input}`}
+                  />
+                </div>
+                <div>
+                  <label className={ui.label}>Max characters</label>
+                  <input
+                    value={personalMax}
+                    onChange={(e) => setPersonalMax(e.target.value)}
+                    type="number"
+                    min={1}
+                    max={60}
+                    className={`mt-1.5 ${ui.input}`}
+                  />
+                </div>
+              </div>
+              <Switch
+                checked={personalRequired}
+                onChange={setPersonalRequired}
+                label="Required before adding to cart"
+              />
+              <p className={ui.note}>
+                Each different name becomes its own cart line, and the name shows on the order, the
+                invoice and the Telegram alert.
+              </p>
+            </>
+          )}
         </div>
 
         {/* Existing images: reorder/remove */}

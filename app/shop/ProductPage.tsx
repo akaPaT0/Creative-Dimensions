@@ -12,6 +12,7 @@ import LikeCartRow from "../components/LikeCartRow";
 import ProductAddToCart from "../components/ProductAddToCart";
 import { ProductSelectionProvider } from "../components/ProductSelection";
 import VariantSwatches from "../components/VariantSwatches";
+import { PersonalizationField, PriceOptionPicker, ProductPrice } from "../components/ProductOptions";
 import TemphomeCustomRequestCta from "../components/TemphomeCustomRequestCta";
 import ProductCustomizeColorsAction from "../components/ProductCustomizeColorsAction";
 import type { Product } from "../data/products";
@@ -25,6 +26,7 @@ import {
   getProductImages,
 } from "../lib/product-seo";
 import { groupColours } from "../lib/product-variants";
+import { pricePrefix } from "../lib/product-options";
 
 /** Short labels used in the breadcrumb and above the product name. */
 const CATEGORY_NAMES: Record<string, string> = {
@@ -163,7 +165,12 @@ export default async function ProductPage({
 
       <Breadcrumb category={category} name={p.name} />
 
-      <ProductSelectionProvider images={images} variants={groupColours(p.variants ?? [], images)}>
+      <ProductSelectionProvider
+        images={images}
+        variants={groupColours(p.variants ?? [], images)}
+        priceOptions={p.priceOptions ?? []}
+        personalization={p.personalization ?? null}
+      >
       <div className="mt-4 sm:mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-10">
         <div className="min-w-0">
           <ProductGallery images={images} name={p.name} />
@@ -186,9 +193,11 @@ export default async function ProductPage({
           </h1>
 
           <div className="mt-4 flex items-center justify-between gap-4">
-            <span className="text-3xl font-bold text-[#FF8B64]">
-              {typeof p.priceUSD === "number" ? `$${p.priceUSD}` : "Ask for price"}
-            </span>
+            {typeof p.priceUSD === "number" ? (
+              <ProductPrice basePriceUSD={p.priceUSD} />
+            ) : (
+              <span className="text-3xl font-bold text-[#FF8B64]">Ask for price</span>
+            )}
             <div className="flex items-center gap-2">
               <LikeCartRow productId={String(p.id)} />
               <ShareButton
@@ -200,7 +209,9 @@ export default async function ProductPage({
             </div>
           </div>
 
+          <PriceOptionPicker />
           <VariantSwatches />
+          <PersonalizationField />
 
           {p.description && (
             <p className="mt-5 whitespace-pre-line text-sm sm:text-base leading-relaxed text-white/70">
@@ -256,7 +267,7 @@ export default async function ProductPage({
                 id: String(x.id),
                 href: getProductPath(x),
                 title: x.name,
-                price: typeof x.priceUSD === "number" ? `$${x.priceUSD}` : "DM",
+                price: typeof x.priceUSD === "number" ? `${pricePrefix(x)}$${x.priceUSD}` : "DM",
                 category: "",
                 image: imgs[0] || "/products/placeholder.jpg",
                 hoverImage: imgs[1],

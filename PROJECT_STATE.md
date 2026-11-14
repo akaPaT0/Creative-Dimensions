@@ -1,5 +1,13 @@
 # Project state
 
+## Personalised names and price options (2026-11-14, branch claude/product-personalization, not deployed)
+
+- Per-product opt-in features, off by default: a "Name" text field (`personalization`) and priced choices (`priceOptions`, e.g. "1 snowman" / "Full set of 5"). Admin product editor has both controls. Product page, cart, checkout, orders API, invoice and Telegram carry them; the orders API re-validates the option and name and charges the option price from the product. With options, admin save sets the base `priceUSD` to the cheapest option; listings show "From $X".
+- All cart readers now share `app/lib/cart-items.ts` (previously four copies that dropped unknown fields on re-save).
+- Production Supabase `products` now has nullable jsonb columns `priceOptions` and `personalization` (owner approved; migration `products_price_options_and_personalization`, file `supabase-product-options.sql`). All 44 existing rows verified unchanged; new columns NULL everywhere. Live site returned 200 afterwards.
+- Verified locally with temporary in-memory product settings (removed): picker, required name, separate lines per name, cart totals, "From $" listings, ordinary products unchanged. TypeScript and 10 Node tests pass. A real order end-to-end (order row, invoice, Telegram) is not yet exercised.
+- Pending: commit/PR and deploy; owner to set snowman option prices; after the Christmas release (separate uncommitted `codex/christmas-release` worktree) lands, switch on the name field for the name ornaments and drop the "use the custom request button to discuss your name" wording. Photo ornament stays on custom request.
+
 ## Halloween collection (2026-11-09)
 
 - Lantern gallery improvement: HA008 now has three clearer unlit front views from the larger second source photo, followed by its four original lit/comparison views (seven lantern images, 25 across the collection). Source crops are 566–584 pixels tall versus roughly 400 previously; this uses original photograph detail, not generative reconstruction. Exact background and separate original-photo layers are preserved. Current gallery override and hashes are in catalog/halloween-lantern-gallery-v3.json; halloween-2026.json remains the initial publication snapshot and its insert-only publisher should not be rerun to update existing listings. Price remains $11 and there are still three choices, with both lit/unlit photos mapped to each.

@@ -2,6 +2,8 @@ import type { Product } from "@/app/data/products";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { supabase } from "@/app/lib/supabase/clients";
 import { normalizeVariants } from "@/app/lib/product-variants";
+import { normalizePersonalization } from "@/app/lib/product-personalization";
+import { normalizePriceOptions } from "@/app/lib/product-options";
 
 const TABLE = "products";
 
@@ -92,6 +94,8 @@ function normalizeProduct(input: unknown): Product | null {
       : undefined;
 
   const variants = normalizeVariants(row.variants, images);
+  const personalization = normalizePersonalization(row.personalization);
+  const priceOptions = normalizePriceOptions(row.priceOptions);
 
   return {
     id,
@@ -100,6 +104,8 @@ function normalizeProduct(input: unknown): Product | null {
     category,
     subCategory: subCategory || undefined,
     variants: variants.length ? variants : undefined,
+    personalization,
+    priceOptions: priceOptions.length ? priceOptions : undefined,
     priceUSD,
     description,
     isNew: asBool(row.isNew) || undefined,
@@ -141,6 +147,15 @@ function toDbRow(product: Product) {
     // Only write variants when set, so saves that don't know about them keep the stored value.
     ...(product.variants !== undefined
       ? { variants: product.variants.length ? product.variants : null }
+      : {}),
+    // Only written when set or being switched off (null), so saves that don't
+    // know about them keep the stored value, and ordinary products still save
+    // before the `personalization` / `priceOptions` columns exist.
+    ...(product.personalization !== undefined
+      ? { personalization: product.personalization ?? null }
+      : {}),
+    ...(product.priceOptions !== undefined
+      ? { priceOptions: product.priceOptions?.length ? product.priceOptions : null }
       : {}),
   };
 }

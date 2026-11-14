@@ -7,6 +7,7 @@ import Image from "next/image";
 import LikeIconButton from "../components/LikeIconButton";
 import CartIconButton from "../components/CartIconButton";
 import { Filter, Search, X, ArrowUpDown, Grid3X3, LayoutGrid } from "lucide-react";
+import { pricePrefix } from "@/app/lib/product-options";
 
 export const ALL_CATEGORY_TABS = [
   { id: "all", label: "All Prints" },
@@ -30,6 +31,7 @@ export type Product = {
   featured?: boolean;
   isNew?: boolean;
   priceUSD?: number;
+  priceOptions?: { priceUSD: number }[] | null;
   price?: number | string;
   currency?: string;
   description?: string;
@@ -109,7 +111,7 @@ function getDesc(p: Product) {
 function getPriceLabel(p: Product) {
   const price = p.price ?? p.priceUSD;
 
-  if (typeof price === "number") return `$${price}`;
+  if (typeof price === "number") return `${pricePrefix(p)}$${price}`;
   if (typeof price === "string" && price.trim()) {
     return price.startsWith("$") ? price : `$${price}`;
   }

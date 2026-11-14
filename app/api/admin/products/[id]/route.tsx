@@ -4,6 +4,8 @@ import type { Product } from "@/app/data/products";
 import { deletePublicAssetByUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
 import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
 import { normalizeVariants } from "@/app/lib/product-variants";
+import { normalizePersonalization } from "@/app/lib/product-personalization";
+import { normalizePriceOptions } from "@/app/lib/product-options";
 
 function json(res: unknown, status = 200) {
   return NextResponse.json(res, { status });
@@ -85,6 +87,8 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const imageFiles = form.getAll("images") as File[];
     const model = form.get("model");
     const variantsRaw = form.get("variants");
+    const personalizationRaw = form.get("personalization");
+    const priceOptionsRaw = form.get("priceOptions");
     const modelFile = model instanceof File && model.size > 0 ? model : null;
 
     if (!name || !categoryRaw || !subCategoryRaw || !priceUSDStr || !description) {
@@ -164,15 +168,36 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
           ? []
           : normalizeVariants(prev.variants ?? [], nextImages);
 
+    // "off" switches it off; a JSON object turns it on; absent keeps what's stored.
+    let nextPersonalization = prev.personalization;
+    if (personalizationRaw === "off") {
+      nextPersonalization = null;
+    } else if (typeof personalizationRaw === "string" && personalizationRaw) {
+      nextPersonalization = normalizePersonalization(personalizationRaw);
+      if (!nextPersonalization) return json({ error: "Invalid personalisation settings" }, 400);
+    }
+
+    // "[]" removes the options; absent keeps what's stored.
+    let nextPriceOptions = prev.priceOptions;
+    if (typeof priceOptionsRaw === "string" && priceOptionsRaw) {
+      const parsed = normalizePriceOptions(priceOptionsRaw);
+      nextPriceOptions = parsed.length ? parsed : null;
+    }
+
     const updated: Product = {
       ...prev,
       variants: nextVariants,
+      personalization: nextPersonalization,
+      priceOptions: nextPriceOptions,
       id,
       name,
       slug,
       category,
       subCategory,
-      priceUSD,
+      // With options, the base price is the cheapest one (used for "From $…", sorting and search results).
+      priceUSD: nextPriceOptions?.length
+        ? Math.min(...nextPriceOptions.map((o) => o.priceUSD))
+        : priceUSD,
       description,
       isNew,
       featured,
