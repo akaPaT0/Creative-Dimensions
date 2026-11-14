@@ -1,5 +1,13 @@
 # Project state
 
+## Personalised names and price options (2026-11-14, branch claude/product-personalization, not deployed)
+
+- Per-product opt-in features, off by default: a "Name" text field (`personalization`) and priced choices (`priceOptions`, e.g. "1 snowman" / "Full set of 5"). Admin product editor has both controls. Product page, cart, checkout, orders API, invoice and Telegram carry them; the orders API re-validates the option and name and charges the option price from the product. With options, admin save sets the base `priceUSD` to the cheapest option; listings show "From $X".
+- All cart readers now share `app/lib/cart-items.ts` (previously four copies that dropped unknown fields on re-save).
+- Production Supabase `products` now has nullable jsonb columns `priceOptions` and `personalization` (owner approved; migration `products_price_options_and_personalization`, file `supabase-product-options.sql`). All 44 existing rows verified unchanged; new columns NULL everywhere. Live site returned 200 afterwards.
+- Verified locally with temporary in-memory product settings (removed): picker, required name, separate lines per name, cart totals, "From $" listings, ordinary products unchanged. TypeScript and 10 Node tests pass. A real order end-to-end (order row, invoice, Telegram) is not yet exercised.
+- Pending: commit/PR and deploy; owner to set snowman option prices; after the Christmas release (separate uncommitted `codex/christmas-release` worktree) lands, switch on the name field for the name ornaments and drop the "use the custom request button to discuss your name" wording. Photo ornament stays on custom request.
+
 ## Christmas category release in progress (2026-11-14)
 
 - Owner requested direct imagegen cutouts on the exact saved background and publication under Christmas, then added $5 sweater name ornaments and a $6 Christmas tree clicker with an exploded-view illustration matching the existing fidget listing. Eight initial rows/assets are published in Supabase; clicker images and final deployment are in progress. Category routes/filter, footer/admin entries, SEO and sitemap are ready. Build/TypeScript and three URL tests passed; all 34 old products unchanged. Release isolated in `codex/christmas-release`.

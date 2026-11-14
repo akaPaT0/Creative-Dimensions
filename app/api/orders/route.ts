@@ -10,21 +10,19 @@ import {
 } from "@/app/lib/promocodes";
 import { requireSupabaseUser } from "@/app/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/app/lib/supabase/admin";
+import {
+  describeCustomization,
+  parseCustomization,
+  type CartCustomization,
+} from "@/app/lib/cart-items";
+import { findPriceOption } from "@/app/lib/product-options";
+import { validatePersonalizationText } from "@/app/lib/product-personalization";
 
 type OrderRequestItem = {
   productId: string;
   quantity: number;
   previewImageUrl?: string;
-  customization?: {
-    summary: string;
-    slots: Array<{
-      slot: string;
-      label: string;
-      filamentId: string;
-      filamentLabel: string;
-      colorValue: string;
-    }>;
-  };
+  customization?: CartCustomization;
 };
 
 type Address = {
@@ -73,6 +71,10 @@ type OrderRecord = {
     lineTotalUSD: number;
     previewImageUrl?: string;
     customizationSummary?: string;
+    /** Chosen priced option, e.g. "Full set of 5". */
+    option?: string;
+    /** Text to print, e.g. { label: "Name", text: "Emma" }. */
+    personalization?: { label: string; text: string };
     customizationSlots?: Array<{
       slot: string;
       label: string;
@@ -177,34 +179,33 @@ function normalizeItems(raw: unknown): OrderRequestItem[] {
     const productId = asText(row.productId);
     const quantity = asPositiveInt(row.quantity);
     if (!productId) continue;
-    const customizationRaw =
+    // Raw text the customer typed is kept so it can be checked against the product's limit.
+    const rawPersonalization =
       row.customization && typeof row.customization === "object"
-        ? (row.customization as Record<string, unknown>)
-        : null;
-    const slots = Array.isArray(customizationRaw?.slots)
-      ? customizationRaw.slots
-          .map((slot) => {
-            if (!slot || typeof slot !== "object") return null;
-            const s = slot as Record<string, unknown>;
-            const filamentId = asText(s.filamentId);
-            if (!filamentId) return null;
-            return {
-              slot: asText(s.slot).slice(0, 60),
-              label: asText(s.label).slice(0, 80),
-              filamentId: filamentId.slice(0, 80),
-              filamentLabel: asText(s.filamentLabel).slice(0, 80),
-              colorValue: asText(s.colorValue).slice(0, 40),
-            };
-          })
-          .filter((x): x is NonNullable<typeof x> => Boolean(x))
-          .slice(0, 12)
-      : [];
-    const summary = asText(customizationRaw?.summary).slice(0, 300);
+        ? (row.customization as { personalization?: { text?: unknown } }).personalization?.text
+        : undefined;
+    const parsed = parseCustomization(row.customization);
+    const customization: CartCustomization | undefined = parsed
+      ? {
+          summary: parsed.summary.trim().slice(0, 300),
+          slots: parsed.slots.slice(0, 12).map((s) => ({
+            slot: s.slot.trim().slice(0, 60),
+            label: s.label.trim().slice(0, 80),
+            filamentId: s.filamentId.trim().slice(0, 80),
+            filamentLabel: s.filamentLabel.trim().slice(0, 80),
+            colorValue: s.colorValue.trim().slice(0, 40),
+          })),
+          ...(parsed.option ? { option: parsed.option } : {}),
+          ...(typeof rawPersonalization === "string"
+            ? { personalization: { label: "", text: rawPersonalization } }
+            : {}),
+        }
+      : undefined;
     out.push({
       productId,
       quantity,
       previewImageUrl: safePreviewUrl(row.previewImageUrl) || undefined,
-      customization: slots.length ? { summary, slots } : undefined,
+      customization,
     });
   }
   return out;
@@ -334,7 +335,7 @@ async function notifyOrderTelegram(params: {
           `Custom item preview`,
           `Order: ${order.orderNumber}`,
           `Item: ${item.name} x${item.quantity}`,
-          `Colors: ${item.customizationSummary}`,
+          `Details: ${item.customizationSummary}`,
         ].join("\n"),
       });
     } catch {
@@ -503,23 +504,62 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  const resolvedItems = items.map((item) => {
+  // Prices, options and personalisation are checked against the product here;
+  // the browser's copy is never trusted for any of them.
+  const resolvedItems: OrderRecord["items"] = [];
+  for (const item of items) {
     const product = byId.get(item.productId);
     if (!product) {
       throw new Error(`Product not found: ${item.productId}`);
     }
-    const lineTotalUSD = product.priceUSD * item.quantity;
-    return {
+
+    let unitPriceUSD = product.priceUSD;
+    let option: string | undefined;
+    if (product.priceOptions?.length) {
+      const chosen = findPriceOption(product, item.customization?.option?.label);
+      if (!chosen) {
+        return NextResponse.json(
+          { error: `Please choose an option for ${product.name} in your cart.` },
+          { status: 400 }
+        );
+      }
+      unitPriceUSD = chosen.priceUSD;
+      option = chosen.label;
+    }
+
+    let personalization: { label: string; text: string } | undefined;
+    if (product.personalization) {
+      const result = validatePersonalizationText(
+        product.personalization,
+        item.customization?.personalization?.text
+      );
+      if ("error" in result) {
+        return NextResponse.json({ error: `${product.name}: ${result.error}` }, { status: 400 });
+      }
+      if (result.text) personalization = { label: product.personalization.label, text: result.text };
+    }
+
+    const slots = item.customization?.slots ?? [];
+    const customizationSummary = describeCustomization({
+      summary: slots.length ? item.customization?.summary ?? "" : "",
+      slots,
+      ...(option ? { option: { label: option } } : {}),
+      ...(personalization ? { personalization } : {}),
+    });
+
+    resolvedItems.push({
       productId: item.productId,
       name: product.name,
       quantity: item.quantity,
-      unitPriceUSD: product.priceUSD,
-      lineTotalUSD,
+      unitPriceUSD,
+      lineTotalUSD: unitPriceUSD * item.quantity,
       previewImageUrl: item.previewImageUrl || getProductPreviewImage(product),
-      customizationSummary: item.customization?.summary || undefined,
-      customizationSlots: item.customization?.slots?.length ? item.customization.slots : undefined,
-    };
-  });
+      customizationSummary: customizationSummary || undefined,
+      ...(option ? { option } : {}),
+      ...(personalization ? { personalization } : {}),
+      customizationSlots: slots.length ? slots : undefined,
+    });
+  }
 
   const subtotalUSD = resolvedItems.reduce((sum, x) => sum + x.lineTotalUSD, 0);
   const baseShippingUSD = subtotalUSD > 0 ? 5 : 0;

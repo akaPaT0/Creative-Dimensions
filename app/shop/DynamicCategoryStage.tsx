@@ -5,6 +5,7 @@ import { getProductPath } from "@/app/lib/product-url";
 import Link from "next/link";
 import FeaturedCarousel from "../components/FeaturedCarousel";
 import type { Product } from "./ShopCatalogClient";
+import { pricePrefix } from "@/app/lib/product-options";
 
 function getCardImage(p: Product) {
   if (Array.isArray(p.images) && p.images.length > 0) return p.images[0];
@@ -29,7 +30,7 @@ function getTitle(p: Product) {
 
 function getPriceLabel(p: Product) {
   const price = p.price ?? p.priceUSD;
-  if (typeof price === "number") return `$${price}`;
+  if (typeof price === "number") return `${pricePrefix(p)}$${price}`;
   if (typeof price === "string" && price.trim())
     return price.startsWith("$") ? price : `$${price}`;
   return "DM";

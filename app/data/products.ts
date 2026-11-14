@@ -1,5 +1,22 @@
 import type { ProductVariantEntry } from "@/app/lib/product-variants";
 
+export type ProductPersonalization = {
+  /** Field label shown to the customer, e.g. "Name". */
+  label: string;
+  /** Example text inside the empty field, e.g. "e.g. Emma". */
+  placeholder?: string;
+  /** Most characters the customer can type (1–60). */
+  maxLength: number;
+  /** When true the item can't be added to the cart without text. */
+  required: boolean;
+};
+
+/** A choice with its own price, e.g. { label: "Full set of 5", priceUSD: 18 }. */
+export type ProductPriceOption = {
+  label: string;
+  priceUSD: number;
+};
+
 export type Category = string;
 
 export type SubCategory = string;
@@ -18,6 +35,10 @@ export type Product = {
   images?: string[];
   /** Optional colour options, each linked to one of the images. */
   variants?: ProductVariantEntry[];
+  /** Ask the customer for text (e.g. a name) when adding this product to the cart. */
+  personalization?: ProductPersonalization | null;
+  /** Choices with their own prices; when set the customer must pick one. null = switched off. */
+  priceOptions?: ProductPriceOption[] | null;
   customizeColors?: {
     modelUrl: string;
     defaultHexes: string[];

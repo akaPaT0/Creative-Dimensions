@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  CART_STORAGE_KEY,
+  cartLineKey,
+  parseStoredCart,
+  writeStoredCart,
+  type StoredCartItem,
+} from "@/app/lib/cart-items";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { Product } from "@/app/data/products";
@@ -13,8 +20,6 @@ type Props = {
   className?: string;
 };
 
-const STORAGE_KEY = "cd_cart_v1";
-const CART_UPDATED_EVENT = "cd-cart-updated";
 const CUSTOMIZE_COLORS_ENABLED =
   process.env.NEXT_PUBLIC_CUSTOMIZE_COLORS === "1";
 
@@ -33,72 +38,9 @@ type SlotInfo = {
   materialName: string;
 };
 
-type StoredCartItem = {
-  productId: string;
-  quantity: number;
-  previewImageUrl?: string;
-  customization?: {
-    summary: string;
-    slots: Array<{
-      slot: string;
-      label: string;
-      filamentId: string;
-      filamentLabel: string;
-      colorValue: string;
-    }>;
-  };
-};
-
-function parseStoredCart(raw: unknown): StoredCartItem[] {
-  if (!Array.isArray(raw)) return [];
-  const out: StoredCartItem[] = [];
-  for (const entry of raw) {
-    if (!entry || typeof entry !== "object") continue;
-    const row = entry as Record<string, unknown>;
-    const productId = typeof row.productId === "string" ? row.productId : "";
-    const quantity =
-      typeof row.quantity === "number" && Number.isFinite(row.quantity)
-        ? Math.max(1, Math.floor(row.quantity))
-        : 1;
-    if (!productId) continue;
-    const customizationRaw =
-      row.customization && typeof row.customization === "object"
-        ? (row.customization as Record<string, unknown>)
-        : null;
-    const slots = Array.isArray(customizationRaw?.slots)
-      ? customizationRaw.slots
-          .map((slot) => {
-            if (!slot || typeof slot !== "object") return null;
-            const s = slot as Record<string, unknown>;
-            const filamentId = typeof s.filamentId === "string" ? s.filamentId : "";
-            if (!filamentId) return null;
-            return {
-              slot: typeof s.slot === "string" ? s.slot : "",
-              label: typeof s.label === "string" ? s.label : "",
-              filamentId,
-              filamentLabel: typeof s.filamentLabel === "string" ? s.filamentLabel : "",
-              colorValue: typeof s.colorValue === "string" ? s.colorValue : "",
-            };
-          })
-          .filter((x): x is NonNullable<typeof x> => Boolean(x))
-      : [];
-    const summary = typeof customizationRaw?.summary === "string" ? customizationRaw.summary : "";
-    out.push({
-      productId,
-      quantity,
-      previewImageUrl: typeof row.previewImageUrl === "string" ? row.previewImageUrl : undefined,
-      customization: slots.length ? { summary, slots } : undefined,
-    });
-  }
-  return out;
-}
 
 function buildFingerprint(item: StoredCartItem) {
-  const slots = item.customization?.slots || [];
-  return JSON.stringify({
-    productId: item.productId,
-    slots: slots.map((x) => ({ slot: x.slot, filamentId: x.filamentId })),
-  });
+  return cartLineKey(item);
 }
 
 function tokenize(input: string) {
@@ -258,7 +200,7 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
 
     let current: StoredCartItem[] = [];
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const raw = window.localStorage.getItem(CART_STORAGE_KEY);
       current = raw ? parseStoredCart(JSON.parse(raw)) : [];
     } catch {
       current = [];
@@ -276,8 +218,7 @@ export default function ProductCustomizeColorsAction({ product, className = "" }
       current.push(newItem);
     }
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-    window.dispatchEvent(new Event(CART_UPDATED_EVENT));
+    writeStoredCart(current);
 
     setSelectedFilamentIds([]);
     setOpen(false);

@@ -9,6 +9,7 @@ import { getProducts } from "../lib/products-db";
 import { getProductPath } from "../lib/product-url";
 import { SITE_URL } from "../lib/site";
 import CategoryGrid, { type CategoryGridItem } from "./CategoryGrid";
+import { pricePrefix } from "@/app/lib/product-options";
 
 const LABELS: Record<string, string> = {
   christmas: "Christmas",
@@ -35,7 +36,7 @@ function getCardImage(p: Product) {
 }
 
 function getPriceLabel(p: Product) {
-  return typeof p.priceUSD === "number" ? `$${p.priceUSD}` : "DM";
+  return typeof p.priceUSD === "number" ? `${pricePrefix(p)}$${p.priceUSD}` : "DM";
 }
 
 type Props = {
