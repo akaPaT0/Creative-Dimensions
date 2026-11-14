@@ -7,6 +7,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/55 sm:justify-start">
           <Link href="/shop">Shop</Link>
+          <Link href="/shop/christmas">Christmas</Link>
           <Link href="/shop/halloween">Halloween</Link>
           <Link href="/shop/keychains">Keychains</Link>
           <Link href="/shop/accessories">Accessories</Link>

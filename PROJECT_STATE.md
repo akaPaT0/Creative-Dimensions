@@ -8,6 +8,10 @@
 - Verified locally with temporary in-memory product settings (removed): picker, required name, separate lines per name, cart totals, "From $" listings, ordinary products unchanged. TypeScript and 10 Node tests pass. A real order end-to-end (order row, invoice, Telegram) is not yet exercised.
 - Pending: commit/PR and deploy; owner to set snowman option prices; after the Christmas release (separate uncommitted `codex/christmas-release` worktree) lands, switch on the name field for the name ornaments and drop the "use the custom request button to discuss your name" wording. Photo ornament stays on custom request.
 
+## Christmas category release in progress (2026-11-14)
+
+- Owner requested direct imagegen cutouts on the exact saved background and publication under Christmas, then added $5 sweater name ornaments and a $6 Christmas tree clicker with an exploded-view illustration matching the existing fidget listing. Eight initial rows/assets are published in Supabase; clicker images and final deployment are in progress. Category routes/filter, footer/admin entries, SEO and sitemap are ready. Build/TypeScript and three URL tests passed; all 34 old products unchanged. Release isolated in `codex/christmas-release`.
+
 ## Halloween collection (2026-11-09)
 
 - Lantern gallery improvement: HA008 now has three clearer unlit front views from the larger second source photo, followed by its four original lit/comparison views (seven lantern images, 25 across the collection). Source crops are 566–584 pixels tall versus roughly 400 previously; this uses original photograph detail, not generative reconstruction. Exact background and separate original-photo layers are preserved. Current gallery override and hashes are in catalog/halloween-lantern-gallery-v3.json; halloween-2026.json remains the initial publication snapshot and its insert-only publisher should not be rerun to update existing listings. Price remains $11 and there are still three choices, with both lit/unlit photos mapped to each.

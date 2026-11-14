@@ -5,6 +5,11 @@
 - Owner: only custom items should ask for a name; non-custom items keep today's flow. Both features default off and are enabled per product in admin.
 - Store settings in two nullable jsonb columns on `products` rather than overloading `variants`. Prices always come from the product on the server; the cart only carries the option label and typed text. Each distinct name is its own cart line.
 
+## 2026-11-14 - Christmas publication and direct imagegen cutouts
+
+- Owner rejected the manually refined masks and explicitly requested direct imagegen cutouts composited onto the exact original `2.png` background. Use the generated cutout RGB and alpha directly; do not restore source pixels or rerun segmentation. This supersedes the original-photo-only rules for this batch. Preserve source references, cutouts and editable layers locally.
+- Owner authorized adding the requested products to the top-level Christmas category (`christmas`), including the later $5 sweater name ornaments. Reuse category/product components, custom request flow and existing checkout. Insert only the new rows; preserve all previous products.
+
 ## 2026-11-09 - Publish the Halloween collection
 
 - Owner authorized publishing all eight prepared listings under the top-level category `halloween` (display label Halloween). Group them into candy-bowls, pots, figurines, wall-decor and lanterns. Retain the existing category/product page components, image-linked variant/cart behavior and canonical URL pattern.

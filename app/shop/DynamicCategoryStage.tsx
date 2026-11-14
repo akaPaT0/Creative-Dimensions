@@ -39,6 +39,7 @@ function getPriceLabel(p: Product) {
 const getProductHref = getProductPath;
 
 const CATEGORY_LABELS: Record<string, string> = {
+  christmas: "Christmas",
   halloween: "Halloween",
   keychains: "Keychains",
   accessories: "Accessories",

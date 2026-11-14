@@ -12,6 +12,7 @@ import CategoryGrid, { type CategoryGridItem } from "./CategoryGrid";
 import { pricePrefix } from "@/app/lib/product-options";
 
 const LABELS: Record<string, string> = {
+  christmas: "Christmas",
   halloween: "Halloween",
   keychains: "Keychains",
   accessories: "Accessories",

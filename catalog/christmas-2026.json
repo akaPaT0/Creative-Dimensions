@@ -1,0 +1,152 @@
+{
+  "category": "christmas",
+  "categoryLabel": "Christmas",
+  "products": [
+    {
+      "SKU": "CH001",
+      "Name": "Christmas Crabs",
+      "slug": "christmas-crabs",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 5,
+      "description": "Festive crab figures wearing red and white Santa hats, with playful eye designs. A cheerful addition to a Christmas desk or seasonal display. Sold individually at $5 each.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/christmas-crabs-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH002",
+      "Name": "Christmas Tree Advent Calendar",
+      "slug": "christmas-tree-advent-calendar",
+      "category": "christmas",
+      "subCategory": "decorations",
+      "priceUSD": 20,
+      "description": "A Christmas tree-shaped advent calendar with a gold-coloured star, turquoise frame and 24 numbered compartments. Open a door each day as you count down to Christmas. Contents shown in the image are display examples.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/christmas-tree-advent-calendar-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH003",
+      "Name": "Personalised Photo Ornament",
+      "slug": "photo-ornament",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 5,
+      "description": "A round photo ornament that turns a portrait into a decorative Christmas keepsake. Use the custom request button to discuss your photo. The image shows an illuminated example; lighting accessories are not specified.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/photo-ornament-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH004",
+      "Name": "Hanging Name Ornaments",
+      "slug": "hanging-name-ornaments",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 3,
+      "description": "Decorative hanging ornaments with a name worked into the circular design. The examples show festive stars, a moon, snowflakes and a sleigh. Sold individually at $3 each. Use the custom request button to discuss your name and design.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/hanging-name-ornaments-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH005",
+      "Name": "Snowflake Name Ornaments",
+      "slug": "snowflake-name-ornaments",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 4,
+      "description": "Circular name ornaments with raised lettering, snowflakes and colourful frames. Use the custom request button to discuss your name and preferred design. Price is per ornament.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/snowflake-name-ornaments-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH006",
+      "Name": "Santa Hat Name Ornament",
+      "slug": "santa-hat-name-ornament",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 3,
+      "description": "A red and white Santa hat ornament with raised name lettering and a hanging loop. Use the custom request button to discuss your name. Price is per ornament.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/santa-hat-name-ornament-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH007",
+      "Name": "Gingerbread Name Ornaments",
+      "slug": "gingerbread-name-ornaments",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 5,
+      "description": "Gingerbread character ornaments with name lettering, icing-style outlines and bow or heart details. Use the custom request button to discuss your name and character. Price is per ornament.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/gingerbread-name-ornaments-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    },
+    {
+      "SKU": "CH008",
+      "Name": "Sweater Name Ornaments",
+      "slug": "sweater-name-ornaments",
+      "category": "christmas",
+      "subCategory": "ornaments",
+      "priceUSD": 5,
+      "description": "Red Christmas sweater ornaments with raised name lettering, reindeer and snowflake details. The knitted-style texture makes a festive keepsake for the tree. Sold individually at $5 each. Use the custom request button to discuss your name.",
+      "images": "[\"https://ypevaawhxhupjxjgkwdp.supabase.co/storage/v1/object/public/product_images/christmas/sweater-name-ornaments-001.webp\"]",
+      "isNew": true,
+      "featured": false,
+      "variants": []
+    }
+  ],
+  "assets": [
+    {
+      "file": "christmas-crabs-001.webp",
+      "storagePath": "christmas/christmas-crabs-001.webp",
+      "sha256": "8d23b5e9367c2ac3a13f86c2d1a29d6471307548fd0deb25c10b36affc20ce4e"
+    },
+    {
+      "file": "christmas-tree-advent-calendar-001.webp",
+      "storagePath": "christmas/christmas-tree-advent-calendar-001.webp",
+      "sha256": "d081f5363b3b196a6d55107c199a0f806fb7a4dd5e03d535ce0b14cdb78279ba"
+    },
+    {
+      "file": "photo-ornament-001.webp",
+      "storagePath": "christmas/photo-ornament-001.webp",
+      "sha256": "1d336294ca8edb8bc006a1f8e793e6b926f7d51c448127eaeac636e41f658ca6"
+    },
+    {
+      "file": "hanging-name-ornaments-001.webp",
+      "storagePath": "christmas/hanging-name-ornaments-001.webp",
+      "sha256": "c2196e599fbd60b7730bd8e21d19d10aa07771fe8157ddf3ede61934a0e006b9"
+    },
+    {
+      "file": "snowflake-name-ornaments-001.webp",
+      "storagePath": "christmas/snowflake-name-ornaments-001.webp",
+      "sha256": "872604f5983ce1670a376c4387a8ff78e0925bcdf98ff953b7ea1b29c1af37c7"
+    },
+    {
+      "file": "santa-hat-name-ornament-001.webp",
+      "storagePath": "christmas/santa-hat-name-ornament-001.webp",
+      "sha256": "485ad8bf5c10524b56344a33b2a9c1e33a0d667b4876af6291b5593d351c53a3"
+    },
+    {
+      "file": "gingerbread-name-ornaments-001.webp",
+      "storagePath": "christmas/gingerbread-name-ornaments-001.webp",
+      "sha256": "c1d756940d0824c9409eae58827663b1d7c42750659459649ea256365783ce7c"
+    },
+    {
+      "file": "sweater-name-ornaments-001.webp",
+      "storagePath": "christmas/sweater-name-ornaments-001.webp",
+      "sha256": "fb25f4c0995855bf72b8e706c03cd04009c010bc09a3baaf5e43e593a5367f60"
+    }
+  ]
+}

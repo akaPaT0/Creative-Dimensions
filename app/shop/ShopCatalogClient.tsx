@@ -11,6 +11,7 @@ import { pricePrefix } from "@/app/lib/product-options";
 
 export const ALL_CATEGORY_TABS = [
   { id: "all", label: "All Prints" },
+  { id: "christmas", label: "Christmas" },
   { id: "halloween", label: "Halloween" },
   { id: "keychains", label: "Keychains" },
   { id: "desk-add-ons", label: "Desk Add-Ons" },

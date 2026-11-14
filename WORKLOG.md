@@ -4,6 +4,10 @@
 
 - Owner needed name fields for custom Christmas ornaments and priced options (melting snowman: single vs set). Built both on `claude/product-personalization` from main 83a33c7. Added the two `products` columns in production with owner approval and verified existing rows unchanged by fingerprint. Local browser checks and tests passed; no real order placed. Not committed or deployed.
 
+## 2026-11-14 - Christmas category release
+
+- Owner requested direct imagegen cutouts on the exact saved background and publication under Christmas, then added $5 sweater name ornaments and a $6 Christmas tree clicker with an exploded-view illustration matching the existing fidget listing. Eight initial rows/assets are published in Supabase; clicker images and final deployment are in progress. Category routes/filter, footer/admin entries, SEO and sitemap are ready. Build/TypeScript and three URL tests passed; all 34 old products unchanged. Release isolated in `codex/christmas-release`.
+
 ## 2026-11-09 - Redesign the admin area and add quick product flags
 
 - Owner asked to flip New / Featured without opening each product, and to bring the admin in line with the redesigned storefront. Added PATCH `/api/admin/products/[id]` and `setProductFlags` in products-db, which update only those two columns on one row (no full-table rewrite), with switches in the product list that save on tap and roll back on error.

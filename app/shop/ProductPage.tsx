@@ -30,6 +30,7 @@ import { pricePrefix } from "../lib/product-options";
 
 /** Short labels used in the breadcrumb and above the product name. */
 const CATEGORY_NAMES: Record<string, string> = {
+  christmas: "Christmas",
   halloween: "Halloween",
   keychains: "Keychains",
   accessories: "Accessories",

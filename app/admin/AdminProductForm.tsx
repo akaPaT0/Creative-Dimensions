@@ -5,6 +5,7 @@ import { Field, Switch, ui } from "./ui";
 import { Box, ChevronLeft, ChevronRight, ImagePlus, X } from "lucide-react";
 
 const DEFAULT_CATEGORIES = [
+  "christmas",
   "halloween",
   "new-arrivals",
   "keychains",
