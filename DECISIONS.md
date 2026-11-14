@@ -1,5 +1,9 @@
 # Decisions
 
+## 2026-11-14 - Overlapping seasons share one homepage section as tabs
+
+- Owner sells Berbara (Dec 4) and Christmas at the same time and chose one section with tabs over stacked sections. Christmas is first at the owner's request. Seasons end by date rather than by manual redeploy; Berbara reuses the Halloween catalogue.
+
 ## 2026-11-14 - Personalised names and price options are per-product opt-ins
 
 - Owner: only custom items should ask for a name; non-custom items keep today's flow. Both features default off and are enabled per product in admin.

@@ -1,5 +1,9 @@
 # Worklog
 
+## 2026-11-14 - Christmas and Berbara tabs on the homepage
+
+- Replaced the single Halloween drop with themed season presets and a tab switcher. Christmas theme is gold to red; long lineup names wrap. Date tests, typecheck, production build and desktop/phone browser checks passed; released via PR #4.
+
 ## 2026-11-14 - Add name personalisation and price options
 
 - Owner needed name fields for custom Christmas ornaments and priced options (melting snowman: single vs set). Built both on `claude/product-personalization` from main 83a33c7. Added the two `products` columns in production with owner approval and verified existing rows unchanged by fingerprint. Local browser checks and tests passed; no real order placed. Not committed or deployed.

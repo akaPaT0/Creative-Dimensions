@@ -1,5 +1,11 @@
 # Project state
 
+## Homepage seasonal tabs: Christmas and Berbara (2026-11-14, live)
+
+- PR akaPaT0/Creative-Dimensions#4 squash-merged as `2ded973`. The seasonal section under the hero shows a tab per live season: Christmas (first, default) and Berbara (Halloween products and orange theme, links to `/shop/halloween`).
+- Config is `app/lib/home-event.ts`: saved presets `christmas`, `berbara`, `halloween` with optional `startsAt`/`endsAt`; `ACTIVE_HOME_EVENTS` sets order. Berbara `endsAt` is `2026-12-05T00:00:00+02:00`; homepage ISR is 60 s, so Christmas shows alone from Dec 5 without a deploy. With one season live, no tabs render; with none, the hero falls back to the product collage.
+- Possible follow-up offered to owner: a dedicated `/shop/berbara` page instead of linking to the Halloween category.
+
 ## Personalised names and price options (2026-11-14, live)
 
 - Released: PR akaPaT0/Creative-Dimensions#3 squash-merged as `27b9ae0` (includes Christmas commit 198ce48). Vercel production `dpl_Hyn3VjSjHGAbfWhDb8YmA92gnrp7` READY on www and apex; previous `dpl_HFuTfspZJvCJCQiG5gPUtNzCCxcX` is the rollback point. Live checks: home, shop, Christmas list and product, Halloween lantern, cart, checkout and products API return 200; lantern add-to-cart on the live site kept its colour with no name box or picker and no console errors. Eight Christmas name-based listings now have required text fields; price options remain off.
