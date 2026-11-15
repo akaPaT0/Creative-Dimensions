@@ -7,7 +7,6 @@ import {
   Instagram,
   Mail,
   MessageCircle,
-  Phone,
   ShoppingBag,
   Sparkles,
   UserPlus,
@@ -30,7 +29,7 @@ type Item = {
   href: string;
   label: string;
   detail: string;
-  icon: typeof Phone;
+  icon: typeof Mail;
   iconClass: string;
   external?: boolean;
   internal?: boolean;
@@ -44,13 +43,6 @@ const contact: Item[] = [
     icon: MessageCircle,
     iconClass: "bg-[#25D366] text-[#0B2A17]",
     external: true,
-  },
-  {
-    href: "tel:+96170304007",
-    label: "Call",
-    detail: PHONE_DISPLAY,
-    icon: Phone,
-    iconClass: "bg-white/10 text-white",
   },
   {
     href: "https://instagram.com/creativedimensions.lb",
