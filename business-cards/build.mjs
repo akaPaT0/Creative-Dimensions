@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
-const W = 85, H = 50, BLEED = 3;
+const W = 95, H = 55, BLEED = 3, M = 7; // M = inner margin used by every element
 const CORAL = "#FF8B64", INK = "#0D0D0D", WHITE = "#FFFFFF", MUTED = "#bdb6ae";
 const FONT = '<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=block" rel="stylesheet">';
 
@@ -51,14 +51,15 @@ function qr(x, y, size) {
   return `<path d="${d}" fill="${INK}" shape-rendering="crispEdges"/>`;
 }
 
+// Front: one centred stack with equal top and bottom space.
 const front = () => `
   <rect x="${-BLEED}" y="${-BLEED}" width="${W + 2 * BLEED}" height="${H + 2 * BLEED}" fill="${INK}"/>
-  ${swoosh(W / 2 - 14, 1.6, 28)}
-  <text x="${W / 2}" y="31.6" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="5.6" letter-spacing=".12">
+  ${swoosh(W / 2 - 16, 0.2, 32)}
+  <text x="${W / 2}" y="35.2" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="6.2" letter-spacing=".14">
     <tspan fill="${WHITE}">CREATIVE</tspan> <tspan fill="${CORAL}">DIMENSIONS</tspan></text>
-  <text x="${W / 2}" y="36.4" text-anchor="middle" font-family="Ubuntu" font-weight="500" font-size="2.15" letter-spacing=".7" fill="${MUTED}">3D PRINTING STUDIO · LEBANON</text>
-  <rect x="${W / 2 - 6}" y="39.8" width="12" height=".5" rx=".25" fill="${CORAL}"/>
-  <text x="${W / 2}" y="44.6" text-anchor="middle" font-family="Ubuntu" font-weight="400" font-size="2.05" fill="${MUTED}" font-style="italic">Designed with taste. Printed with precision.</text>`;
+  <text x="${W / 2}" y="40.4" text-anchor="middle" font-family="Ubuntu" font-weight="500" font-size="2.35" letter-spacing=".8" fill="${MUTED}">3D PRINTING STUDIO · LEBANON</text>
+  <rect x="${W / 2 - 7}" y="43.3" width="14" height=".5" rx=".25" fill="${CORAL}"/>
+  <text x="${W / 2}" y="48.6" text-anchor="middle" font-family="Ubuntu" font-weight="400" font-size="2.25" fill="${MUTED}" font-style="italic">Designed with taste. Printed with precision.</text>`;
 
 const rows = [
   [I.wa, "+961 70 304 007", "WhatsApp"],
@@ -66,24 +67,24 @@ const rows = [
   [I.mail, "support@creativedimensionslb.com", "Email"],
   [I.web, "creativedimensionslb.com", "Shop online"],
 ];
-// Edges stay plain black so a 1-2 mm duplex shift on a home printer is invisible.
+// Back grid: 7 mm margins. Header across the full width; below it the contact list (left)
+// and the QR (right) share the same top line, and the last row lines up with the QR caption.
+const BODY_TOP = 18.5, QR_SIZE = 24, QR_X = W - M - QR_SIZE, PITCH = 7.97;
 const back = () => `
   <rect x="${-BLEED}" y="${-BLEED}" width="${W + 2 * BLEED}" height="${H + 2 * BLEED}" fill="${INK}"/>
-  ${swoosh(6, 3.6, 10)}
-  <text x="17.6" y="8.8" font-family="Ubuntu" font-weight="700" font-size="3.1" letter-spacing=".08">
+  ${swoosh(M - 0.3, 3.6, 11)}
+  <text x="${M + 12.2}" y="11.2" font-family="Ubuntu" font-weight="700" font-size="3.4" letter-spacing=".1">
     <tspan fill="${WHITE}">CREATIVE</tspan> <tspan fill="${CORAL}">DIMENSIONS</tspan></text>
-  <rect x="6" y="11.6" width="46.5" height=".4" rx=".2" fill="${CORAL}"/>
+  <rect x="${M}" y="14.2" width="${W - 2 * M}" height=".35" fill="${CORAL}"/>
   ${rows.map(([ic, main, sub], i) => {
-    const y = 15.4 + i * 7.6;
-    return `${icon(ic, 6.2, y - 0.2, 4)}
-      <text x="12.6" y="${y + 1.9}" font-family="Ubuntu" font-weight="500" font-size="${main.length > 26 ? 2.12 : 2.45}" fill="${WHITE}">${main}</text>
-      <text x="12.6" y="${y + 4.6}" font-family="Ubuntu" font-weight="400" font-size="1.75" fill="${MUTED}">${sub}</text>`;
+    const top = BODY_TOP + i * PITCH;
+    return `${icon(ic, M, top - 0.1, 4.4)}
+      <text x="${M + 6.6}" y="${top + 2}" font-family="Ubuntu" font-weight="500" font-size="${main.length > 26 ? 2.35 : 2.6}" fill="${WHITE}">${main}</text>
+      <text x="${M + 6.6}" y="${top + 4.9}" font-family="Ubuntu" font-weight="400" font-size="1.85" fill="${MUTED}">${sub}</text>`;
   }).join("")}
-  <rect x="57.6" y="7.4" width="22.4" height="22.4" rx="2.1" fill="${WHITE}"/>
-  ${qr(60.1, 9.9, 17.4)}
-  <text x="68.8" y="34" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="2.3" fill="${CORAL}">Scan me</text>
-  <text x="68.8" y="37" text-anchor="middle" font-family="Ubuntu" font-weight="400" font-size="1.7" fill="${MUTED}">all our contacts</text>
-  <text x="68.8" y="39.3" text-anchor="middle" font-family="Ubuntu" font-weight="400" font-size="1.7" fill="${MUTED}">in one place</text>`;
+  <rect x="${QR_X}" y="${BODY_TOP}" width="${QR_SIZE}" height="${QR_SIZE}" rx="2.2" fill="${WHITE}"/>
+  ${qr(QR_X + 2.8, BODY_TOP + 2.8, QR_SIZE - 5.6)}
+  <text x="${QR_X + QR_SIZE / 2}" y="${BODY_TOP + 3 * PITCH + 4.9}" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="2.2" fill="${CORAL}">Scan for all contacts</text>`;
 
 const side = (art, b = BLEED) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${W + 2 * b}mm" height="${H + 2 * b}mm" viewBox="${-b} ${-b} ${W + 2 * b} ${H + 2 * b}">${art}</svg>`;
@@ -111,7 +112,7 @@ await render([side(front()), side(back())], BW, BH, { pdf: out("print", "busines
 await render([side(front())], BW, BH, { png: out("print", "business-card_FRONT_3mm-bleed_300dpi.png") });
 await render([side(back())], BW, BH, { png: out("print", "business-card_BACK_3mm-bleed_300dpi.png") });
 
-// A4 home-print sheet: 10 cards (2 x 5) edge to edge, no gaps, so every cut is one straight
+// A4 home-print sheet: 10 cards (2 x 5, 95 x 55 mm) edge to edge, no gaps, so every cut is one straight
 // line across the whole sheet. Page 1 fronts, page 2 backs. The grid is centred and every card
 // is identical, so it lines up whether the printer flips on the long or the short edge.
 // Cut guides sit in the margins only; a 50 mm ruler lets you check the print was not scaled.
@@ -147,9 +148,9 @@ const card = (art, x, y, rot) => `<g transform="translate(${x} ${y}) rotate(${ro
 const mock = `<svg xmlns="http://www.w3.org/2000/svg" width="${MW}mm" height="${MH}mm" viewBox="0 0 ${MW} ${MH}">
 <defs><filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.6" stdDeviation="2.2" flood-opacity=".35"/></filter></defs>
 <rect width="${MW}" height="${MH}" fill="#e9e3dc"/>
-${card(front(), 18, 32, -4)}${card(back(), 124, 36, 3)}
-<text x="60" y="108" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="5" fill="#5b544d">Front</text>
-<text x="167" y="108" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="5" fill="#5b544d">Back</text></svg>`;
+${card(front(), 10, 30, -4)}${card(back(), 122, 34, 3)}
+<text x="57" y="108" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="5" fill="#5b544d">Front</text>
+<text x="170" y="108" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="5" fill="#5b544d">Back</text></svg>`;
 await render([mock], MW, MH, { png: out("BUSINESS-CARDS-mockup.png"), scale: 2.2 });
 await browser.close();
 console.log("done");
