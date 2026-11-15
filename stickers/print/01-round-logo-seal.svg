@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="69.5mm" height="69.5mm" viewBox="-3 -3 69.5 69.5"><rect x="-3" y="-3" width="69.5" height="69.5" fill="#0D0D0D"/>
+      <circle cx="31.75" cy="31.75" r="28.55" fill="none" stroke="#FF8B64" stroke-width=".55"/>
+      <defs><path id="arcTop" d="M 8.3 31.75 A 23.45 23.45 0 0 1 55.2 31.75"/>
+            <path id="arcBot" d="M 5.6 31.75 A 26.15 26.15 0 0 0 57.9 31.75"/></defs>
+      <text font-family="Ubuntu" font-weight="700" font-size="4.3" letter-spacing=".55" fill="#FFFFFF">
+        <textPath href="#arcTop" startOffset="50%" text-anchor="middle">CREATIVE DIMENSIONS</textPath></text>
+      <text font-family="Ubuntu" font-weight="500" font-size="3.3" letter-spacing=".9" fill="#FF8B64">
+        <textPath href="#arcBot" startOffset="50%" text-anchor="middle">3D PRINTED IN LEBANON</textPath></text>
+      <g transform="translate(14.25 12.25) scale(0.068359375)">
+  <defs>
+    <linearGradient id="s2g" x1="0" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7fd6b4"/><stop offset=".18" stop-color="#2f8f86"/>
+      <stop offset=".38" stop-color="#1f6a6c"/><stop offset=".46" stop-color="#2f605c"/>
+      <stop offset=".52" stop-color="#8a5f3e"/><stop offset=".6" stop-color="#d9692a"/>
+      <stop offset=".78" stop-color="#f2741f"/><stop offset="1" stop-color="#ff8a2a"/>
+    </linearGradient>
+    <linearGradient id="s2s" x1="0" y1="190" x2="0" y2="425" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#s2g)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/><path fill="url(#s2s)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/></g>
+      <circle cx="9.75" cy="38.25" r=".7" fill="#FF8B64"/>
+      <circle cx="53.75" cy="38.25" r=".7" fill="#FF8B64"/></svg>

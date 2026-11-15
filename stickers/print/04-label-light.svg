@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="82mm" height="36mm" viewBox="-3 -3 82 36"><rect x="-3" y="-3" width="82" height="36" fill="#FFFFFF"/>
+      <g transform="translate(4 3.2) scale(0.0390625)">
+  <defs>
+    <linearGradient id="s11g" x1="0" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7fd6b4"/><stop offset=".18" stop-color="#2f8f86"/>
+      <stop offset=".38" stop-color="#1f6a6c"/><stop offset=".46" stop-color="#2f605c"/>
+      <stop offset=".52" stop-color="#8a5f3e"/><stop offset=".6" stop-color="#d9692a"/>
+      <stop offset=".78" stop-color="#f2741f"/><stop offset="1" stop-color="#ff8a2a"/>
+    </linearGradient>
+    <linearGradient id="s11s" x1="0" y1="190" x2="0" y2="425" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#s11g)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/><path fill="url(#s11s)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/></g>
+      <text x="26.5" y="13.8" font-family="Ubuntu" font-weight="700" font-size="6.1" fill="#0D0D0D" letter-spacing=".15">CREATIVE</text>
+      <text x="26.5" y="20" font-family="Ubuntu" font-weight="700" font-size="6.1" fill="#F0703E" letter-spacing=".15">DIMENSIONS</text>
+      <text x="26.7" y="24.6" font-family="Ubuntu" font-weight="400" font-size="2.6" fill="#5a5550" letter-spacing=".1">creativedimensionslb.com</text></svg>

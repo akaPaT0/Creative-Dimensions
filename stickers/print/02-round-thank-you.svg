@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56.8mm" height="56.8mm" viewBox="-3 -3 56.8 56.8"><rect x="-3" y="-3" width="56.8" height="56.8" fill="#FFF6EF"/>
+      <circle cx="25.4" cy="25.4" r="22.799999999999997" fill="none" stroke="#FF8B64" stroke-width=".5" stroke-dasharray="1.2 1"/>
+      <g transform="translate(17.4 6.2) scale(0.03125)">
+  <defs>
+    <linearGradient id="s5g" x1="0" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7fd6b4"/><stop offset=".18" stop-color="#2f8f86"/>
+      <stop offset=".38" stop-color="#1f6a6c"/><stop offset=".46" stop-color="#2f605c"/>
+      <stop offset=".52" stop-color="#8a5f3e"/><stop offset=".6" stop-color="#d9692a"/>
+      <stop offset=".78" stop-color="#f2741f"/><stop offset="1" stop-color="#ff8a2a"/>
+    </linearGradient>
+    <linearGradient id="s5s" x1="0" y1="190" x2="0" y2="425" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#s5g)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/><path fill="url(#s5s)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/></g>
+      <text x="25.4" y="27.4" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="8.4" fill="#0D0D0D" letter-spacing="-.2">thank you</text>
+      <text x="25.4" y="32.6" text-anchor="middle" font-family="Ubuntu" font-weight="500" font-size="2.5" fill="#0D0D0D" opacity=".8">for supporting a small business</text>
+      <rect x="8.899999999999999" y="35.6" width="33" height="5.6" rx="2.8" fill="#FF8B64"/>
+      <text x="25.4" y="39.4" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="2.65" fill="#0D0D0D">@creativedimensions.lb</text></svg>
