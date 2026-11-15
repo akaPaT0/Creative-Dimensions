@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="106mm" height="76mm" viewBox="-3 -3 106 76"><rect x="-3" y="-3" width="106" height="76" fill="#0D0D0D"/>
+      <rect x="3" y="3" width="94" height="64" rx="3" fill="none" stroke="#FF8B64" stroke-width=".55"/>
+      <g transform="translate(33 0.8) scale(0.06640625)">
+  <defs>
+    <linearGradient id="s2g" x1="0" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7fd6b4"/><stop offset=".18" stop-color="#2f8f86"/>
+      <stop offset=".38" stop-color="#1f6a6c"/><stop offset=".46" stop-color="#2f605c"/>
+      <stop offset=".52" stop-color="#8a5f3e"/><stop offset=".6" stop-color="#d9692a"/>
+      <stop offset=".78" stop-color="#f2741f"/><stop offset="1" stop-color="#ff8a2a"/>
+    </linearGradient>
+    <linearGradient id="s2s" x1="0" y1="190" x2="0" y2="425" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#s2g)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/><path fill="url(#s2s)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/></g>
+      <text x="50" y="38.2" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="6.4" letter-spacing=".15">
+        <tspan fill="#FFFFFF">CREATIVE</tspan> <tspan fill="#FF8B64">DIMENSIONS</tspan></text>
+      <text x="50" y="43.6" text-anchor="middle" font-family="Ubuntu" font-weight="500" font-size="2.5" letter-spacing=".75" fill="#bdb6ae">3D PRINTING STUDIO · LEBANON</text>
+      <line x1="20" y1="47.4" x2="80" y2="47.4" stroke="#ffffff" stroke-opacity=".18" stroke-width=".3"/>
+      <g font-family="Ubuntu" font-weight="500" font-size="3.4" fill="#FFFFFF">
+        <g transform="translate(27.5 51.1) scale(0.17500000000000002)" fill="none" stroke="#FF8B64" stroke-width="2.2">
+  <rect x="2" y="2" width="20" height="20" rx="5.5"/><circle cx="12" cy="12" r="4.6"/><circle cx="17.6" cy="6.4" r="1.2" fill="#FF8B64" stroke="none"/></g><text x="33.4" y="54.5">@creativedimensions.lb</text>
+        <g transform="translate(27.5 57.3) scale(0.17500000000000002)" fill="none" stroke="#FF8B64" stroke-width="2">
+  <circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4.4" ry="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+  <path d="M4.2 6.5 H19.8 M4.2 17.5 H19.8"/></g><text x="33.4" y="60.7">creativedimensionslb.com</text>
+      </g></svg>

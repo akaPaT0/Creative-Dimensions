@@ -2,17 +2,17 @@
       <circle cx="19" cy="19" r="16.6" fill="none" stroke="#FF8B64" stroke-width=".5"/>
       <g transform="translate(8 3.5) scale(0.04296875)">
   <defs>
-    <linearGradient id="s14g" x1="0" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+    <linearGradient id="s17g" x1="0" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#7fd6b4"/><stop offset=".18" stop-color="#2f8f86"/>
       <stop offset=".38" stop-color="#1f6a6c"/><stop offset=".46" stop-color="#2f605c"/>
       <stop offset=".52" stop-color="#8a5f3e"/><stop offset=".6" stop-color="#d9692a"/>
       <stop offset=".78" stop-color="#f2741f"/><stop offset="1" stop-color="#ff8a2a"/>
     </linearGradient>
-    <linearGradient id="s14s" x1="0" y1="190" x2="0" y2="425" gradientUnits="userSpaceOnUse">
+    <linearGradient id="s17s" x1="0" y1="190" x2="0" y2="425" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/>
     </linearGradient>
   </defs>
-  <path fill="url(#s14g)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/><path fill="url(#s14s)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/></g>
+  <path fill="url(#s17g)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/><path fill="url(#s17s)" d="M4 366 C 40 290, 95 200, 165 194 C 215 190, 245 230, 248 290 C 250 318, 262 332, 285 328 C 360 312, 440 220, 508 96 C 470 190, 410 300, 330 372 C 290 408, 245 425, 210 405 C 182 388, 178 350, 178 320 C 178 282, 160 262, 130 266 C 85 272, 40 320, 4 366 Z"/></g>
       <defs><path id="arcMini" d="M 4.6 19 A 14.4 14.4 0 0 0 33.4 19"/></defs>
       <text font-family="Ubuntu" font-weight="700" font-size="2.5" letter-spacing=".45" fill="#FFFFFF">
         <textPath href="#arcMini" startOffset="50%" text-anchor="middle">CREATIVE DIMENSIONS</textPath></text></svg>

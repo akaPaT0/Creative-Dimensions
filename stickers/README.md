@@ -1,11 +1,12 @@
 # Creative Dimensions packaging stickers
 
-Preview of all designs: `ALL-STICKERS-preview.png` · How they look on bags and boxes: `PACKAGING-mockup.png`
+Preview of all designs: `ALL-STICKERS-preview.png` · How they look on bags and boxes: `MAIN-STICKER-mockup.png`, `PACKAGING-mockup.png`
 
 **Fold-over seal (07):** fold it in the middle over the top of a bag or the edge of a box lid. The front shows the logo; the back half is printed upside down so "thank you" reads upright on the other side.
 
 | Design | Size | A4 sheet |
 |---|---|---|
+| **00 Main sticker (bags & boxes)**: logo, Instagram, website | 100 × 70 mm | 3 per sheet |
 | 01 Round logo seal | 2.5" (63.5 mm) round | 6 per sheet |
 | 02 Thank-you sticker | 2" (50.8 mm) round | 12 per sheet |
 | 03 Wordmark label, dark | 76 × 30 mm | 14 per sheet |

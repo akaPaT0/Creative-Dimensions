@@ -34,8 +34,29 @@ function swoosh(x, y, w) {
   <path fill="url(#${id}g)" d="${SWOOSH_D}"/><path fill="url(#${id}s)" d="${SWOOSH_D}"/></g>`;
 }
 
+
+const igIcon = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s / 24})" fill="none" stroke="${c}" stroke-width="2.2">
+  <rect x="2" y="2" width="20" height="20" rx="5.5"/><circle cx="12" cy="12" r="4.6"/><circle cx="17.6" cy="6.4" r="1.2" fill="${c}" stroke="none"/></g>`;
+const webIcon = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s / 24})" fill="none" stroke="${c}" stroke-width="2">
+  <circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4.4" ry="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+  <path d="M4.2 6.5 H19.8 M4.2 17.5 H19.8"/></g>`;
+
 // Each design is drawn in a mm coordinate system of its trim size (w x h).
 const designs = [
+  {
+    name: "00-main-sticker", label: "Main sticker (bags & boxes)", w: 100, h: 70, shape: "rounded", r: 5, bg: INK,
+    art: (w, h) => `
+      <rect x="3" y="3" width="${w - 6}" height="${h - 6}" rx="3" fill="none" stroke="${CORAL}" stroke-width=".55"/>
+      ${swoosh(w / 2 - 17, 0.8, 34)}
+      <text x="${w / 2}" y="38.2" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="6.4" letter-spacing=".15">
+        <tspan fill="${WHITE}">CREATIVE</tspan> <tspan fill="${CORAL}">DIMENSIONS</tspan></text>
+      <text x="${w / 2}" y="43.6" text-anchor="middle" font-family="Ubuntu" font-weight="500" font-size="2.5" letter-spacing=".75" fill="#bdb6ae">3D PRINTING STUDIO · LEBANON</text>
+      <line x1="${w / 2 - 30}" y1="47.4" x2="${w / 2 + 30}" y2="47.4" stroke="#ffffff" stroke-opacity=".18" stroke-width=".3"/>
+      <g font-family="Ubuntu" font-weight="500" font-size="3.4" fill="${WHITE}">
+        ${igIcon(w / 2 - 22.5, 51.1, 4.2, CORAL)}<text x="${w / 2 - 16.6}" y="54.5">@creativedimensions.lb</text>
+        ${webIcon(w / 2 - 22.5, 57.3, 4.2, CORAL)}<text x="${w / 2 - 16.6}" y="60.7">creativedimensionslb.com</text>
+      </g>`,
+  },
   {
     name: "01-round-logo-seal", label: "Round logo seal", w: 63.5, h: 63.5, shape: "circle", bg: INK,
     art: (w) => `
@@ -258,5 +279,40 @@ ${stk(D["02-round-thank-you"], 750, 168, 1, -6)}
 <text x="787" y="455" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="13" fill="#5b544d">Black box + logo seal</text>
 </svg>`;
 await render(doc(scene, MW, MH), MW, MH, { png: out("PACKAGING-mockup.png"), scale: 0.6 });
+
+// Main sticker mockup on a kraft bag and a white box.
+{
+  const m = D["00-main-sticker"];
+  const W2 = 640, H2 = 460;
+  const sc = `<svg xmlns="http://www.w3.org/2000/svg" width="${W2}mm" height="${H2}mm" viewBox="0 0 ${W2} ${H2}">
+  <defs>
+    <filter id="ss" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy=".6" stdDeviation=".8" flood-opacity=".35"/></filter>
+    <filter id="bs" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".25"/></filter>
+    <linearGradient id="kraft" x1="0" x2="1"><stop offset="0" stop-color="#c49a64"/><stop offset=".5" stop-color="#d2a96f"/><stop offset="1" stop-color="#b98d58"/></linearGradient>
+    <linearGradient id="kraftS" x1="0" x2="1"><stop offset="0" stop-color="#a87f4c"/><stop offset="1" stop-color="#94703f"/></linearGradient>
+    <linearGradient id="wbox" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fafafa"/><stop offset="1" stop-color="#e6e3df"/></linearGradient>
+  </defs>
+  <rect width="${W2}" height="${H2}" fill="#efe9e2"/><rect y="${H2 - 70}" width="${W2}" height="70" fill="#e4ddd4"/>
+  <g filter="url(#bs)">
+    <path d="M100 95 q-10 -70 50 -70 q60 0 50 70" fill="none" stroke="#7a5a33" stroke-width="5"/>
+    <rect x="40" y="90" width="260" height="330" fill="url(#kraft)"/>
+    <polygon points="300,90 340,110 340,420 300,420" fill="url(#kraftS)"/>
+    <rect x="40" y="90" width="260" height="22" fill="#000" opacity=".06"/>
+    <circle cx="115" cy="103" r="4" fill="#5c4325"/><circle cx="225" cy="103" r="4" fill="#5c4325"/>
+    <path d="M115 103 q55 -95 110 0" fill="none" stroke="#6b4d2a" stroke-width="5"/>
+  </g>
+  <g transform="translate(120 200)" filter="url(#ss)">${inner(m)}</g>
+  <g filter="url(#bs)">
+    <polygon points="390,250 590,250 625,215 425,215" fill="#ffffff"/>
+    <rect x="390" y="250" width="200" height="170" fill="url(#wbox)"/>
+    <polygon points="590,250 625,215 625,385 590,420" fill="#d9d5cf"/>
+    <line x1="390" y1="262" x2="590" y2="262" stroke="#cfcac3" stroke-width="1"/>
+  </g>
+  <g transform="translate(440 300)" filter="url(#ss)">${inner(m)}</g>
+  <text x="170" y="448" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="13" fill="#5b544d">On a bag</text>
+  <text x="500" y="448" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="13" fill="#5b544d">On a box</text>
+  </svg>`;
+  await render(doc(sc, W2, H2), W2, H2, { png: out("MAIN-STICKER-mockup.png"), scale: 0.8 });
+}
 await browser.close();
 console.log(designs.map((d) => `${d.name}: ${d.up}-up on A4`).join("\n"));
