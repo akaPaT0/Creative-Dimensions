@@ -112,34 +112,31 @@ await render([side(front()), side(back())], BW, BH, { pdf: out("print", "busines
 await render([side(front())], BW, BH, { png: out("print", "business-card_FRONT_3mm-bleed_300dpi.png") });
 await render([side(back())], BW, BH, { png: out("print", "business-card_BACK_3mm-bleed_300dpi.png") });
 
-// A4 home-print sheet: 10 cards (2 x 5, 95 x 55 mm) edge to edge, no gaps, so every cut is one straight
-// line across the whole sheet. Page 1 fronts, page 2 backs. The grid is centred and every card
-// is identical, so it lines up whether the printer flips on the long or the short edge.
-// Cut guides sit in the margins only; a 50 mm ruler lets you check the print was not scaled.
-const A4W = 210, A4H = 297, cols = 2, rowsN = 5;
-const gx = (A4W - cols * W) / 2, gy = (A4H - rowsN * H) / 2;
-function sheet(art, label) {
+// A4 home-print sheet: 10 cards (2 x 5, 95 x 55 mm) with a 2.5 mm white gap to cut along.
+// Page 1 fronts, page 2 backs. The grid is centred and every card is identical, so it lines up
+// whether the printer flips on the long or the short edge. Cut along the front's card edges:
+// the backs run 1.25 mm into the gaps, so a small duplex shift leaves no white edge on the back.
+const A4W = 210, A4H = 297, cols = 2, rowsN = 5, GAP = 2.5;
+const gx = (A4W - cols * W - (cols - 1) * GAP) / 2, gy = (A4H - rowsN * H - (rowsN - 1) * GAP) / 2;
+function sheet(art, overlap) {
   let g = "";
   for (let r = 0; r < rowsN; r++) for (let c = 0; c < cols; c++) {
-    const x = gx + c * W, y = gy + r * H;
-    g += `<svg x="${x}" y="${y}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="hidden">${art()}</svg>`;
+    const x = gx + c * (W + GAP) - overlap, y = gy + r * (H + GAP) - overlap;
+    const w = W + 2 * overlap, h = H + 2 * overlap;
+    g += `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${-overlap} ${-overlap} ${w} ${h}" overflow="hidden">${art()}</svg>`;
   }
+  // Short cut guides in the side margins, level with every card edge.
   let guides = "";
-  for (let c = 0; c <= cols; c++) {
-    const x = gx + c * W;
-    guides += `<path d="M${x} 2V${gy - 2}M${x} ${gy + rowsN * H + 2}V${A4H - 2}"/>`;
+  for (let r = 0; r < rowsN; r++) for (const y of [gy + r * (H + GAP), gy + r * (H + GAP) + H]) {
+    guides += `<path d="M1.5 ${y}H${gx - 1.5}M${A4W - gx + 1.5} ${y}H${A4W - 1.5}"/>`;
   }
-  for (let r = 0; r <= rowsN; r++) {
-    const y = gy + r * H;
-    guides += `<path d="M2 ${y}H${gx - 2}M${gx + cols * W + 2} ${y}H${A4W - 2}"/>`;
+  for (let c = 0; c < cols; c++) for (const x of [gx + c * (W + GAP), gx + c * (W + GAP) + W]) {
+    guides += `<path d="M${x} 1V${gy - 1.5}M${x} ${A4H - gy + 1.5}V${A4H - 1}"/>`;
   }
-  const ruler = `<path d="M${gx} ${A4H - 8}h50M${gx} ${A4H - 9.5}v3M${gx + 50} ${A4H - 9.5}v3" stroke="#000" stroke-width=".25"/>
-    <text x="${gx + 53}" y="${A4H - 7}" font-family="Ubuntu" font-size="2.6" fill="#555">= 50 mm (check scale)</text>
-    <text x="${gx + W + 4}" y="${A4H - 7}" font-family="Ubuntu" font-size="2.6" fill="#555">${label} · print at Actual size / 100%</text>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
-    <rect width="210" height="297" fill="#fff"/>${g}<g stroke="#000" stroke-width=".2">${guides}</g>${ruler}</svg>`;
+    <rect width="210" height="297" fill="#fff"/>${g}<g stroke="#000" stroke-width=".2">${guides}</g></svg>`;
 }
-await render([sheet(front, "Page 1: FRONTS"), sheet(back, "Page 2: BACKS")], A4W, A4H, { pdf: out("print", "business-cards_A4_10-up_HOME-PRINT_front-and-back.pdf"), scale: 1 });
+await render([sheet(front, 0), sheet(back, GAP / 2)], A4W, A4H, { pdf: out("print", "business-cards_A4_10-up_HOME-PRINT_front-and-back.pdf"), scale: 1 });
 
 // Mockup: both sides on a table.
 const MW = 230, MH = 120;
