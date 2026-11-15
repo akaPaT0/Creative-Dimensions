@@ -118,7 +118,7 @@ await render([side(back())], BW, BH, { png: out("print", "business-card_BACK_3mm
 // white gaps in the same positions.
 const A4W = 210, A4H = 297, cols = 2, rowsN = 5, GAP = 2.5;
 const gx = (A4W - cols * W - (cols - 1) * GAP) / 2, gy = (A4H - rowsN * H - (rowsN - 1) * GAP) / 2;
-function sheet(art, overlap) {
+function sheet(art, overlap, rotate180 = false) {
   let g = "";
   for (let r = 0; r < rowsN; r++) for (let c = 0; c < cols; c++) {
     const x = gx + c * (W + GAP) - overlap, y = gy + r * (H + GAP) - overlap;
@@ -134,9 +134,12 @@ function sheet(art, overlap) {
     guides += `<path d="M${x} 1V${gy - 1.5}M${x} ${A4H - gy + 1.5}V${A4H - 1}"/>`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
-    <rect width="210" height="297" fill="#fff"/>${g}<g stroke="#000" stroke-width=".2">${guides}</g></svg>`;
+    <rect width="210" height="297" fill="#fff"/><g${rotate180 ? ` transform="rotate(180 ${A4W / 2} ${A4H / 2})"` : ""}>${g}</g><g stroke="#000" stroke-width=".2">${guides}</g></svg>`;
 }
-await render([sheet(front, 0), sheet(back, 0)], A4W, A4H, { pdf: out("print", "business-cards_A4_10-up_HOME-PRINT_front-and-back.pdf"), scale: 1 });
+// Printers that flip on the SHORT edge turn the back upside down, so this version pre-rotates the backs.
+await render([sheet(front, 0), sheet(back, 0, true)], A4W, A4H, { pdf: out("print", "business-cards_A4_PRINT-THIS_backs-rotated-for-your-printer.pdf"), scale: 1 });
+// For printers set to flip on the LONG edge.
+await render([sheet(front, 0), sheet(back, 0)], A4W, A4H, { pdf: out("print", "business-cards_A4_alternative_flip-on-long-edge.pdf"), scale: 1 });
 
 // Mockup: both sides on a table.
 const MW = 230, MH = 120;
