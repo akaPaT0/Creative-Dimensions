@@ -114,8 +114,8 @@ await render([side(back())], BW, BH, { png: out("print", "business-card_BACK_3mm
 
 // A4 home-print sheet: 10 cards (2 x 5, 95 x 55 mm) with a 2.5 mm white gap to cut along.
 // Page 1 fronts, page 2 backs. The grid is centred and every card is identical, so it lines up
-// whether the printer flips on the long or the short edge. Cut along the front's card edges:
-// the backs run 1.25 mm into the gaps, so a small duplex shift leaves no white edge on the back.
+// whether the printer flips on the long or the short edge. Fronts and backs both have the same
+// white gaps in the same positions.
 const A4W = 210, A4H = 297, cols = 2, rowsN = 5, GAP = 2.5;
 const gx = (A4W - cols * W - (cols - 1) * GAP) / 2, gy = (A4H - rowsN * H - (rowsN - 1) * GAP) / 2;
 function sheet(art, overlap) {
@@ -136,7 +136,7 @@ function sheet(art, overlap) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
     <rect width="210" height="297" fill="#fff"/>${g}<g stroke="#000" stroke-width=".2">${guides}</g></svg>`;
 }
-await render([sheet(front, 0), sheet(back, GAP / 2)], A4W, A4H, { pdf: out("print", "business-cards_A4_10-up_HOME-PRINT_front-and-back.pdf"), scale: 1 });
+await render([sheet(front, 0), sheet(back, 0)], A4W, A4H, { pdf: out("print", "business-cards_A4_10-up_HOME-PRINT_front-and-back.pdf"), scale: 1 });
 
 // Mockup: both sides on a table.
 const MW = 230, MH = 120;
