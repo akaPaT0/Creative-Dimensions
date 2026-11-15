@@ -85,6 +85,32 @@ const designs = [
       <text font-family="Ubuntu" font-weight="700" font-size="2.5" letter-spacing=".45" fill="${WHITE}">
         <textPath href="#arcMini" startOffset="50%" text-anchor="middle">CREATIVE DIMENSIONS</textPath></text>`,
   },
+  {
+    name: "06-big-front-logo", label: "Big front logo (bags & boxes)", w: 100, h: 100, shape: "circle", bg: INK,
+    art: (w) => `
+      <circle cx="${w / 2}" cy="${w / 2}" r="${w / 2 - 4}" fill="none" stroke="${CORAL}" stroke-width=".7"/>
+      ${swoosh(w / 2 - 24, 13, 48)}
+      <text x="${w / 2}" y="${61}" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="9.4" letter-spacing=".2" fill="${WHITE}">CREATIVE</text>
+      <text x="${w / 2}" y="${71.5}" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="9.4" letter-spacing=".2" fill="${CORAL}">DIMENSIONS</text>
+      <text x="${w / 2}" y="${80.5}" text-anchor="middle" font-family="Ubuntu" font-weight="500" font-size="2.8" letter-spacing=".4" fill="#bdb6ae">3D PRINTING STUDIO · LEBANON</text>`,
+  },
+  {
+    name: "07-fold-over-seal", label: "Fold-over seal (bag top / box lid)", w: 40, h: 120, shape: "rounded", r: 4, bg: INK,
+    art: (w, h) => `
+      <g transform="rotate(180 ${w / 2} ${h / 4})">
+        ${swoosh(w / 2 - 9, 6, 18)}
+        <text x="${w / 2}" y="34" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="6.2" fill="${WHITE}">thank you</text>
+        <text x="${w / 2}" y="40" text-anchor="middle" font-family="Ubuntu" font-weight="500" font-size="2.05" fill="${CORAL}">for supporting a small business</text>
+        <text x="${w / 2}" y="50" text-anchor="middle" font-family="Ubuntu" font-weight="400" font-size="2.2" fill="#bdb6ae">creativedimensionslb.com</text>
+      </g>
+      <g transform="translate(0 ${h / 2})">
+        ${swoosh(w / 2 - 13, 3.5, 26)}
+        <text x="${w / 2}" y="35" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="4.6" letter-spacing=".1" fill="${WHITE}">CREATIVE</text>
+        <text x="${w / 2}" y="41.4" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="4.6" letter-spacing=".1" fill="${CORAL}">DIMENSIONS</text>
+        <rect x="${w / 2 - 15}" y="47" width="30" height="5.4" rx="2.7" fill="${CORAL}"/>
+        <text x="${w / 2}" y="50.6" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="2.4" fill="${INK}">@creativedimensions.lb</text>
+      </g>`,
+  },
 ];
 
 function trimPath(d) {
@@ -154,17 +180,83 @@ for (const d of designs) {
 
 // Overview mockup of all designs.
 let x = 12, items = "";
-const ow = designs.reduce((s, d) => s + d.w + 12, 12), oh = 63.5 + 40;
+const TALL = Math.max(...designs.map((d) => d.h));
+const ow = designs.reduce((s, d) => s + d.w + 12, 12), oh = TALL + 40;
 for (const d of designs) {
-  const y = 14 + (63.5 - d.h) / 2;
+  const y = 14 + (TALL - d.h) / 2;
   items += `<g transform="translate(${x} ${y})"><g filter="url(#sh)">${svg(d, "preview").replace(/<svg[^>]*>|<\/svg>/g, "")}</g></g>
-  <text x="${x + d.w / 2}" y="${14 + 63.5 + 9}" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="3.6" fill="#2a2724">${d.label}</text>
-  <text x="${x + d.w / 2}" y="${14 + 63.5 + 14}" text-anchor="middle" font-family="Ubuntu" font-size="3" fill="#7a736c">${d.shape === "circle" ? `${(d.w / 25.4).toFixed(1).replace(".0", "")}" round` : `${d.w} × ${d.h} mm`}</text>`;
+  <text x="${x + d.w / 2}" y="${14 + TALL + 9}" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="3.6" fill="#2a2724">${d.label}</text>
+  <text x="${x + d.w / 2}" y="${14 + TALL + 14}" text-anchor="middle" font-family="Ubuntu" font-size="3" fill="#7a736c">${d.shape === "circle" ? `${(d.w / 25.4).toFixed(1).replace(".0", "")}" round` : `${d.w} × ${d.h} mm`}</text>`;
   x += d.w + 12;
 }
 const ov = `<svg xmlns="http://www.w3.org/2000/svg" width="${ow}mm" height="${oh}mm" viewBox="0 0 ${ow} ${oh}">
 <defs><filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy=".8" stdDeviation="1.2" flood-opacity=".28"/></filter></defs>
 <rect width="${ow}" height="${oh}" fill="#ece6df"/>${items}</svg>`;
 await render(doc(ov, ow, oh), ow, oh, { png: out("ALL-STICKERS-preview.png"), scale: 2 });
+
+// Packaging mockup: kraft bag, white box, black box, kraft pouch.
+const D = Object.fromEntries(designs.map((d) => [d.name, d]));
+const inner = (d) => svg(d, "preview").replace(/<svg[^>]*>|<\/svg>/g, "");
+const stk = (d, x, y, s = 1, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" filter="url(#ss)">${inner(d)}</g>`;
+const seal = D["07-fold-over-seal"];
+const MW = 900, MH = 470;
+const scene = `<svg xmlns="http://www.w3.org/2000/svg" width="${MW}mm" height="${MH}mm" viewBox="0 0 ${MW} ${MH}">
+<defs>
+  <filter id="ss" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy=".6" stdDeviation=".8" flood-opacity=".35"/></filter>
+  <filter id="bs" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".25"/></filter>
+  <linearGradient id="kraft" x1="0" x2="1"><stop offset="0" stop-color="#c49a64"/><stop offset=".5" stop-color="#d2a96f"/><stop offset="1" stop-color="#b98d58"/></linearGradient>
+  <linearGradient id="kraftS" x1="0" x2="1"><stop offset="0" stop-color="#a87f4c"/><stop offset="1" stop-color="#94703f"/></linearGradient>
+  <linearGradient id="wbox" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fafafa"/><stop offset="1" stop-color="#e6e3df"/></linearGradient>
+  <linearGradient id="bbox" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262626"/><stop offset="1" stop-color="#141414"/></linearGradient>
+  <clipPath id="sealFront"><rect x="0" y="60" width="40" height="60"/></clipPath>
+</defs>
+<rect width="${MW}" height="${MH}" fill="#efe9e2"/>
+<rect y="${MH - 70}" width="${MW}" height="70" fill="#e4ddd4"/>
+
+<!-- kraft shopping bag with big front logo -->
+<g filter="url(#bs)">
+  <path d="M100 95 q-10 -70 50 -70 q60 0 50 70" fill="none" stroke="#7a5a33" stroke-width="5"/>
+  <path d="M200 95 q-10 -70 50 -70 q60 0 50 70" fill="none" stroke="#7a5a33" stroke-width="5" opacity="0"/>
+  <rect x="40" y="90" width="260" height="330" fill="url(#kraft)"/>
+  <polygon points="300,90 340,110 340,420 300,420" fill="url(#kraftS)"/>
+  <rect x="40" y="90" width="260" height="22" fill="#000" opacity=".06"/>
+  <circle cx="115" cy="103" r="4" fill="#5c4325"/><circle cx="225" cy="103" r="4" fill="#5c4325"/>
+  <path d="M115 103 q55 -95 110 0" fill="none" stroke="#6b4d2a" stroke-width="5"/>
+</g>
+${stk(D["06-big-front-logo"], 120, 190)}
+
+<!-- white mailer box with fold-over seal -->
+<g filter="url(#bs)">
+  <polygon points="390,250 610,250 650,215 430,215" fill="#ffffff"/>
+  <rect x="390" y="250" width="220" height="170" fill="url(#wbox)"/>
+  <polygon points="610,250 650,215 650,385 610,420" fill="#d9d5cf"/>
+  <line x1="390" y1="262" x2="610" y2="262" stroke="#cfcac3" stroke-width="1"/>
+</g>
+<g transform="translate(480 202)" filter="url(#ss)"><g transform="translate(0 0)">
+  <polygon points="0,0 40,0 46,-4 6,-4" fill="#1a1a1a" opacity="0"/>
+</g></g>
+<g transform="translate(480 190)" filter="url(#ss)"><g clip-path="url(#sealFront)">${inner(seal)}</g></g>
+<polygon points="480,250 520,250 532,215 492,215" fill="${INK}"/>
+
+<!-- black box with round logo seal -->
+<g filter="url(#bs)">
+  <polygon points="690,300 860,300 885,275 715,275" fill="#2e2e2e"/>
+  <rect x="690" y="300" width="170" height="120" fill="url(#bbox)"/>
+  <polygon points="860,300 885,275 885,395 860,420" fill="#0c0c0c"/>
+</g>
+${stk(D["01-round-logo-seal"], 743, 328)}
+
+<!-- small kraft pouch with thank-you sticker on the table -->
+<g filter="url(#bs)" transform="translate(700 150) rotate(-6)">
+  <rect x="0" y="0" width="130" height="95" rx="3" fill="url(#kraft)"/>
+  <polygon points="0,0 130,0 65,40" fill="#b88c57"/>
+</g>
+${stk(D["02-round-thank-you"], 750, 168, 1, -6)}
+
+<text x="170" y="455" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="13" fill="#5b544d">Kraft bag + big front logo</text>
+<text x="520" y="455" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="13" fill="#5b544d">White box + fold-over seal</text>
+<text x="787" y="455" text-anchor="middle" font-family="Ubuntu" font-weight="700" font-size="13" fill="#5b544d">Black box + logo seal</text>
+</svg>`;
+await render(doc(scene, MW, MH), MW, MH, { png: out("PACKAGING-mockup.png"), scale: 0.6 });
 await browser.close();
 console.log(designs.map((d) => `${d.name}: ${d.up}-up on A4`).join("\n"));

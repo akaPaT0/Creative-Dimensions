@@ -1,6 +1,8 @@
 # Creative Dimensions packaging stickers
 
-Preview of all designs: `ALL-STICKERS-preview.png`
+Preview of all designs: `ALL-STICKERS-preview.png` · How they look on bags and boxes: `PACKAGING-mockup.png`
+
+**Fold-over seal (07):** fold it in the middle over the top of a bag or the edge of a box lid. The front shows the logo; the back half is printed upside down so "thank you" reads upright on the other side.
 
 | Design | Size | A4 sheet |
 |---|---|---|
@@ -9,6 +11,8 @@ Preview of all designs: `ALL-STICKERS-preview.png`
 | 03 Wordmark label, dark | 76 × 30 mm | 14 per sheet |
 | 04 Wordmark label, light | 76 × 30 mm | 14 per sheet |
 | 05 Mini box seal | 1.5" (38 mm) round | 20 per sheet |
+| 06 Big front logo (bags & box lids) | 4" (100 mm) round | 2 per sheet |
+| 07 Fold-over seal (bag top / box lid edge) | 40 × 120 mm | 6 per sheet |
 
 ## What to send the printer
 - **Online sticker shops / die-cut vinyl:** `print/<design>_print-with-3mm-bleed.pdf` (vector, fonts embedded). If they ask for an image, use the `_300dpi.png`. If they ask for a cut line, send `_cutline.pdf` too (magenta hairline at the cut).
