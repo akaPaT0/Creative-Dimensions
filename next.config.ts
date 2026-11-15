@@ -20,7 +20,14 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Contact card from /info: phones open "Add contact" only with the vCard type.
+      {
+        source: "/creative-dimensions.vcf",
+        headers: [{ key: "Content-Type", value: "text/vcard; charset=utf-8" }],
+      },
+    ];
   },
   images: {
     remotePatterns: [
