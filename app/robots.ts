@@ -6,7 +6,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "OAI-SearchBot",
-        allow: "/",
+        // Product photos are served from /api/img; crawlers must be able to fetch them.
+        allow: ["/", "/api/img"],
         disallow: [
           "/admin",
           "/admin/*",
@@ -25,7 +26,8 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "*",
-        allow: "/",
+        // Product photos are served from /api/img; crawlers must be able to fetch them.
+        allow: ["/", "/api/img"],
         disallow: [
           "/admin",
           "/admin/*",
