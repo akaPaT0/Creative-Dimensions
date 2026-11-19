@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    // Vercel Image Optimization is not used: its free plan allows only 5,000 resized copies a month,
+    // and once that ran out every uncached photo failed to load. Our own loader sends photos
+    // through /api/img, which makes and keeps resized copies itself (see DECISIONS.md).
+    loader: "custom",
+    loaderFile: "./app/lib/image-loader.ts",
+    // Keep srcsets to the widths /api/img actually makes.
+    deviceSizes: [400, 800, 1600],
+    imageSizes: [160],
     remotePatterns: [
       {
         protocol: "https",

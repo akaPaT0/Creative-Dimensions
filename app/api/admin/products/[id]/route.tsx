@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProductsFromDb, saveProducts, setProductFlags } from "@/app/lib/products-db";
 import type { Product } from "@/app/data/products";
-import { deletePublicAssetByUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
+import { deletePublicAssetByUrl, getStorageObjectFromPublicUrl, uploadPublicAsset } from "@/app/lib/supabase/storage";
 import { requireSupabaseAdmin } from "@/app/lib/supabase/auth-server";
 import { normalizeVariants } from "@/app/lib/product-variants";
 import { normalizePersonalization } from "@/app/lib/product-personalization";
@@ -124,9 +124,14 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
           file,
           contentType: file.type || undefined,
         });
-        uploaded.push(result);
+        // ?v= gives a replaced photo a new address, so cached resized copies are never reused.
+        uploaded.push(`${result}?v=${Date.now()}`);
       }
-      for (const oldUrl of prevImages) await safeDelete(oldUrl);
+      // New photos often reuse the old file names; never delete a file we just uploaded.
+      const uploadedPaths = new Set(uploaded.map((url) => getStorageObjectFromPublicUrl(url)?.path));
+      for (const oldUrl of prevImages) {
+        if (!uploadedPaths.has(getStorageObjectFromPublicUrl(oldUrl)?.path)) await safeDelete(oldUrl);
+      }
       nextImages = uploaded;
     } else if (imagesOrderRaw) {
       const ordered = parseStringArray(imagesOrderRaw);
