@@ -93,7 +93,8 @@ export async function POST(req: Request) {
         file,
         contentType: file.type || undefined,
       });
-      images.push(uploaded);
+      // ?v= gives a replaced photo a new address, so cached resized copies are never reused.
+      images.push(`${uploaded}?v=${Date.now()}`);
     }
 
     let modelUrl: string | undefined;

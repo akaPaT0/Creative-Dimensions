@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-11-20 - Resize photos ourselves instead of Vercel Image Optimization
+
+- The free Vercel plan allows 5,000 image transformations a month. Each photo was offered in up to 10 widths, so the limit ran out and every uncached photo returned an error. The owner chose to make our own sizes and keep Vercel's optimizer off rather than upgrade.
+- `next/image` uses the custom loader in `app/lib/image-loader.ts`. Our own photos (product_images in Supabase and image files in /public) go through `/api/img`, which makes a WebP copy at 160, 400, 800 or 1600 px on first request, keeps it under `_variants/` in the product_images bucket, and is cached by Vercel's CDN for a year. Other images are shown as they are. Originals stay untouched, so the lossless Christmas and Halloween files are kept.
+- Admin uploads add `?v=<time>` to photo URLs because a replaced photo keeps its file name; this gives it new cached copies. Editing a product no longer deletes newly uploaded photos that reuse the old file names.
+
 ## 2026-11-14 - Overlapping seasons share one homepage section as tabs
 
 - Owner sells Berbara (Dec 4) and Christmas at the same time and chose one section with tabs over stacked sections. Christmas is first at the owner's request. Seasons end by date rather than by manual redeploy; Berbara reuses the Halloween catalogue.
