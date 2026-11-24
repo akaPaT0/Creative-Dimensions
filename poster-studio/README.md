@@ -35,6 +35,34 @@ Results go to `poster-studio/renders/`:
 The script uses your GPU automatically (NVIDIA, AMD, Intel or Apple). Without one it renders on
 the CPU, where a full-quality poster takes a few minutes.
 
+## Christmas scene
+
+Set `"scene": { "preset": "christmas" }` in a config, or start from `configs/christmas.json`.
+The product sits on a lacquered rosewood table in a decorated living room:
+
+- **Room:** the `christmas_photo_studio_01` 360° photo from Poly Haven. It shows behind the product, blurred, and also lights the scene.
+- **Christmas tree:** in the background, with warm string lights, red, gold and silver baubles, and a star. Its lights blur into soft dots.
+- **Vintage TV:** a CRT with a glowing screen. Set `"tv_image"` to put your logo or a poster on the screen.
+- **Candlesticks:** two of them, with real flames that give off warm light.
+- **Gifts:** wrapped boxes with ribbons and bows, sized to the product. Change their colours with `gift_colors`.
+- **Snow and fairy lights:** falling snow and blurred fairy lights in the far background. The snow is kept away from the area in front of the product.
+
+Scene options, all inside `"scene"`:
+- `hdri`: the background room. You can use any Poly Haven HDRI name.
+- `hdri_strength`: how bright the room is.
+- `hdri_rotation_deg`: turns the room behind the product.
+- `table_texture`: any Poly Haven wood texture name.
+- `tree`, `tv`, `candles`, `gifts`: set any of them to `false` to remove that prop.
+- `tv_image`: picture to show on the TV screen.
+- `snow`: number of snowflakes. `0` turns it off.
+- `bokeh_lights`: number of far fairy lights.
+- `seed`: change it to shuffle where the snow and tree decorations land.
+
+**Assets:** the TV, candlestick, HDRI and wood texture are free CC0 assets from
+[Poly Haven](https://polyhaven.com), fine for commercial use with no credit needed. They
+download automatically into `poster-studio/assets/` (about 45 MB) the first time you render
+the scene. You can also download them yourself with `python fetch_assets.py`.
+
 ## Config
 
 Copy an example in `configs/` and change it. Anything you leave out uses the default.
@@ -87,4 +115,4 @@ Set any filter value to `0` to switch that effect off.
 ## Coming next
 
 Overlays: product name, price, logo and call-to-action text on the poster, matching the
-Christmas poster templates.
+Christmas poster templates. More props: send model files and they can be added to the set.

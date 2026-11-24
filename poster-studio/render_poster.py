@@ -26,6 +26,9 @@ import bpy
 import mathutils
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import christmas_scene  # noqa: E402
+
 BASE_W_PER_M2 = float(os.environ.get("PS_BASE", "45"))
 WALL_DIST = 2.6  # back wall distance in product sizes: further = darker, moodier set
 FORMATS = {"feed": (1080, 1350), "story": (1080, 1920), "square": (1080, 1080)}
@@ -40,6 +43,7 @@ DEFAULTS = {
     "device": "auto",  # auto | GPU | CPU
     "save_blend": True,
     "models": [],  # empty = demo spiral tree
+    "scene": christmas_scene.SCENE_DEFAULTS,
     "backdrop": {"color": "#0f0e0d", "roughness": 0.85},
     "lighting": {"preset": "dark_glow", "intensity": 1.0, "glow_color": "#ff7a3d", "rim_color": "#ffb08a"},
     "camera": {"elevation_deg": 10, "orbit_deg": -18, "lens_mm": 85, "fstop": 4.0, "fill": 0.68, "shift_y": 0.0},
@@ -401,6 +405,12 @@ def make_lights(cfg, h, center):
         return (cx + dist * math.sin(a) * math.cos(e), cy - dist * math.cos(a) * math.cos(e), cz + dist * math.sin(e))
     d = h * 2.8  # close softboxes: light falls off across the floor like a real studio
     base = BASE_W_PER_M2 * (d ** 2)  # keeps exposure constant whatever the product size
+    if preset == "christmas":  # the room HDRI is the ambient light; softboxes shape the product
+        area_light("Key", h * 2.2, base * 0.38 * I, "#ffe9d2", pos(-45, 45, d), center)
+        area_light("Fill", h * 3.5, base * 0.08 * I, "#dfe8ff", pos(60, 12, d), center)
+        area_light("Rim L", h * 1.2, base * 0.5 * I, L["rim_color"], pos(-150, 28, d * 0.9), center, 60)
+        area_light("Rim R", h * 1.2, base * 0.35 * I, L["rim_color"], pos(150, 28, d * 0.9), center, 60)
+        return
     if preset == "clean_white":
         make_world(bpy.context.scene, 0.12, "#f2efea")
         area_light("Key", h * 3, base * 0.32 * I, "#fff4ea", pos(-40, 38, d), center)
@@ -648,10 +658,17 @@ def main():
 
         lo, hi = world_bbox(all_objs)
         size = max(hi.z - lo.z, hi.x - lo.x, hi.y - lo.y)
-        make_sweep(s, cfg, size)
+        christmas = cfg["scene"]["preset"] == "christmas"
+        if christmas:
+            christmas_scene.build(cfg, cfg_dir, lo, hi)
+            cfg["lighting"]["preset"] = "christmas"
+        else:
+            make_sweep(s, cfg, size)
         center = ((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z + (hi.z - lo.z) * 0.5)
         make_lights(cfg, size, center)
-        make_camera(s, cfg, lo, hi, fmt)
+        cam = make_camera(s, cfg, lo, hi, fmt)
+        if christmas:
+            christmas_scene.add_snow(cfg, cam)
 
         tag = f"{cfg['name']}_{fmt}" + ("_preview" if args.preview else "")
         raw = os.path.join(out_dir, tag + "_raw.png")

@@ -1,0 +1,10 @@
+{
+  "name": "christmas",
+  "output_dir": "../renders",
+  "formats": ["feed"],
+  "models": [
+    { "path": "", "height_cm": 12, "material": "pla_matte", "color": "#1f6a3e" }
+  ],
+  "scene": { "preset": "christmas" },
+  "camera": { "elevation_deg": 8, "orbit_deg": -15, "fstop": 4.0, "fill": 0.55 }
+}

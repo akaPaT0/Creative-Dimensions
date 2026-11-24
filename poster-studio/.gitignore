@@ -2,3 +2,4 @@ renders/
 renders-test/
 *.blend1
 __pycache__/
+assets/
