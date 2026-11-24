@@ -1,0 +1,9 @@
+{
+  "name": "crab",
+  "output_dir": "../renders",
+  "formats": ["feed"],
+  "models": [
+    { "path": "../../public/models/keychains/cute/cute-crab.glb", "height_cm": 6, "material": "pla_matte", "color": "#e2482e", "rotation_deg": 15 }
+  ],
+  "camera": { "elevation_deg": 16, "orbit_deg": -12, "fill": 0.62 }
+}

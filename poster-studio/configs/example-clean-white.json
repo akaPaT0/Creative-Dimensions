@@ -1,0 +1,11 @@
+{
+  "name": "white-studio",
+  "output_dir": "../renders",
+  "formats": ["square"],
+  "backdrop": { "color": "#e9e4de" },
+  "lighting": { "preset": "clean_white" },
+  "look": { "bloom": 0.1, "halation": 0.05, "vignette": 0.15, "warmth": 0.01 },
+  "models": [
+    { "path": "../models/your-model.stl", "height_cm": 10, "material": "pla_matte", "color": "#f4f1ec" }
+  ]
+}

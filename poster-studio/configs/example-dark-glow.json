@@ -1,0 +1,31 @@
+{
+  "name": "spiral-tree",
+  "output_dir": "../renders",
+  "formats": ["feed", "story"],
+  "samples": 256,
+  "device": "auto",
+  "models": [
+    {
+      "path": "",
+      "height_cm": 12,
+      "material": "pla_matte",
+      "color": "#1f6a3e",
+      "rotation_deg": 0,
+      "layer_height_mm": 0.2,
+      "layer_lines": 0.35
+    }
+  ],
+  "backdrop": { "color": "#0f0e0d" },
+  "lighting": { "preset": "dark_glow", "intensity": 1.0, "glow_color": "#ff7a3d", "rim_color": "#ffb08a" },
+  "camera": { "elevation_deg": 10, "orbit_deg": -18, "lens_mm": 85, "fstop": 4.0, "fill": 0.68 },
+  "look": {
+    "look": "AgX - Medium High Contrast",
+    "exposure": 0.0,
+    "bloom": 0.22,
+    "halation": 0.18,
+    "chromatic_aberration": 0.6,
+    "vignette": 0.32,
+    "grain": 0.016,
+    "warmth": 0.03
+  }
+}
