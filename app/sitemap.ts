@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getProducts } from "@/app/lib/products-db";
 import { SITE_URL } from "@/app/lib/site";
-import { slugify, getProductImages } from "@/app/lib/product-seo";
+import { slugify, getPublicProductImageUrls } from "@/app/lib/product-seo";
 
 const PRODUCT_CATEGORIES = new Set([
   "christmas",
@@ -111,9 +111,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((p) => p?.category && p?.slug && PRODUCT_CATEGORIES.has(p.category))
     .map((p) => {
       const cleanSlug = slugify(p.slug);
-      const images = getProductImages(p).map((img) =>
-        String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`
-      );
+      const images = getPublicProductImageUrls(p);
 
       return {
         url: `${SITE_URL}/shop/${encodeURIComponent(p.category)}/${encodeURIComponent(cleanSlug)}`,

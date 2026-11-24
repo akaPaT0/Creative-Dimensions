@@ -1,10 +1,14 @@
 "use client";
 
 import { parseVariantSource, pickVariantWidth } from "@/app/lib/image-variants";
+import { getStaticCatalogImage } from "@/app/lib/static-catalog-images";
 
-// next/image calls this for each width in a srcset. Our own photos go through /api/img,
-// which serves (and on first use creates) a resized copy. Other images are used as they are.
+// Bundled catalog photos go straight to the CDN. New, unbundled photos use the existing resize route.
 export default function imageLoader({ src, width }: { src: string; width: number; quality?: number }) {
-  if (!parseVariantSource(src)) return src;
-  return `/api/img?src=${encodeURIComponent(src)}&w=${pickVariantWidth(width)}`;
+  const source = parseVariantSource(src);
+  if (!source) return src;
+
+  const variantWidth = pickVariantWidth(width);
+  return getStaticCatalogImage(source.key, variantWidth)
+    ?? `/api/img?src=${encodeURIComponent(src)}&w=${variantWidth}`;
 }

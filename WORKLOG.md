@@ -1,5 +1,11 @@
 # Worklog
 
+## 2026-11-24 - Backfill and serve existing catalog photo sizes
+
+- Owner approved publishing the missing preconverted sizes. Verified 260 generated WebPs for 142 photos and reused 388 existing variants to cover all four sizes for 162 photos.
+- Added the static asset manifest and files, routed storefront and product SEO images to the shop CDN, and added immutable cache headers. No database or storage changes. Future uploads still use the on-demand fallback.
+- Local webpack production build, focused lint, 12 existing tests, all 67 product pages, four storefront routes, the image sitemap, and representative WebP responses passed. The Windows Turbopack build did not resolve the existing custom loader during prerendering.
+
 ## 2026-11-14 - Christmas and Berbara tabs on the homepage
 
 - Replaced the single Halloween drop with themed season presets and a tab switcher. Christmas theme is gold to red; long lineup names wrap. Date tests, typecheck, production build and desktop/phone browser checks passed; released via PR #4.

@@ -1,5 +1,10 @@
 # Project state
 
+## Static catalog photos (2026-11-24)
+
+- The storefront bundles four WebP sizes each for 162 photos found across 67 catalog listings. The browser selects a size and requests a static file from the shop CDN. The release includes 260 generated copies and 388 reused variant mappings.
+- New and replaced photos outside this snapshot use `/api/img`. Existing public originals remain accessible in Supabase.
+
 ## Homepage seasonal tabs: Christmas and Berbara (2026-11-14, live)
 
 - PR akaPaT0/Creative-Dimensions#4 squash-merged as `2ded973`. The seasonal section under the hero shows a tab per live season: Christmas (first, default) and Berbara (Halloween products and orange theme, links to `/shop/halloween`).

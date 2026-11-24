@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-11-24 - Serve the existing catalog's resized photos as static files
+
+- Bundle the current catalog's 160, 400, 800 and 1600 px WebPs under `public/catalog-variants/`. Each filename hashes the image bytes, so the CDN can cache it as immutable. The custom loader, product sharing metadata, structured data and image sitemap resolve bundled photos on the shop domain.
+- Use `/api/img` for photos outside the bundle, including new uploads and replacements with a new source version. Keep source photos in their existing storage during this release. Making them private requires a separate storage and upload migration.
+
 ## 2026-11-20 - Resize photos ourselves instead of Vercel Image Optimization
 
 - The free Vercel plan allows 5,000 image transformations a month. Each photo was offered in up to 10 widths, so the limit ran out and every uncached photo returned an error. The owner chose to make our own sizes and keep Vercel's optimizer off rather than upgrade.

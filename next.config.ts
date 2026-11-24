@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      {
+        source: "/catalog-variants/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
       // Contact card from /info: phones open "Add contact" only with the vCard type.
       {
         source: "/creative-dimensions.vcf",
@@ -31,8 +35,8 @@ const nextConfig: NextConfig = {
   },
   images: {
     // Vercel Image Optimization is not used: its free plan allows only 5,000 resized copies a month,
-    // and once that ran out every uncached photo failed to load. Our own loader sends photos
-    // through /api/img, which makes and keeps resized copies itself (see DECISIONS.md).
+    // and once that ran out every uncached photo failed to load. Our loader serves bundled copies
+    // directly and uses /api/img for photos added after the bundle was generated.
     loader: "custom",
     loaderFile: "./app/lib/image-loader.ts",
     // Keep srcsets to the widths /api/img actually makes.

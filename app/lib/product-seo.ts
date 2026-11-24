@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { Product } from "@/app/data/products";
+import { parseVariantSource } from "@/app/lib/image-variants";
 import { SITE_URL } from "@/app/lib/site";
+import { getStaticCatalogImage } from "@/app/lib/static-catalog-images";
 
 import { slugify } from "./product-url";
 export { slugify } from "./product-url";
@@ -23,6 +25,15 @@ export function getProductImages(p: Product): string[] {
   return ["/products/placeholder.jpg"];
 }
 
+export function getPublicProductImageUrls(p: Product): string[] {
+  return getProductImages(p).map((image) => {
+    const source = parseVariantSource(image);
+    const bundled = source && getStaticCatalogImage(source.key, 1600);
+    if (bundled) return `${SITE_URL}${bundled}`;
+    return image.startsWith("http") ? image : `${SITE_URL}${image}`;
+  });
+}
+
 export function buildProductMetadata(p: Product, category: string): Metadata {
   const categoryLabel = CATEGORY_LABELS[category] || "3D Prints";
   const title = `${p.name} | Creative Dimensions Lebanon`;
@@ -35,9 +46,7 @@ export function buildProductMetadata(p: Product, category: string): Metadata {
     : `${p.name}, a made-to-order 3D printed ${categoryLabel.toLowerCase()} from Creative Dimensions in Lebanon. Delivery available across Lebanon.`;
   const cleanSlug = slugify(p.slug);
   const url = `${SITE_URL}/shop/${category}/${encodeURIComponent(cleanSlug)}`;
-  const images = getProductImages(p).map((img) =>
-    String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`
-  );
+  const images = getPublicProductImageUrls(p);
 
   return {
     title,
@@ -79,9 +88,7 @@ export function buildProductJsonLd(p: Product, category: string) {
   const categoryLabel = CATEGORY_LABELS[category] || "3D Prints";
   const cleanSlug = slugify(p.slug);
   const productUrl = `${SITE_URL}/shop/${category}/${encodeURIComponent(cleanSlug)}`;
-  const productImages = getProductImages(p).map((img) =>
-    String(img).startsWith("http") ? String(img) : `${SITE_URL}${img}`
-  );
+  const productImages = getPublicProductImageUrls(p);
   const hasPrice = typeof p.priceUSD === "number" && Number.isFinite(p.priceUSD) && p.priceUSD > 0;
   const priceValue = hasPrice ? Number(p.priceUSD).toFixed(2) : null;
 
