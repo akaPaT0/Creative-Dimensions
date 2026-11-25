@@ -20,6 +20,25 @@ export function Stars({ rating, size = 16 }: { rating: number; size?: number }) 
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric" });
 
+/** Slim card for the moving home page strip: three lines of text, details on one line. */
+export function CompactReviewCard({ review }: { review: PublicReview }) {
+  return (
+    <figure className="flex h-full flex-col rounded-2xl border border-white/10 bg-[#141417]/90 px-4 py-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <Stars rating={review.rating} size={13} />
+        <span className="text-[11px] text-white/35">{dateFormat.format(new Date(review.createdAt))}</span>
+      </div>
+      <blockquote className="mt-2 line-clamp-3 flex-1 text-[13px] leading-snug text-white/75">
+        {review.comment.replace(/\s*\n+\s*/g, " ")}
+      </blockquote>
+      <figcaption className="mt-2.5 truncate text-xs">
+        <span className="font-semibold text-white">{review.name}</span>
+        {review.product && <span className="text-white/40"> · {review.product}</span>}
+      </figcaption>
+    </figure>
+  );
+}
+
 export default function ReviewCard({ review, clamp = false }: { review: PublicReview; clamp?: boolean }) {
   return (
     <figure className="flex h-full flex-col rounded-3xl border border-white/10 bg-[#141417]/90 p-5 sm:p-6">
