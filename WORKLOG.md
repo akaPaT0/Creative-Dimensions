@@ -1,5 +1,11 @@
 # Worklog
 
+## 2026-11-25 - Auto-scrolling reviews carousel on the homepage
+
+- Owner wanted the homepage reviews as one horizontal row that scrolls by itself, with slimmer cards. Added `ReviewsCarousel` (loops seamlessly only when the cards overflow; pauses on hover, touch, swipe, wheel and keyboard focus, resumes 2.5 s later; still for reduced motion) and a `CompactReviewCard` with three lines of text. `/reviews` keeps the full grid cards. Shows up to 12 latest approved reviews.
+- Previewed locally with five sample reviews that were never committed or written to the database. Desktop and 375 px checks passed with no page overflow; focused lint passed.
+- Live review flow checked the same day: `/review` validation, Turnstile and 11 rejected API requests passed. One real end-to-end submission still needs the owner (CAPTCHA). One pending review from 2026-11-11 is awaiting approval.
+
 ## 2026-11-24 - Backfill and serve existing catalog photo sizes
 
 - Owner approved publishing the missing preconverted sizes. Verified 260 generated WebPs for 142 photos and reused 388 existing variants to cover all four sizes for 162 photos.

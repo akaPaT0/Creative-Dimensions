@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loadApprovedReviews } from "@/app/lib/supabase/review-store";
-import ReviewCard, { Stars } from "./ReviewCard";
+import { Stars } from "./ReviewCard";
+import ReviewsCarousel from "./ReviewsCarousel";
 
 /** Homepage strip of the latest approved reviews. Renders nothing until at least one is approved. */
 export default async function ReviewsSection({ className = "" }: { className?: string }) {
@@ -8,7 +9,7 @@ export default async function ReviewsSection({ className = "" }: { className?: s
   if (!reviews.length) return null;
 
   const average = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-  const latest = reviews.slice(0, 6);
+  const latest = reviews.slice(0, 12);
 
   return (
     <section id="reviews" className={className} aria-labelledby="reviews-heading">
@@ -34,13 +35,7 @@ export default async function ReviewsSection({ className = "" }: { className?: s
         </div>
       </div>
 
-      <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3">
-        {latest.map((review) => (
-          <div key={review.id} className="w-[85%] shrink-0 snap-start sm:w-auto">
-            <ReviewCard review={review} clamp />
-          </div>
-        ))}
-      </div>
+      <ReviewsCarousel reviews={latest} />
     </section>
   );
 }
