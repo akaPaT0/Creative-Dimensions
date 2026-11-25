@@ -1,5 +1,9 @@
 # Worklog
 
+## 2026-11-25 - New social share image
+
+- Owner supplied a new 1200x630 share image (bust, car, hermit crab keychain, QR stand; "Designed with taste. Printed with precision."). Saved it as `public/og-image-2026.jpg` (89 KB JPEG) and pointed `DEFAULT_OG_IMAGE` at it, so the home page, shop, `/review` and `/reviews` share it. Product pages keep their own photos. New file name so WhatsApp and Facebook don't reuse cached previews; old `og-image.jpg` kept for existing links.
+
 ## 2026-11-25 - Auto-scrolling reviews carousel on the homepage
 
 - Owner wanted the homepage reviews as one horizontal row that scrolls by itself, with slimmer cards. Added `ReviewsCarousel` (loops seamlessly only when the cards overflow; pauses on hover, touch, swipe, wheel and keyboard focus, resumes 2.5 s later; still for reduced motion) and a `CompactReviewCard` with three lines of text. `/reviews` keeps the full grid cards. Shows up to 12 latest approved reviews.
